@@ -115,3 +115,70 @@
 .app .startup-content > span:not(.tags) { color: #5b5368; }
 .app .startup-content .tags > span { color: #633b82; }
 .app footer :is(p, button) { color: #5b5368; }
+/* A quieter, neutral account form with explicit active and disabled states. */
+.app .auth-layout { border-color:#cdd1d8;background:#fff; }
+.app .auth-welcome { background:#edf0f4;border-color:#d4d9e0; }
+.app .auth-welcome h2 { color:#222b38; }
+.app .auth-welcome-copy > p,.app .auth-welcome li { color:#46515f; }
+.app .auth-welcome-top,.app .auth-welcome-label,.app .auth-panel .auth-eyebrow { color:#596371; }
+.app .auth-brand-mark { color:#36465f;border-color:#acb6c4; }
+.app .auth-welcome li > span { background:#dce3eb;color:#3a4c65; }
+.app .auth-cup-card { background:#28364b;border-color:#28364b; }
+.app .auth-cup-card strong,.app .auth-cup-card > div > span,.app .auth-cup-spark { color:#fff; }
+.app .auth-panel h2 { color:#202733;font-weight:550;font-size:30px;line-height:1.3; }
+.app .auth-panel .auth-tabs { background:#edf0f3;padding:4px;border:1px solid #d7dce3; }
+.app .auth-panel .auth-tabs button { color:#46515f;font-size:14px;min-height:44px; }
+.app .auth-panel .auth-tabs button.active { background:#28364b;color:#fff;box-shadow:none; }
+.app .auth-panel label { color:#28313e;font-size:14px;font-weight:550;line-height:1.5; }
+.app .auth-panel form input { color:#202733;background:#fff;border:1px solid #9ca5b2;font-size:15px;min-height:49px; }
+.app .auth-panel form input::placeholder { color:#697381;font-size:14px;font-weight:400;opacity:1; }
+.app .auth-panel form input:focus { border-color:#344e73;outline:2px solid #b8c8df;outline-offset:2px; }
+.app .auth-panel .password-input button { color:#344153;font-size:12px;font-weight:500;min-height:40px; }
+.app .auth-panel form small { color:#57616e;font-size:12px;line-height:1.6;text-align:left;font-weight:400; }
+.app .auth-panel .google-signin { border-color:#9ca5b2;color:#303b4a;font-size:14px;min-height:49px;background:#fff; }
+.app .auth-panel .google-signin:disabled { background:#fafbfc;opacity:1;color:#46515f; }
+.app .auth-panel .auth-provider-note { font-size:12px;color:#596371;line-height:1.6; }
+.app .auth-panel .auth-divider { color:#5b6572;font-size:12px; }
+.app .auth-panel .auth-divider::before,.app .auth-panel .auth-divider::after { background:#d5dae2; }
+.app .auth-panel .auth-service-note { background:#f2f4f7;border:0;color:#4b5563;font-size:12px;line-height:1.7;border-radius:8px;padding:12px 14px; }
+.app .auth-panel form > .primary { font-size:14px;min-height:50px; }
+.app .auth-panel form > .primary:disabled { color:#46515f;background:#e1e5eb;border:1px solid #c7ced8;opacity:1; }
+.app .auth-content .demo-auth-options { border-color:#d3d8e0; }
+.app .auth-content .demo-auth-options summary { color:#4b5563;font-size:12px; }
+
+/* Teams is a capability within project discovery, not a top-level destination. */
+.project-browse-tabs { display:flex;align-items:center;gap:6px;padding:5px;background:#eae6f0;border:1px solid #d8cee4;border-radius:13px;width:fit-content;margin-bottom:32px; }
+.project-browse-tabs button { border:0;background:none;color:#5f4b70;min-height:42px;padding:10px 20px;border-radius:9px;font-size:14px;font-weight:500; }
+.project-browse-tabs button.active { background:#fff;color:#3f205c;box-shadow:0 2px 6px #23113b0b; }
+
+/* About: a clear story, a practical path and answers to first questions. */
+.about-story { padding-block:78px;scroll-margin-top:100px;border-top:1px solid #d9d4e0; }
+.about-story-intro { display:grid;grid-template-columns:1.12fr .88fr;gap:70px;align-items:center; }
+.about-story-intro h2 { font-size:clamp(34px,4vw,52px);line-height:1.08;letter-spacing:-.05em;max-width:580px;margin-bottom:24px;color:#251735; }
+.about-story-intro > div > p:last-of-type { color:#51495c;font-size:16px;line-height:1.85;max-width:570px; }
+.about-field-tags { display:flex;flex-wrap:wrap;gap:8px;margin-top:24px; }
+.about-field-tags span { color:#603b7e;background:#f0e8f8;border:1px solid #d8c6e7;border-radius:999px;font-size:12px;padding:7px 12px; }
+.about-belief { background:#251638;color:#fff;border-radius:22px;padding:34px;min-height:300px;display:flex;flex-direction:column;justify-content:space-between; }
+.about-belief-symbol { color:#c29bee;font-size:52px;line-height:1;margin-bottom:30px; }
+.about-belief p { font-size:clamp(22px,2.4vw,29px);letter-spacing:-.03em;line-height:1.4;margin-bottom:26px; }
+.about-belief small { color:#d4c6e4;font-size:10px;letter-spacing:.1em;line-height:1.6; }
+.about-journey-heading { display:flex;align-items:baseline;justify-content:space-between;gap:32px;margin-top:56px;margin-bottom:26px; }
+.about-journey-heading h3 { font-size:27px;line-height:1.3;letter-spacing:-.035em; }
+.about-journey-heading p { font-size:13px;line-height:1.8;color:#5e5667;max-width:390px; }
+.about-journey { list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px; }
+.about-journey li { border:1px solid #d9d1e2;border-radius:16px;background:#fff;padding:24px; }
+.about-journey li > span { display:inline-grid;place-items:center;background:#ede1fa;color:#60318b;width:35px;height:35px;border-radius:9px;font-size:11px;margin-bottom:26px; }
+.about-journey h4 { font-size:18px;line-height:1.4;letter-spacing:-.025em;margin-bottom:12px;color:#30233b; }
+.about-journey li p { font-size:13px;color:#5d5467;line-height:1.8;margin:0; }
+.about-questions { display:grid;grid-template-columns:.8fr 1.2fr;gap:70px;margin-top:62px;padding-top:40px;border-top:1px solid #ded6e6; }
+.about-questions h3 { font-size:31px;letter-spacing:-.04em;line-height:1.2;margin-bottom:16px; }.about-questions > div > p:last-child { color:#5e5667;font-size:14px;line-height:1.7; }
+.about-faq details { border-bottom:1px solid #d9d2e1; }.about-faq summary { display:flex;justify-content:space-between;align-items:center;gap:18px;cursor:pointer;list-style:none;font-size:16px;font-weight:500;line-height:1.5;padding:20px 0; }.about-faq summary::-webkit-details-marker { display:none; }.about-faq summary > span { color:#76439b;font-size:24px;transition:transform .2s; }.about-faq details[open] summary > span { transform:rotate(45deg); }.about-faq details p { color:#51495c;font-size:14px;line-height:1.85;margin:0;padding:0 30px 22px 0; }
+.about-next-step { display:flex;justify-content:space-between;align-items:center;gap:30px;border:1px solid #cfb9e1;background:#ece0f6;border-radius:18px;padding:30px 34px;margin-top:48px; }.about-next-step span { display:block;font-size:11px;letter-spacing:.08em;color:#643683;margin-bottom:12px; }.about-next-step h3 { font-size:28px;letter-spacing:-.035em;margin-bottom:12px;color:#34203f; }.about-next-step p { font-size:13px;line-height:1.8;color:#57425f;margin:0; }.about-next-step .primary { flex-shrink:0;border-radius:11px; }
+@media(max-width:950px) { .about-story-intro { gap:32px; }.about-journey { grid-template-columns:repeat(2,minmax(0,1fr)); }.about-questions { gap:30px; } }
+@media(max-width:700px) { .about-story { padding-block:52px; }.about-story-intro,.about-questions { grid-template-columns:1fr;gap:28px; }.about-belief { padding:26px;min-height:260px; }.about-journey-heading { align-items:start;flex-direction:column;gap:10px; }.about-journey-heading h3 { margin:0; }.about-journey-heading p { margin:0; }.about-journey { gap:12px; }.about-journey li { padding:20px; }.about-next-step { align-items:start;flex-direction:column;padding:26px;gap:22px; }.project-browse-tabs { width:100%;margin-bottom:26px; }.project-browse-tabs button { flex:1;padding-inline:12px;font-size:13px; } }
+@media(max-width:420px) { .about-journey { grid-template-columns:1fr; }.about-journey li > span { margin-bottom:16px; } }
+/* Scoped selectors override the older shared lavender text rules. */
+.app .auth-layout .auth-panel form > label { color:#28313e; }
+.app .auth-layout .auth-panel form small { color:#57616e;font-size:12px;text-align:left; }
+.app .auth-layout .auth-panel :is(.auth-provider-note,.auth-divider,.auth-service-note,.auth-eyebrow) { color:#4b5563; }
+.app .auth-layout .auth-panel .password-input button { color:#344153; }

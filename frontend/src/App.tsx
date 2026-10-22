@@ -1,4 +1,5 @@
-import { Teams, TeamProvider, useTeams } from "./teams"
+import { AboutSection } from "./about"
+import { Teams, TeamProvider, useTeams, ProjectBrowseTabs } from "./teams"
 import { backend, usePlatform } from "./backend"
 import { AuthPanel, BackendNotice } from "./auth"
 import { StartupEditor, ownsStartup } from "./media"
@@ -230,7 +231,6 @@ function Header({
   const c = copy[lang]
   const nav = [
     { label: c.nav[0], page: "startups" as Page },
-    { label: t("Teams"), page: "teams" as Page },
     { label: c.nav[1], page: "demo" as Page },
     { label: c.nav[2], page: "home" as Page, anchor: true },
     { label: account === "student" ? t("My workspace") : c.nav[3], page: "apply" as Page },
@@ -252,7 +252,7 @@ function Header({
           {nav.map((item) => (
             <button
               key={item.label}
-              className={page === item.page && !item.anchor ? "active" : ""}
+              className={(page === item.page || (page === "teams" && item.page === "startups")) && !item.anchor ? "active" : ""}
               onClick={() => {
                 navigate(item.page)
                 if (item.anchor)
@@ -589,39 +589,7 @@ function Home({ lang, go }: { lang: Lang, go: (p: Page) => void }) {
           ['03','Find your team','Bring your strengths to a team, or invite people to build your idea together.','Find a team','teams'],
         ].map(([number,title,description,action,target]) => <button className="next-step-card" key={number} onClick={() => go(target as Page)}><span className="step-number">{number}</span><h3>{t(title)}</h3><p>{t(description)}</p><span className="step-action">{t(action)}<span aria-hidden="true">↗</span></span></button>)}</div>
       </section>
-      <section className="section shell reveal" id="about">
-        <div className="section-head">
-          <p className="eyebrow">{t("01 — OFE")}</p>
-          <h2>{c.directions}</h2>
-        </div>
-        <div className="directions bento-grid">
-          {[
-            [
-              "Idea validation",
-              "Test assumptions, talk to users and find the problem worth solving.",
-            ],
-            [
-              "Founder support",
-              "Work alongside mentors and operators who have built before.",
-            ],
-            [
-              "Community",
-              "Meet ambitious students, collaborators and future co-founders.",
-            ],
-            [
-              "Market access",
-              "Connect with investors, partners and Kazakhstan's startup ecosystem.",
-            ],
-          ].map(([title, text], i) => (
-            <article key={t(title)}>
-              <DirectionIcon index={i} />
-              <span>0{i + 1}</span>
-              <h3>{t(title)}</h3>
-              <p>{t(text)}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+      <AboutSection go={go} />
 
       {current && <section className="section shell reveal">
         <div className="demo-banner">
@@ -716,7 +684,7 @@ function Directory({ go }: { go: (p: Page) => void }) {
   const filtered=projects.filter(project=>(industry==='All'||project.industry===industry)&&(stage==='All'||project.stage===stage)&&(!recruiting||Boolean(openTeam(project.id)))&&[project.name,project.description,t(project.description),project.industry,t(project.industry)].join(' ').toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>sort==='az'?a.name.localeCompare(b.name):(b.createdAt??'').localeCompare(a.createdAt??''))
   const reset=()=>{setSearch('');setIndustry('All');setStage('All');setRecruiting(false);setShown(6)}
   useEffect(()=>setShown(6),[search,industry,stage,recruiting,sort])
-  return <main className="shell page projects-page">
+  return <main className="shell page projects-page"><ProjectBrowseTabs active="projects" go={go} />
     <div className="community-page-head"><div><p className="eyebrow">BUILT AT SDU</p><h1>{t('Small beginnings. Real possibilities.')}</h1><p>{t('Explore what students are building. Find an idea you love, a team to join, or a little inspiration to start.')}</p></div><button className="primary" onClick={()=>go('apply')}>{t('Share your project')}<span aria-hidden="true">＋</span></button></div>
     <div className="projects-collection-intro"><div><span className="collection-symbol" aria-hidden="true">✳</span><div><strong>{t('Ideas from every field.')}</strong><p>{t('Education, culture, the environment, business — there is more than one way to make a difference.')}</p></div></div><div className="collection-count"><strong>{String(projects.length).padStart(2,'0')}</strong><span>{t('projects to discover')}</span></div></div>
     <div className="community-search project-search"><span aria-hidden="true">⌕</span><input aria-label={t('Search projects')} placeholder={t('Search by name, idea or field…')} value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label={t('Sort startups')} value={sort} onChange={e=>setSort(e.target.value)}><option value="newest">{t('Newest first')}</option><option value="az">{t('A–Z')}</option></select></div>
