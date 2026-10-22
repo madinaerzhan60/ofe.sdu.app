@@ -1,0 +1,21 @@
+ .topic-filter { position:relative;width:fit-content;max-width:100%;margin:20px 0;z-index:5; }
+.topic-filter summary { list-style:none;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:44px;padding:11px 16px;border:1px solid #c8b4d9;border-radius:11px;background:#fff;color:#47235f;font-size:14px;cursor:pointer; }
+.topic-filter summary::-webkit-details-marker { display:none; }
+.topic-filter summary > span:last-child { font-size:18px;transition:transform .15s; }
+.topic-filter[open] summary > span:last-child { transform:rotate(180deg); }
+.topic-filter summary:focus-visible,.topic-filter-options button:focus-visible { outline:3px solid #b28be8;outline-offset:2px; }
+.topic-filter-panel { position:absolute;top:calc(100% + 8px);left:0;width:330px;max-width:calc(100vw - 48px);padding:12px;background:#fff;border:1px solid #d9c9e5;border-radius:14px;box-shadow:0 16px 45px #24123526; }
+.app .topic-filter-panel > input { width:100%;min-height:42px;padding:10px 12px;font-size:14px;border:1px solid #ad97be;border-radius:8px;background:#fff;color:#291536; }
+.topic-filter-options { max-height:280px;overflow-y:auto;margin-top:8px;overscroll-behavior:contain; }
+.topic-filter-options button { width:100%;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:12px;border:0;background:transparent;color:#392546;font-size:13px;text-align:left;border-radius:8px; }
+.topic-filter-options button:hover { background:#f2eaf9; }
+.topic-filter-options button[aria-pressed="true"] { background:#eee1fb;color:#58248c;font-weight:600; }
+.topic-filter-options small { color:#6a547c; }
+.topic-filter-options p { font-size:13px;padding:12px;margin:0; }
+html[data-theme="dark"] .app.app .projects-page .topic-filter summary { background:#291c35;border-color:#785490;color:#f2e3ff; }
+html[data-theme="dark"] .app.app .projects-page .topic-filter-panel { background:#251a30;border-color:#79548e;box-shadow:0 20px 50px #0008; }
+html[data-theme="dark"] .app.app .projects-page .topic-filter-panel > input { background:#191120;border-color:#79548e;color:#f2e3ff; }
+html[data-theme="dark"] .app.app .projects-page .topic-filter-options button { color:#e7d8f2; }
+html[data-theme="dark"] .app.app .projects-page .topic-filter-options button:hover { background:#3a254a; }
+html[data-theme="dark"] .app.app .projects-page .topic-filter-options button[aria-pressed="true"] { background:#583080;color:#fff; }
+html[data-theme="dark"] .app.app .projects-page .topic-filter-options small { color:#d6bce8; }

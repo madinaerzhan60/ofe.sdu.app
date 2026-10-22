@@ -661,6 +661,19 @@ function Home({ lang, go }: { lang: Lang, go: (p: Page) => void }) {
   )
 }
 
+function TopicFilter({value,onChange,topics}:{value:string;onChange:(value:string)=>void;topics:{name:string;count:number}[]}) {
+  const t=useT()
+  const menu=useRef<HTMLDetailsElement>(null)
+  const [query,setQuery]=useState('')
+  useEffect(()=>{const outside=(event:PointerEvent)=>{if(menu.current&&!menu.current.contains(event.target as Node))menu.current.open=false};document.addEventListener('pointerdown',outside);return()=>document.removeEventListener('pointerdown',outside)},[])
+  const choose=(name:string)=>{onChange(name);if(menu.current){menu.current.open=false;menu.current.querySelector('summary')?.focus()}}
+  const visible=topics.filter(topic=>[topic.name,t(topic.name)].join(' ').toLowerCase().includes(query.trim().toLowerCase()))
+  return <details ref={menu} className="topic-filter" onToggle={e=>{if(!e.currentTarget.open)setQuery('')}} onKeyDown={e=>{if(e.key==='Escape'){e.preventDefault();if(menu.current){menu.current.open=false;menu.current.querySelector('summary')?.focus()}}}}>
+    <summary><span>{t('Topics')}{value!=='All'?`: ${t(value)}`:''}</span><span aria-hidden="true">⌄</span></summary>
+    <div className="topic-filter-panel"><input aria-label={t('Search topics')} placeholder={t('Search topics')} value={query} onChange={e=>setQuery(e.target.value)}/><div className="topic-filter-options" aria-label={t('Topics')}><button type="button" aria-pressed={value==='All'} onClick={()=>choose('All')}><span>{t('All topics')}</span><span aria-hidden="true">{value==='All'?'✓':''}</span></button>{visible.map(topic=><button key={topic.name} type="button" aria-pressed={value===topic.name} onClick={()=>choose(topic.name)}><span>{t(topic.name)}</span><small>{topic.count}{value===topic.name?' ✓':''}</small></button>)}{!visible.length&&<p>{t('No topics found')}</p>}</div></div>
+  </details>
+}
+
 function Directory({ go }: { go: (p: Page) => void }) {
   const t = useT()
   const { submissions, select } = useModel()
@@ -677,7 +690,7 @@ function Directory({ go }: { go: (p: Page) => void }) {
   return <main className="shell page projects-page">
     <div className="community-page-head"><h1>{t('Projects')}</h1><button className="primary" onClick={()=>go('apply')}>{t('Add project')} ＋</button></div>
     <div className="community-search project-search"><span aria-hidden="true">⌕</span><input aria-label={t('Search projects')} placeholder={t('Search by name, idea or field…')} value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label={t('Sort startups')} value={sort} onChange={e=>setSort(e.target.value)}><option value="newest">{t('Newest first')}</option><option value="az">{t('A–Z')}</option></select></div>
-    <div className="project-category-tabs" aria-label={t('Industry')}>{['All',...industries].map(field=><button key={field} aria-pressed={industry===field} className={industry===field?'active':''} onClick={()=>setIndustry(field)}>{t(field==='All'?'All projects':field)}<span>{field==='All'?projects.length:projects.filter(p=>p.industry===field).length}</span></button>)}</div>
+    <TopicFilter value={industry} onChange={setIndustry} topics={industries.map(name=>({name,count:projects.filter(p=>p.industry===name).length}))} />
     <div className="project-results-toolbar"><p role="status">{filtered.length} {t('projects found')}</p><div><label className="project-stage-filter"><span>{t('Stage')}</span><select aria-label={t('Stage')} value={stage} onChange={e=>setStage(e.target.value)}><option value="All">{t('All stages')}</option>{['Idea','Prototype','MVP','Seed','Growth'].map(value=><option key={value} value={value}>{t(value)}</option>)}</select></label>{(search||industry!=='All'||stage!=='All')&&<button className="inline-link" onClick={reset}>{t('Clear filters')}</button>}</div></div>
     <div className="project-card-grid">{filtered.slice(0,shown).map((project,index)=>{
       return <button className={`project-discovery-card project-color-${index%4}`} key={project.id} onClick={()=>{select(project.name);go('profile')}}>

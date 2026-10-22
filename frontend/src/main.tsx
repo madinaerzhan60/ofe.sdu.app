@@ -4,6 +4,7 @@ import App from './App'
 import './index.css'
 import './contrast.css'
 import './dark-discovery.css'
+import './topics.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

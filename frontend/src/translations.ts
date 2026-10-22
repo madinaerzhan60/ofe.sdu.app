@@ -891,3 +891,5 @@ Object.assign(translations, { 'Demo workspace · Changes are not saved to the se
 Object.assign(translations, { 'Description':['Описание','Сипаттама'] })
 
 Object.assign(translations, { 'Program':['Программа','Бағдарлама'] })
+
+Object.assign(translations, { 'Topics':['Темы','Тақырыптар'], 'All topics':['Все темы','Барлық тақырыптар'], 'Search topics':['Найти тему','Тақырып іздеу'], 'No topics found':['Темы не найдены','Тақырыптар табылмады'] })
