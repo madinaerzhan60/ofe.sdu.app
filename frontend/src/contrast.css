@@ -1,0 +1,117 @@
+/* Shared readable palette. Events keeps its dark hero and white ticket. */
+:root {
+  --ink: #211438;
+  --muted: #5b5368;
+  --purple: #6d28d9;
+  --purple-2: #7c3aed;
+  --line: #d8d1e2;
+}
+
+.app .primary,
+.app .event-register:not(:disabled),
+.app .admin-project .actions button.approve {
+  background: #6d28d9;
+  color: #fff;
+  border-color: #6d28d9;
+}
+.app .primary:hover:not(:disabled),
+.app .admin-project .actions button.approve:hover { background: #5720b0; }
+.app .secondary { color: #523070; border-color: #b6a5ca; background: white; }
+.app .secondary:hover:not(:disabled) { background: #f0e8fa; border-color: #8855b5; }
+.app .inline-link { color: #6530a4; }
+.app .primary:disabled { background: #e8e2ef; color: #65596f; border-color: #d4c9df; opacity: 1; }
+.app button:disabled { opacity: .72; }
+.app .primary:disabled, .app .google-signin:disabled { opacity: 1; }
+.app .eyebrow:not(.light) { color: #70438e; }
+
+.app :is(
+  .community-page-head > div > p:last-child,
+  .projects-collection-intro p, .project-card-description,
+  .team-card > p, .project-community-cta p, .community-empty p,
+  .admin-description, .admin-project-identity p, .admin-project-state small,
+  .admin-empty p, .admin-review-summary p, .admin-side-bottom p,
+  .next-step-card p, .getting-started-heading > p:last-child,
+  .auth-welcome-copy > p, .auth-welcome li,
+  .profile-collaborate > p:not(.eyebrow), .field-help,
+  .auth-provider-note, .auth-panel form small,
+  .team-member-list small, .team-request-list p,
+  .team-manage-setting p
+) { color: #5b5368; }
+
+.app :is(
+  .community-field, .project-results-toolbar, .project-card-footer,
+  .project-card-footer > span:first-child, .project-card-category,
+  .team-roles > div > span, .team-roles > small,
+  .team-card-bottom > span, .team-overview span,
+  .community-tabs button, .project-category-tabs button,
+  .project-category-tabs button > span,
+  .community-search select, .project-stage-filter select,
+  .project-load-more p, .collection-count > span,
+  .admin-stat, .admin-stat small, .admin-list-heading > span,
+  .admin-breadcrumb, .admin-project-tags span,
+  .auth-welcome-label, .auth-welcome-top, .auth-panel label,
+  .auth-panel .auth-eyebrow, .auth-panel .auth-service-note,
+  .auth-tabs button, .password-input button, .auth-divider,
+  .demo-auth-options summary, .team-demo-note,
+  .team-modal-notice, .profile .project-sample-note
+) { color: #634775; }
+
+.app :is(.team-card, .project-discovery-card, .admin-project,
+  .admin-stat, .team-overview > div, .next-step-card,
+  .community-search, .auth-layout, .auth-panel form input,
+  .google-signin, .project-stage-filter select,
+  .project-category-tabs button, .team-roles > div > span
+) { border-color: #d8cde3; }
+.app .community-search input { color: #211438; }
+.app :is(.community-search input, .auth-panel form input)::placeholder { color: #766582; opacity: 1; }
+.app .community-search:focus-within { border-color: #7c3aed; box-shadow: 0 0 0 3px #e8dcfb; }
+.app .community-search > span { color: #714097; }
+
+.app :is(.community-tabs button.active, .auth-tabs button.active,
+  .project-category-tabs button.active, .table-toolbar button.active
+) { color: #582294; background: #ece0fc; border-color: #b494d0; }
+.app .project-category-tabs button.active > span { color: #65319d; }
+.app .project-results-toolbar, .app .project-category-tabs button,
+.app .project-card-description, .app .team-card > p { font-size: 13px; }
+.app .project-card-footer, .app .project-card-category,
+.app .team-roles > div > span, .app .team-open-tag,
+.app .team-card-bottom > span { font-size: 11px; }
+
+.app .project-card-visual { background: #e5d7f4; }
+.app .project-visual-word { color: #573079; }
+.app .project-color-1 .project-card-visual { background: #dcece2; }
+.app .project-color-1 .project-visual-word { color: #285f41; }
+.app .project-color-2 .project-card-visual { background: #f4e1d0; }
+.app .project-color-2 .project-visual-word { color: #81431e; }
+.app .project-color-3 .project-card-visual { background: #dce5f5; }
+.app .project-color-3 .project-visual-word { color: #2f4c7b; }
+.app .project-card-category { background: #ffffffed; border-color: #fff; }
+.app :is(.project-card-arrow, .collection-symbol, .community-empty > span) { color: #7943a5; }
+.app .collection-count strong, .app .team-overview strong { color: #633094; }
+.app :is(.community-monogram, .project-card-logo, .team-member-avatar) {
+  color: #6832a1; background: #ede2fa; border-color: #d2bce6;
+}
+.app .team-open-tag { color: #63368a; background: #ece2f7; }
+.app .project-card-footer .project-team-label { color: #286b43; font-weight: 600; }
+.app .team-roles > div > span { background: #f7f3fb; }
+
+.app .projects-collection-intro,
+.app .project-community-cta, .app .profile-collaborate {
+  background: #ece2f8; border-color: #d5c2e7;
+}
+.app .auth-welcome { background: #ece2f7; }
+.app .auth-welcome h2 { color: #30203f; }
+.app .auth-cup-card { background: #e0cfee; border-color: #c9aedc; }
+.app .auth-cup-card strong, .app .auth-cup-card > div > span,
+.app .auth-cup-spark { color: #5e327f; }
+.app .auth-welcome li > span { color: #693795; background: #dfceef; }
+.app .google-signin { color: #3d3147; }
+.app .auth-provider-note, .app .team-demo-note { line-height: 1.8; }
+.app .admin-project .actions button:not(.approve) { color: #5c3874; border-color: #cabbd5; }
+.app .status.approved { color: #25613c; background: #e1f2e7; }
+.app .status.pending { color: #76500c; background: #fff0cf; }
+.app .status.rejected { color: #71408f; background: #efe1f8; }
+.app .admin-notice { color: #28613c; border-color: #bad8c5; }
+.app .startup-content > span:not(.tags) { color: #5b5368; }
+.app .startup-content .tags > span { color: #633b82; }
+.app footer :is(p, button) { color: #5b5368; }
