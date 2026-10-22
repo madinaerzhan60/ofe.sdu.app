@@ -108,3 +108,9 @@ html[data-theme="dark"] .app.app .hamburger span { background:#ead9f5; }
  html[data-theme="dark"] .app.app .projects-page .project-results-toolbar { flex-wrap:nowrap;gap:12px;align-items:center; }
  html[data-theme="dark"] .app.app .projects-page .project-results-toolbar > div { width:auto; }
 }
+
+/* Home event link needs its own dark state: a light pill made lavender text disappear. */
+html[data-theme="dark"] .app.app .hero-pill { background:#36204d;color:#f0dcff;border:1px solid #9362ba;font-weight:600; }
+html[data-theme="dark"] .app.app .hero-pill > span { background:#c89aff;box-shadow:0 0 0 4px #c89aff1a; }
+html[data-theme="dark"] .app.app .hero-pill:hover { background:#482761;color:#fff;border-color:#c496ed; }
+html[data-theme="dark"] .app.app .hero-pill:focus-visible { outline:3px solid #c89aff;outline-offset:4px; }
