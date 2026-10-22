@@ -1,0 +1,110 @@
+/* Projects and Events: intentional dark palettes, rather than tinted light cards. */
+html[data-theme="dark"] .app.app .projects-page { padding-top:54px; }
+html[data-theme="dark"] .app.app .projects-page .community-page-head { margin-bottom:28px; }
+html[data-theme="dark"] .app.app .projects-page .community-search { background:#201a29;border:1px solid #51425e;border-radius:14px;padding:14px 18px;box-shadow:0 8px 24px #00000012; }
+html[data-theme="dark"] .app.app .projects-page .community-search input { background:transparent;border:0;box-shadow:none;color:#faf6ff;font-size:14px; }
+html[data-theme="dark"] .app.app .projects-page .community-search select { background:transparent;border-color:#51425e;color:#e1d5ed;font-size:13px; }
+html[data-theme="dark"] .app.app .projects-page .project-category-tabs { gap:8px;margin-block:22px; }
+html[data-theme="dark"] .app.app .projects-page .project-category-tabs button { color:#d2c2df;background:transparent;border:1px solid #44334f;border-radius:10px;padding:10px 13px;font-size:12px; }
+html[data-theme="dark"] .app.app .projects-page .project-category-tabs button:hover { background:#2b2038;border-color:#8867a4; }
+html[data-theme="dark"] .app.app .projects-page .project-category-tabs button.active { background:#6d28d9;border-color:#9964ec;color:#fff; }
+html[data-theme="dark"] .app.app .projects-page .project-category-tabs button span { background:#ffffff12;color:inherit;border:0; }
+html[data-theme="dark"] .app.app .projects-page .project-results-toolbar { background:transparent;margin-bottom:22px;border:0; }
+html[data-theme="dark"] .app.app .projects-page .project-results-toolbar p { color:#bcaacb;font-size:12px; }
+html[data-theme="dark"] .app.app .projects-page .project-stage-filter { color:#cdbbdf;font-size:12px; }
+html[data-theme="dark"] .app.app .projects-page .project-stage-filter select { background:#201a29;border:1px solid #51425e;border-radius:9px;padding:9px 12px;color:#eadff2; }
+html[data-theme="dark"] .app.app .projects-page .project-card-grid { gap:24px; }
+html[data-theme="dark"] .app.app .projects-page .project-discovery-card { background:#211929;border:1px solid #463250;border-radius:18px;box-shadow:0 6px 20px #00000014; }
+html[data-theme="dark"] .app.app .projects-page .project-discovery-card:hover { border-color:#ad7be9;transform:translateY(-4px);box-shadow:0 14px 38px #09040f60; }
+html[data-theme="dark"] .app.app .projects-page .project-discovery-card:focus-visible { outline:3px solid #c6a0ff;outline-offset:4px; }
+html[data-theme="dark"] .app.app .projects-page .project-card-visual { height:188px;background:linear-gradient(135deg,#452265,#261633);border-bottom:1px solid #624176; }
+html[data-theme="dark"] .app.app .projects-page .project-color-1 .project-card-visual { background:linear-gradient(135deg,#4b2854,#271b30); }
+html[data-theme="dark"] .app.app .projects-page .project-color-2 .project-card-visual { background:linear-gradient(135deg,#563045,#2b192c); }
+html[data-theme="dark"] .app.app .projects-page .project-color-3 .project-card-visual { background:linear-gradient(135deg,#3c2b60,#21182f); }
+html[data-theme="dark"] .app.app .projects-page .project-visual-word { color:#f4e9ff;font-size:28px;font-weight:600;letter-spacing:-.045em;line-height:1.2;text-shadow:0 2px 16px #15091f50; }
+html[data-theme="dark"] .app.app .projects-page .project-visual-ring { border:1px solid #d9b5ff38;width:250px;height:250px;right:-75px;top:-100px;box-shadow:0 0 0 28px #d9b5ff08,0 0 0 56px #d9b5ff05; }
+html[data-theme="dark"] .app.app .projects-page .project-visual-square { background:#c9a2ed0b;border:1px solid #d9b5ff26;border-radius:24px;left:-20px;bottom:-80px;width:180px;height:180px; }
+html[data-theme="dark"] .app.app .projects-page .project-card-category { background:#1b1126c9;border:1px solid #b38acd5c;color:#e8d5fa;font-size:10px;border-radius:7px;padding:6px 9px; }
+html[data-theme="dark"] .app.app .projects-page .project-card-details { background:#211929;padding:22px; }
+html[data-theme="dark"] .app.app .projects-page .project-card-logo { background:#392447;border-color:#67477d;color:#e7cef9; }
+html[data-theme="dark"] .app.app .projects-page .project-card-identity strong { font-size:17px;color:#fff; }
+html[data-theme="dark"] .app.app .projects-page .project-card-arrow { width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:#33223f;color:#d7b1ff;font-size:18px; }
+html[data-theme="dark"] .app.app .projects-page .project-card-description { color:#cdbed7;font-size:13px;line-height:1.75;min-height:46px; }
+html[data-theme="dark"] .app.app .projects-page .project-card-footer { background:transparent;border-color:#493153;font-size:11px;gap:8px; }
+html[data-theme="dark"] .app.app .projects-page .project-card-footer > span { background:transparent;color:#d0abdF; }
+html[data-theme="dark"] .app.app .projects-page .project-card-footer > span:first-child { background:#302039;border:1px solid #4d335e;color:#d9c6e8;max-width:65%;font-size:10px; }
+
+html[data-theme="dark"] .app.app .events-page .demo-hero { background:radial-gradient(ellipse at 12% 40%,#4e23704d,transparent 58%),#1d1129;border-bottom:1px solid #4a2c5c;padding:44px 0 66px; }
+html[data-theme="dark"] .app.app .events-page .event-hero-layout { gap:72px; }
+html[data-theme="dark"] .app.app .events-page .event-back { color:#bca8cc;margin-bottom:40px; }
+html[data-theme="dark"] .app.app .events-page .event-kicker { color:#d7b5f5;font-size:11px;letter-spacing:.1em;text-transform:uppercase; }
+html[data-theme="dark"] .app.app .events-page .event-kicker > span { background:#c79bff;box-shadow:0 0 0 5px #c79bff16; }
+html[data-theme="dark"] .app.app .events-page .demo-hero h1 { color:#fcf7ff;font-size:clamp(42px,5.5vw,72px);max-width:620px;letter-spacing:-.045em;line-height:1.02; }
+html[data-theme="dark"] .app.app .events-page .event-hero-description { color:#d2bedf;max-width:440px;font-size:15px; }
+html[data-theme="dark"] .app.app .events-page .event-countdown-label { color:#bca6cc;font-size:12px; }
+html[data-theme="dark"] .app.app .events-page .countdown div { background:#2c1c3b;border:1px solid #593b6c;border-radius:12px;min-width:72px;padding:16px 12px;box-shadow:none; }
+html[data-theme="dark"] .app.app .events-page .countdown strong { color:#f7eaff;font-size:30px; }
+html[data-theme="dark"] .app.app .events-page .countdown span { color:#c7b0d8;font-size:10px; }
+html[data-theme="dark"] .app.app .events-page .event-ticket { background:#291c35;border:1px solid #795093;border-radius:22px;box-shadow:0 24px 64px #09030f60,inset 0 1px 0 #d5aaff18;padding:28px;margin-top:30px; }
+html[data-theme="dark"] .app.app .events-page .event-ticket-top > span:first-child { color:#cbb2dd;letter-spacing:.13em;font-size:10px; }
+html[data-theme="dark"] .app.app .events-page .event-ticket-badge { color:#e7ceff;background:#402654;border:1px solid #8253a5; }
+html[data-theme="dark"] .app.app .events-page .event-day { background:#7c3aed;border:1px solid #bc91fb;border-radius:12px; }
+html[data-theme="dark"] .app.app .events-page .event-day > span { background:#ffffff12;color:#fff; }
+html[data-theme="dark"] .app.app .events-page .event-day strong { color:#fff;font-size:34px; }
+html[data-theme="dark"] .app.app .events-page .event-field-label { color:#bfa5d1;font-size:10px;letter-spacing:.08em; }
+html[data-theme="dark"] .app.app .events-page .event-date-display time { color:#fff;font-size:15px;font-weight:550;line-height:1.5; }
+html[data-theme="dark"] .app.app .events-page .event-date-display small,html[data-theme="dark"] .app.app .events-page .event-location small { color:#c1aacF;font-size:12px;line-height:1.6; }
+html[data-theme="dark"] .app.app .events-page .event-location-icon { color:#e1bfff;background:#382346;border-color:#6e4885; }
+html[data-theme="dark"] .app.app .events-page .event-location strong { color:#f5eafc; }
+html[data-theme="dark"] .app.app .events-page .ticket-perforation { border-color:#79528d;margin-block:26px; }
+html[data-theme="dark"] .app.app .events-page .event-register { background:#8b43ec;color:#fff;border:1px solid #b783ff;min-height:50px;box-shadow:0 5px 18px #09030f30; }
+html[data-theme="dark"] .app.app .events-page .event-register:hover { background:#9b58f5;transform:none; }
+html[data-theme="dark"] .app.app .events-page .event-register:disabled { background:#244336;border-color:#497b60;color:#d3f6df; }
+html[data-theme="dark"] .app.app .events-page .event-calendar { background:transparent;color:#e7d2f6;border:1px solid #77508b;min-height:48px; }
+html[data-theme="dark"] .app.app .events-page .event-calendar:hover { background:#3a254a; }
+html[data-theme="dark"] .app.app .events-page .event-ticket-note { color:#bda5cf;font-size:11px; }
+html[data-theme="dark"] .app.app .events-page .section { border-color:#3e2d49;padding-block:64px; }
+html[data-theme="dark"] .app.app .events-page .program { gap:64px; }
+html[data-theme="dark"] .app.app .events-page .program h2 { font-size:40px; }
+html[data-theme="dark"] .app.app .events-page .program-row { padding:20px 0;border-color:#463150;grid-template-columns:64px 1fr;gap:24px; }
+html[data-theme="dark"] .app.app .events-page .program-row > span { background:#30203d;color:#d6b1ff;border:1px solid #5e4073;padding:6px 8px;border-radius:7px;font-size:12px; }
+html[data-theme="dark"] .app.app .events-page .program-row strong { color:#eaddf3;font-size:15px; }
+html[data-theme="dark"] .app.app .events-page .startup-card { background:#211929;border:1px solid #493353;border-radius:16px; }
+html[data-theme="dark"] .app.app .events-page .startup-content { background:transparent; }
+html[data-theme="dark"] .app.app .events-page .startup-content > span:not(.tags) { color:#cdbed7; }
+html[data-theme="dark"] .app.app .events-page .archive-grid > button { background:#211929;border:1px solid #493353;border-radius:16px;overflow:hidden; }
+html[data-theme="dark"] .app.app .events-page .archive-grid > button > span:not(.archive-visual) { color:#cdbed7; }
+html[data-theme="dark"] .app.app .events-page .archive-grid > button > i { color:#d6b1ff; }
+html[data-theme="dark"] .app.app .events-page .archive-visual { background:linear-gradient(135deg,#512376,#281636);color:#e5c9ff; }
+@media(max-width:1000px) { html[data-theme="dark"] .app.app .events-page .event-hero-layout { gap:32px; } }
+@media(max-width:760px) {
+ html[data-theme="dark"] .app.app .projects-page { padding-top:32px; }
+ html[data-theme="dark"] .app.app .projects-page .project-card-visual { height:180px; }
+ html[data-theme="dark"] .app.app .projects-page .project-category-tabs button { font-size:11px;padding:9px 11px; }
+ html[data-theme="dark"] .app.app .events-page .demo-hero { padding:28px 0 40px; }
+ html[data-theme="dark"] .app.app .events-page .event-hero-layout { gap:24px; }
+ html[data-theme="dark"] .app.app .events-page .event-back { margin-bottom:28px; }
+ html[data-theme="dark"] .app.app .events-page .demo-hero h1 { font-size:46px; }
+ html[data-theme="dark"] .app.app .events-page .event-ticket { margin-top:0;padding:24px; }
+ html[data-theme="dark"] .app.app .events-page .program { gap:24px; }
+ html[data-theme="dark"] .app.app .events-page .section { padding-block:44px; }
+}
+@media(prefers-reduced-motion:reduce) { html[data-theme="dark"] .app.app .projects-page .project-discovery-card:hover { transform:none; } }
+
+.events-page .event-title-university { display:block;font-size:24px;letter-spacing:.08em;margin-bottom:12px;line-height:1.2; }
+.events-page .event-title-name { display:block; }
+html[data-theme="dark"] .app.app .events-page .event-title-university { color:#cca7ee; }
+html[data-theme="dark"] .app.app .events-page .event-title-name { font-size:clamp(38px,4.6vw,64px);line-height:1.08; }
+@media(max-width:760px) { html[data-theme="dark"] .app.app .events-page .event-title-name { font-size:clamp(32px,8.4vw,44px); }.events-page .event-title-university { font-size:20px; } }
+
+html[data-theme="dark"] .app.app .hamburger span { background:#ead9f5; }
+
+@media(max-width:700px) {
+ html[data-theme="dark"] .app.app .projects-page .community-page-head { flex-direction:row;align-items:center;gap:16px; }
+ html[data-theme="dark"] .app.app .projects-page .community-page-head h1 { font-size:32px; }
+ html[data-theme="dark"] .app.app .projects-page .community-page-head > .primary { padding-inline:14px;min-height:44px;font-size:12px; }
+ html[data-theme="dark"] .app.app .projects-page .project-category-tabs { flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding-bottom:8px;scrollbar-width:thin;scrollbar-color:#674480 transparent; }
+ html[data-theme="dark"] .app.app .projects-page .project-category-tabs button { flex:0 0 auto; }
+ html[data-theme="dark"] .app.app .projects-page .project-results-toolbar { flex-wrap:nowrap;gap:12px;align-items:center; }
+ html[data-theme="dark"] .app.app .projects-page .project-results-toolbar > div { width:auto; }
+}

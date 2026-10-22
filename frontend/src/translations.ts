@@ -889,3 +889,5 @@ Object.assign(translations, {
 Object.assign(translations, { 'Demo workspace · Changes are not saved to the server.':['Демо-кабинет · Изменения не сохраняются на сервере.','Демо-кабинет · Өзгерістер серверде сақталмайды.'] })
 
 Object.assign(translations, { 'Description':['Описание','Сипаттама'] })
+
+Object.assign(translations, { 'Program':['Программа','Бағдарлама'] })

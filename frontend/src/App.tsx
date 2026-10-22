@@ -814,7 +814,7 @@ function DemoDay({ go }: { go: (p: Page) => void }) {
   },[userId,current?.id])
   const [archive, setArchive] = useState<string[] | null>(null)
   return (
-    <main>
+    <main className="events-page">
       {registrationOpen && (
         <DetailDialog
           title={t(liveMode ? "You are registered" : "Demo registration recorded")}
@@ -852,7 +852,7 @@ function DemoDay({ go }: { go: (p: Page) => void }) {
           <div className="event-hero-copy">
             <button className="event-back" onClick={() => go('home')}>← {t('Back to website')}</button>
             <p className="event-kicker"><span />{t(current.title)}</p>
-            <h1>SDU FOUNDERS CUP</h1>
+            <h1><span className="event-title-university">SDU</span><span className="event-title-name">FOUNDERS CUP</span></h1>
             <p className="event-hero-description">{t('Meet student founders, discover fresh ideas and connect with the OFE community.')}</p>
             <div className="event-countdown"><span className="event-countdown-label">{t('Until we meet')}</span><Countdown date={current.date} /></div>
           </div>
@@ -888,11 +888,7 @@ function DemoDay({ go }: { go: (p: Page) => void }) {
       <section className="section shell program">
         <div className="section-head">
           <p className="eyebrow">{t("PROPOSED PROGRAM")}</p>
-          <h2>
-            {t("One afternoon.")}
-            <br />
-            {t("Ideas for what comes next.")}
-          </h2>
+          <h2>{t('Program')}</h2>
         </div>
         <div>
           {[
