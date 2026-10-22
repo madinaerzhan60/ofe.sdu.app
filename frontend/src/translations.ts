@@ -858,3 +858,12 @@ Object.assign(translations, {
  'Explore the event':['Подробнее о событии','Іс-шара туралы толығырақ'],
 })
 Object.assign(translations, { 'Open recruitment':['Открытые команды','Ашық командалар'] })
+
+Object.assign(translations, {
+ 'Four ways to move your idea forward.':['Четыре направления для роста вашей идеи.','Идеяңызды дамытудың төрт бағыты.'],
+ 'From the first question to new opportunities — explore what we are building for founders.':['От первого вопроса до новых возможностей — вот что мы развиваем для будущих основателей.','Алғашқы сұрақтан жаңа мүмкіндіктерге дейін — болашақ негізін қалаушылар үшін дамытатын бағыттарымыз.'],
+ 'Turn a promising thought into a problem worth solving. Talk to future users, test your assumptions and discover what people really need.':['Найдите задачу, которую действительно стоит решать. Общайтесь с будущими пользователями, проверяйте гипотезы и узнавайте, что людям нужно на самом деле.','Шешуге тұрарлық мәселені табыңыз. Болашақ пайдаланушылармен сөйлесіп, болжамдарыңызды тексеріңіз және адамдарға не қажет екенін біліңіз.'],
+ 'Build with people who have been there. Learn from mentors and experienced entrepreneurs as you work through your next steps.':['Двигайтесь вперёд с теми, кто уже прошёл этот путь. Учитесь у наставников и опытных предпринимателей, чтобы увереннее делать следующие шаги.','Осы жолдан өткендермен бірге дамыңыз. Келесі қадамдарыңызды сенімді жасау үшін тәлімгерлер мен тәжірибелі кәсіпкерлерден үйреніңіз.'],
+ 'Find your people. Meet ambitious students from different fields, share ideas and connect with future collaborators and co-founders.':['Найдите своих людей. Знакомьтесь со студентами из разных сфер, обменивайтесь идеями и встречайте будущих участников команды и сооснователей.','Өз ортаңызды табыңыз. Әртүрлі салалардағы студенттермен танысып, идеялар бөлісіңіз және болашақ команда мүшелері мен серіктестерді кездестіріңіз.'],
+ "Take your idea beyond campus. Explore connections with investors, partners and Kazakhstan's startup ecosystem.":['Дайте идее выйти за пределы кампуса. Открывайте возможности для знакомства с инвесторами, партнёрами и стартап-сообществом Казахстана.','Идеяңызды кампустан тыс дамытыңыз. Қазақстанның инвесторларымен, серіктестерімен және стартап ортасымен байланысу мүмкіндіктерін зерттеңіз.'],
+})

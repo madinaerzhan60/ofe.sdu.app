@@ -115,36 +115,40 @@
 .app .startup-content > span:not(.tags) { color: #5b5368; }
 .app .startup-content .tags > span { color: #633b82; }
 .app footer :is(p, button) { color: #5b5368; }
-/* A quieter, neutral account form with explicit active and disabled states. */
-.app .auth-layout { border-color:#cdd1d8;background:#fff; }
-.app .auth-welcome { background:#edf0f4;border-color:#d4d9e0; }
-.app .auth-welcome h2 { color:#222b38; }
-.app .auth-welcome-copy > p,.app .auth-welcome li { color:#46515f; }
-.app .auth-welcome-top,.app .auth-welcome-label,.app .auth-panel .auth-eyebrow { color:#596371; }
-.app .auth-brand-mark { color:#36465f;border-color:#acb6c4; }
-.app .auth-welcome li > span { background:#dce3eb;color:#3a4c65; }
-.app .auth-cup-card { background:#28364b;border-color:#28364b; }
+/* Purple brand account form with explicit active and disabled states. */
+.app .auth-layout { border-color:#d9c8e8;background:#fff; }
+.app .auth-welcome { background:#2e124c;border-color:#442065; }
+.app .auth-welcome h2 { color:#ffffff; }
+.app .auth-welcome-copy > p,.app .auth-welcome li { color:#493654; }
+.app .auth-welcome-top,.app .auth-welcome-label,.app .auth-panel .auth-eyebrow { color:#62526e; }
+.app .auth-brand-mark { color:#ffffff;border-color:#a97bda; }
+.app .auth-welcome li > span { background:#56317b;color:#ffffff; }
+.app .auth-cup-card { background:#6d28d9;border-color:#6d28d9; }
 .app .auth-cup-card strong,.app .auth-cup-card > div > span,.app .auth-cup-spark { color:#fff; }
-.app .auth-panel h2 { color:#202733;font-weight:550;font-size:30px;line-height:1.3; }
-.app .auth-panel .auth-tabs { background:#edf0f3;padding:4px;border:1px solid #d7dce3; }
-.app .auth-panel .auth-tabs button { color:#46515f;font-size:14px;min-height:44px; }
-.app .auth-panel .auth-tabs button.active { background:#28364b;color:#fff;box-shadow:none; }
-.app .auth-panel label { color:#28313e;font-size:14px;font-weight:550;line-height:1.5; }
-.app .auth-panel form input { color:#202733;background:#fff;border:1px solid #9ca5b2;font-size:15px;min-height:49px; }
-.app .auth-panel form input::placeholder { color:#697381;font-size:14px;font-weight:400;opacity:1; }
-.app .auth-panel form input:focus { border-color:#344e73;outline:2px solid #b8c8df;outline-offset:2px; }
-.app .auth-panel .password-input button { color:#344153;font-size:12px;font-weight:500;min-height:40px; }
-.app .auth-panel form small { color:#57616e;font-size:12px;line-height:1.6;text-align:left;font-weight:400; }
-.app .auth-panel .google-signin { border-color:#9ca5b2;color:#303b4a;font-size:14px;min-height:49px;background:#fff; }
-.app .auth-panel .google-signin:disabled { background:#fafbfc;opacity:1;color:#46515f; }
-.app .auth-panel .auth-provider-note { font-size:12px;color:#596371;line-height:1.6; }
-.app .auth-panel .auth-divider { color:#5b6572;font-size:12px; }
-.app .auth-panel .auth-divider::before,.app .auth-panel .auth-divider::after { background:#d5dae2; }
-.app .auth-panel .auth-service-note { background:#f2f4f7;border:0;color:#4b5563;font-size:12px;line-height:1.7;border-radius:8px;padding:12px 14px; }
+.app .auth-panel h2 { color:#291536;font-weight:550;font-size:30px;line-height:1.3; }
+.app .auth-panel .auth-tabs { background:#f1eaf8;padding:4px;border:1px solid #d9c8e8; }
+.app .auth-panel .auth-tabs button { color:#493654;font-size:14px;min-height:44px; }
+.app .auth-panel .auth-tabs button.active { background:#6d28d9;color:#fff;box-shadow:none; }
+.app .auth-panel label { color:#392546;font-size:14px;font-weight:550;line-height:1.5; }
+.app .auth-panel form input { color:#291536;background:#fff;border:1px solid #a390b3;font-size:15px;min-height:49px; }
+.app .auth-panel form input::placeholder { color:#71627c;font-size:14px;font-weight:400;opacity:1; }
+.app .auth-panel form input:focus { border-color:#6d28d9;outline:2px solid #d8baff;outline-offset:2px; }
+.app .auth-panel .password-input button { color:#523368;font-size:12px;font-weight:500;min-height:40px; }
+.app .auth-panel form small { color:#62526e;font-size:12px;line-height:1.6;text-align:left;font-weight:400; }
+.app .auth-panel .google-signin { border-color:#a390b3;color:#392546;font-size:14px;min-height:49px;background:#fff; }
+.app .auth-panel .google-signin:disabled { background:#fcfaff;opacity:1;color:#493654; }
+.app .auth-panel .auth-provider-note { font-size:12px;color:#62526e;line-height:1.6; }
+.app .auth-panel .auth-divider { color:#62526e;font-size:12px; }
+.app .auth-panel .auth-divider::before,.app .auth-panel .auth-divider::after { background:#dfd2e8; }
+.app .auth-panel .auth-service-note { background:#f5f0f9;border:0;color:#574661;font-size:12px;line-height:1.7;border-radius:8px;padding:12px 14px; }
 .app .auth-panel form > .primary { font-size:14px;min-height:50px; }
-.app .auth-panel form > .primary:disabled { color:#46515f;background:#e1e5eb;border:1px solid #c7ced8;opacity:1; }
-.app .auth-content .demo-auth-options { border-color:#d3d8e0; }
-.app .auth-content .demo-auth-options summary { color:#4b5563;font-size:12px; }
+.app .auth-panel form > .primary:disabled { color:#493654;background:#e8deef;border:1px solid #d1bfdf;opacity:1; }
+.app .auth-content .demo-auth-options { border-color:#d9c8e8; }
+.app .auth-content .demo-auth-options summary { color:#574661;font-size:12px; }
+
+.app .auth-layout .auth-welcome :is(h2,li,.auth-welcome-copy > p) { color:#fff; }
+.app .auth-layout .auth-welcome :is(.auth-welcome-top,.auth-welcome-label) { color:#e5cef9; }
+.app .auth-layout .auth-cup-card { background:#4b1b77;border-color:#8752b3; }
 
 /* Teams is a capability within project discovery, not a top-level destination. */
 .project-browse-tabs { display:flex;align-items:center;gap:6px;padding:5px;background:#eae6f0;border:1px solid #d8cee4;border-radius:13px;width:fit-content;margin-bottom:32px; }
@@ -178,7 +182,18 @@
 @media(max-width:700px) { .about-story { padding-block:52px; }.about-story-intro,.about-questions { grid-template-columns:1fr;gap:28px; }.about-belief { padding:26px;min-height:260px; }.about-journey-heading { align-items:start;flex-direction:column;gap:10px; }.about-journey-heading h3 { margin:0; }.about-journey-heading p { margin:0; }.about-journey { gap:12px; }.about-journey li { padding:20px; }.about-next-step { align-items:start;flex-direction:column;padding:26px;gap:22px; }.project-browse-tabs { width:100%;margin-bottom:26px; }.project-browse-tabs button { flex:1;padding-inline:12px;font-size:13px; } }
 @media(max-width:420px) { .about-journey { grid-template-columns:1fr; }.about-journey li > span { margin-bottom:16px; } }
 /* Scoped selectors override the older shared lavender text rules. */
-.app .auth-layout .auth-panel form > label { color:#28313e; }
-.app .auth-layout .auth-panel form small { color:#57616e;font-size:12px;text-align:left; }
-.app .auth-layout .auth-panel :is(.auth-provider-note,.auth-divider,.auth-service-note,.auth-eyebrow) { color:#4b5563; }
-.app .auth-layout .auth-panel .password-input button { color:#344153; }
+.app .auth-layout .auth-panel form > label { color:#392546; }
+.app .auth-layout .auth-panel form small { color:#62526e;font-size:12px;text-align:left; }
+.app .auth-layout .auth-panel :is(.auth-provider-note,.auth-divider,.auth-service-note,.auth-eyebrow) { color:#574661; }
+.app .auth-layout .auth-panel .password-input button { color:#523368; }
+
+/* Deep purple gives the original OFE pillars a stronger rhythm. */
+.about-journey li:nth-child(2),.about-journey li:nth-child(4) { background:#351453;border-color:#351453; }
+.about-journey li:nth-child(2) h4,.about-journey li:nth-child(4) h4 { color:#fff; }
+.about-journey li:nth-child(2) p,.about-journey li:nth-child(4) p { color:#eee2f8; }
+.about-journey li:nth-child(2) > span,.about-journey li:nth-child(4) > span { background:#68408c;color:#fff; }
+.about-next-step { background:#351453;border-color:#351453; }
+.about-next-step h3 { color:#fff; }
+.about-next-step span,.about-next-step p { color:#ead9f6; }
+.app .about-next-step .primary { background:#fff;color:#4b1b77;border-color:#fff; }
+.app .about-next-step .primary:hover { background:#eee2fa; }
