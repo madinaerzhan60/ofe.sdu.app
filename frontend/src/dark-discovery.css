@@ -114,3 +114,22 @@ html[data-theme="dark"] .app.app .hero-pill { background:#36204d;color:#f0dcff;b
 html[data-theme="dark"] .app.app .hero-pill > span { background:#c89aff;box-shadow:0 0 0 4px #c89aff1a; }
 html[data-theme="dark"] .app.app .hero-pill:hover { background:#482761;color:#fff;border-color:#c496ed; }
 html[data-theme="dark"] .app.app .hero-pill:focus-visible { outline:3px solid #c89aff;outline-offset:4px; }
+
+/* Project detail shares the catalog's dark surfaces. */
+html[data-theme="dark"] .app.app .profile .profile-side > section { background:#251a30;border:1px solid #654478;border-radius:17px;padding:24px;margin-bottom:22px;box-shadow:0 8px 24px #09040f20; }
+html[data-theme="dark"] .app.app .profile .profile-side .eyebrow { color:#d4b1ee;font-size:11px;margin-bottom:20px; }
+html[data-theme="dark"] .app.app .profile .profile-side p:not(.eyebrow) { color:#e3d5ed;font-size:14px;line-height:1.8; }
+html[data-theme="dark"] .app.app .profile .facts > div { border-color:#50365f;gap:20px;align-items:baseline;padding-block:15px; }
+html[data-theme="dark"] .app.app .profile .facts > div:last-child { border-bottom:0;padding-bottom:0; }
+html[data-theme="dark"] .app.app .profile .facts span { color:#bfa8cf;font-size:12px;flex-shrink:0; }
+html[data-theme="dark"] .app.app .profile .facts strong { color:#f7edff;font-size:13px;font-weight:500;text-align:right;line-height:1.6; }
+html[data-theme="dark"] .app.app .profile .project-sample-note { background:#30203d;color:#e4cbf5;border:1px solid #79518e;margin-left:14px; }
+html[data-theme="dark"] .app.app .profile .profile-hero { border-color:#493153; }
+html[data-theme="dark"] .app.app .profile .profile-main > section > p:not(.eyebrow) { color:#d9c9e3;font-size:15px;line-height:1.85; }
+html[data-theme="dark"] .app.app .profile .profile-body { padding-block:56px;gap:64px; }
+html[data-theme="dark"] .app.app .profile .related { border-color:#493153;padding-top:48px; }
+html[data-theme="dark"] .app.app .profile .related .startup-card { background:#251a30;border:1px solid #50365f;border-radius:16px; }
+html[data-theme="dark"] .app.app .profile .related .startup-content { background:transparent; }
+html[data-theme="dark"] .app.app .profile .related .startup-content > span:not(.tags) { color:#d9c9e3; }
+html[data-theme="dark"] .app.app .profile .event-profile-link { background:#30203d;border-color:#79518e;color:#e4cbf5; }
+@media(max-width:700px) { html[data-theme="dark"] .app.app .profile .profile-body { padding-block:32px;gap:24px; }html[data-theme="dark"] .app.app .profile .project-sample-note { display:block;width:fit-content;margin-left:0; } }
