@@ -197,3 +197,88 @@
 .about-next-step span,.about-next-step p { color:#ead9f6; }
 .app .about-next-step .primary { background:#fff;color:#4b1b77;border-color:#fff; }
 .app .about-next-step .primary:hover { background:#eee2fa; }
+
+/* Simple page titles and a compact student workspace. */
+.community-page-head h1,.app .apply-intro h1 { font-size:clamp(32px,4vw,48px);line-height:1.15;letter-spacing:-.04em;margin:0; }
+.community-page-head { margin-bottom:30px;align-items:center; }
+.app .apply-intro { margin-bottom:30px; }
+.workspace-overview { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid #e2d6ec;background:#f9f5fd; }
+.workspace-overview > div { padding:22px 28px;display:flex;flex-direction:column;gap:6px; }
+.workspace-overview strong { font-size:28px;line-height:1.1;color:#5b21a0; }
+.workspace-overview span { font-size:12px;color:#5e496c; }
+.app .student-sidebar { background:#32144e;border-color:#32144e; }
+.app .student-sidebar .student-identity strong { color:#fff;overflow-wrap:anywhere; }
+.app .student-sidebar .student-identity small { color:#e2ceef; }
+.app .student-sidebar nav button,.app .student-sidebar > .inline-link { color:#e9daf4; }
+.app .student-sidebar nav button.active { background:#fff;color:#4c1d75; }
+.personal-team-list { display:grid;gap:14px; }
+.personal-team-list article { display:flex;justify-content:space-between;align-items:center;gap:20px;border:1px solid var(--line);border-radius:14px;padding:22px; }
+.personal-team-list .community-monogram { float:left;margin-right:14px; }
+.personal-team-list h3 { font-size:18px;margin-bottom:8px; }
+.personal-team-list p { font-size:14px;line-height:1.7; }
+.personal-team-list small { color:var(--muted); }
+.theme-toggle { display:inline-grid;place-items:center;flex-shrink:0;width:40px;height:40px;border:1px solid #d8c8e5;background:#f5effb;color:#54247a;border-radius:12px;font-size:24px;line-height:1; }
+.theme-toggle:focus-visible { outline:3px solid #b99ae4;outline-offset:3px; }
+@media(max-width:700px) { .workspace-overview > div { padding:18px 14px; }.workspace-overview span { font-size:11px; }.personal-team-list article { align-items:start;flex-direction:column; }.header-right { gap:8px; }.theme-toggle { width:34px;height:34px;font-size:22px; } }
+
+/* Dark surfaces retain the purple brand and explicit control states. */
+html[data-theme="dark"] { color-scheme:dark;--ink:#f5effa;--muted:#c7b8d4;--surface:#21172c;--surface-solid:#21172c;--line:#493353;--purple:#b58aff;--purple-2:#c2a0ff;--purple-soft:#39224e;background:#150e1d; }
+html[data-theme="dark"] body,html[data-theme="dark"] .app { background:#150e1d;color:#f5effa; }
+html[data-theme="dark"] .app.app :is(.header,.nav.open,.student-content,.application-panel,.auth-layout,.auth-panel,.project-discovery-card,.startup-card,.workspace-section,.owned-startup,.submission-summary,.admin-panel,.admin-table,.admin-sidebar,.admin-detail,.admin-card,.account-popover,.filter-panel,.policy-page,.event-card,.archive-card,.team-card,.ticket,.event-ticket) { background:#21172c;border-color:#493353; }
+html[data-theme="dark"] .app.app :is(h1,h2,h3,h4,strong,dt,dd,label,summary) { color:#f5effa; }
+html[data-theme="dark"] .app.app :is(p,small,.eyebrow,.hero-sub,.hero-note,.project-card-description,.project-card-footer,.field-help,.startup-description,.tags,.account-name,.auth-divider,.auth-provider-note,.auth-service-note,.form-foot,.form-help,.auth-eyebrow) { color:#d2c2df; }
+html[data-theme="dark"] .app.app :is(.nav button,.text-link,.inline-link,.back,.password-input button,.account-popover button,footer button,.mobile-actions button) { color:#d5b7ff; }
+html[data-theme="dark"] .app.app :is(.language,.prototype-toolbar,.project-category-tabs button,.workspace-overview,.draft-notice,.prototype-note,.auth-tabs,.auth-service-note,.team-demo-note,.account-menu summary) { background:#2d1e3d;border-color:#513761;color:#dfcbed; }
+html[data-theme="dark"] .app.app :is(input,textarea,select) { color:#f5effa;background:#1a1124;border-color:#795d8c; }
+html[data-theme="dark"] .app.app :is(input,textarea)::placeholder { color:#b9a6c8;opacity:1; }
+html[data-theme="dark"] .app.app :is(input,textarea,select):focus { outline-color:#b58aff;border-color:#b58aff; }
+html[data-theme="dark"] .app.app :is(.secondary,.google-signin,.theme-toggle) { background:#2d1e3d;border-color:#795d8c;color:#f1e5fa; }
+html[data-theme="dark"] .app.app :is(.primary,.login,.auth-tabs button.active,.project-category-tabs button.active) { background:#7c3aed;border-color:#7c3aed;color:#fff; }
+html[data-theme="dark"] .app.app :is(.primary,.google-signin):disabled { background:#3d3049;border-color:#63516f;color:#cbbbd6; }
+html[data-theme="dark"] .app .about-journey li { background:#21172c;border-color:#493353; }
+html[data-theme="dark"] .app .about-journey li:nth-child(even) { background:#3b1959;border-color:#64407d; }
+html[data-theme="dark"] .app.app :is(.about-belief,.about-next-step,.auth-welcome,.student-sidebar,.demo-banner,.demo-hero) { background:#301346;border-color:#64407d; }
+html[data-theme="dark"] .app.app :is(.about-journey li > span,.about-field-tags span,.project-category-tabs button span,.language button.active,.status,.tags span) { background:#49305d;color:#eee0fb;border-color:#79548d; }
+html[data-theme="dark"] .app.app :is(.project-card-details,.project-card-logo,.project-card-footer) { background:#21172c;border-color:#493353; }
+html[data-theme="dark"] .app .project-card-visual { background:#3b2158; }
+html[data-theme="dark"] .app .project-card-identity strong { color:#f5effa; }
+html[data-theme="dark"] .app .project-card-category { background:#261137;color:#fff; }
+html[data-theme="dark"] .app .project-visual-word { color:#ead8ff; }
+html[data-theme="dark"] .app .student-sidebar nav button.active { background:#684090;color:#fff; }
+html[data-theme="dark"] .app .auth-layout .auth-panel :is(label,small,.auth-eyebrow,.auth-provider-note,.auth-divider,.auth-service-note,.password-input button) { color:#d2c2df; }
+html[data-theme="dark"] .app.app :is(.status.approved,.success-banner) { background:#153c30;color:#bdf2d8;border-color:#376e57; }
+html[data-theme="dark"] .app .status.pending { background:#44341b;color:#ffdda0; }
+html[data-theme="dark"] .app.app :is(.form-error,.status.rejected) { background:#4b2234;color:#ffd0dc; }
+html[data-theme="dark"] .app footer { border-color:#493353; }
+html[data-theme="dark"] .app .footer-cta { background:#301346;border-color:#64407d; }
+html[data-theme="dark"] .admin-modal { background:#21172c;color:#f5effa;border-color:#79548d; }
+html[data-theme="dark"] .admin-modal :is(p,small,label) { color:#d2c2df; }
+html[data-theme="dark"] .admin-modal :is(input,textarea,select) { background:#1a1124;color:#f5effa;border-color:#795d8c; }
+html[data-theme="dark"] .admin-modal :is(.modal-form-body,.modal-form-actions,.admin-modal-header) { background:#21172c;border-color:#493353; }
+html[data-theme="dark"] .admin-modal .secondary { color:#f5effa;border-color:#795d8c; }
+
+html[data-theme="dark"] .app.app :is(.nav,.community-search,.admin-project,.admin-stat,.admin-workspace,.admin-main,.admin-toolbar,.admin-tools,.event-ticket,.event-register,.event-details,.startup-content,.profile-sidebar,.program-item,.archive-placeholder) { background:#21172c;border-color:#493353; }
+html[data-theme="dark"] .app.app :is(.project-card-footer > span,.project-card-category,.project-results-toolbar,.community-field,.admin-stat,.admin-stat small,.admin-project-state small,.admin-project-tags span,.auth-tabs button,.prototype-toolbar button,.language button) { color:#dfcbed;background:#2d1e3d; }
+html[data-theme="dark"] .app.app .prototype-toolbar button.active,html[data-theme="dark"] .app.app .language button.active { background:#684090;color:#fff; }
+html[data-theme="dark"] .app.app .auth-layout .auth-panel .auth-tabs button.active { background:#7c3aed;color:#fff; }
+html[data-theme="dark"] .app.app .auth-layout .auth-panel form input { background:#1a1124;color:#fff;border-color:#795d8c; }
+html[data-theme="dark"] .app.app .auth-layout .auth-panel form input::placeholder { color:#b9a6c8; }
+html[data-theme="dark"] .app.app .auth-layout .auth-panel .google-signin { background:#2d1e3d;color:#dfcbed;border-color:#795d8c; }
+html[data-theme="dark"] .app.app .auth-layout .auth-panel form > .primary:disabled { background:#3d3049;border-color:#63516f;color:#cbbbd6; }
+html[data-theme="dark"] .app.app .brand { background:#f5effa;border-radius:8px;padding:4px 8px; }
+
+html[data-theme="dark"] .app.app footer { background:#21172c; }
+html[data-theme="dark"] .app.app :is(.workspace-overview span,.footer-bottom,.footer-bottom span,.event-field-label,.event-day > span,.event-date-display > div > span) { color:#d2c2df; }
+html[data-theme="dark"] .app.app :is(.event-day,.event-day > span,.event-ticket-badge,.event-calendar,.event-location-icon,.admin-filters,.admin-project-logo) { background:#39224e;color:#ecdafa;border-color:#795d8c; }
+html[data-theme="dark"] .app.app .event-register { background:#7c3aed;color:#fff; }
+html[data-theme="dark"] .app.app .event-register:disabled { background:#153c30;color:#bdf2d8;border-color:#376e57; }
+
+.student-sidebar { min-width:0; }
+@media(max-width:800px) { .student-layout { grid-template-columns:minmax(0,1fr); }.student-sidebar { max-width:100%; }.student-sidebar nav { max-width:100%; }.workspace-head { flex-wrap:wrap;gap:16px; } }
+
+html[data-theme="dark"] .app.app :is(.admin-side,.table-toolbar > div,.admin-empty,.admin-review-summary) { background:#21172c;border-color:#493353; }
+html[data-theme="dark"] .app.app :is(.admin-side > button,.admin-breadcrumb,.admin-nav-label,.admin-list-heading > span,.admin-side-bottom button,.admin-project .actions button:not(.approve)) { color:#dfcbed; }
+html[data-theme="dark"] .app.app .admin-side > button.active { background:#684090;color:#fff; }
+html[data-theme="dark"] .app.app :is(.table-toolbar button,.admin-project .actions button:not(.approve),.admin-demo-badge) { background:#39224e;border-color:#795d8c;color:#ecdafa; }
+html[data-theme="dark"] .app.app .table-toolbar button.active { background:#7c3aed;color:#fff; }
+html[data-theme="dark"] .app.app .admin-modal-header > button { background:#39224e;border-color:#795d8c;color:#ecdafa; }

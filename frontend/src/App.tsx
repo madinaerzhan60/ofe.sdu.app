@@ -1,5 +1,6 @@
+import { ThemeToggle } from "./theme"
 import { AboutSection } from "./about"
-import { Teams, TeamProvider, useTeams, ProjectBrowseTabs } from "./teams"
+import { Teams, TeamProvider } from "./teams"
 import { backend, usePlatform } from "./backend"
 import { AuthPanel, BackendNotice } from "./auth"
 import { StartupEditor, ownsStartup } from "./media"
@@ -197,7 +198,7 @@ function AccountMenu({go}: {go: (page: Page)=>void}) {
 
  const close=()=>{if(menu.current)menu.current.open=false;};
  useEffect(()=>{const dismiss=(event:PointerEvent)=>{if(menu.current&&!menu.current.contains(event.target as Node))close();};document.addEventListener('pointerdown',dismiss);return()=>document.removeEventListener('pointerdown',dismiss);},[]);
- return <details ref={menu} className="account-menu" onKeyDown={e=>{if(e.key==='Escape')close();}}><summary aria-label={t('My account')}><span className="account-name">{t('My account')}</span><span className="account-chevron" aria-hidden="true">⌄</span></summary><div className="account-popover"><span>{liveMode ? userEmail : t('Demo student · SDU account')}</span><button onClick={()=>{close();setWorkspaceTab('My applications');go('apply');}}>{t('My applications')}</button><button onClick={()=>{close();setWorkspaceTab('My startup');go('apply');}}>{t('My startup')}</button>{isAdmin && <button onClick={()=>{close();go('admin')}}>{t('Workspace management')}</button>}<button onClick={()=>{close();setAccount('signed-out');go('home');}}>{t('Sign out')}</button></div></details>;
+ return <details ref={menu} className="account-menu" onKeyDown={e=>{if(e.key==='Escape')close();}}><summary aria-label={t('My account')}><span className="account-name">{t('My account')}</span><span className="account-chevron" aria-hidden="true">⌄</span></summary><div className="account-popover"><span>{liveMode ? userEmail : t('Demo student · SDU account')}</span><button onClick={()=>{close();setWorkspaceTab('My applications');go('apply');}}>{t('My applications')}</button><button onClick={()=>{close();setWorkspaceTab('My startup');go('apply');}}>{t('My startup')}</button><button onClick={()=>{close();setWorkspaceTab('My teams');go('apply');}}>{t('My teams')}</button>{isAdmin && <button onClick={()=>{close();go('admin')}}>{t('Workspace management')}</button>}<button onClick={()=>{close();setAccount('signed-out');go('home');}}>{t('Sign out')}</button></div></details>;
 }
 
 function Header({
@@ -278,7 +279,7 @@ function Header({
             </button>
           </div>
         </nav>
-        <div className="header-right">
+        <div className="header-right"><ThemeToggle />
           <div
             className={`language ${lang.toLowerCase()}`}
             aria-label={t("Language selector")}
@@ -581,21 +582,13 @@ function Home({ lang, go }: { lang: Lang, go: (p: Page) => void }) {
         <HeroVisual />
       </section>
 
-      <section className="shell getting-started" aria-label={t('Find your next step')}>
-        <div className="getting-started-heading"><p className="eyebrow">{t('FOR EVERY KIND OF IDEA')}</p><h2>{t('Where would you like to start?')}</h2><p>{t('You do not need a tech background. Start with a problem you care about.')}</p></div>
-        <div className="next-step-grid">{[
-          ['01','I have an idea','Tell us what you want to create. You can save a draft and finish later.','Share your project','apply'],
-          ['02','I want to explore','Meet student projects from different fields and see what they are building.','Explore projects','startups'],
-          ['03','Find your team','Bring your strengths to a team, or invite people to build your idea together.','Find a team','teams'],
-        ].map(([number,title,description,action,target]) => <button className="next-step-card" key={number} onClick={() => go(target as Page)}><span className="step-number">{number}</span><h3>{t(title)}</h3><p>{t(description)}</p><span className="step-action">{t(action)}<span aria-hidden="true">↗</span></span></button>)}</div>
-      </section>
       <AboutSection go={go} />
 
       {current && <section className="section shell reveal">
         <div className="demo-banner">
           <div>
             <p className="eyebrow light">{t("NEXT DEMO DAY")}</p>
-            <h2>{t("Ideas meet opportunity.")}</h2>
+            <h2>SDU FOUNDERS CUP</h2>
             <p className="demo-date">{current.date} · {t(current.place)}</p>
           </div>
           <div>
@@ -663,7 +656,7 @@ function Home({ lang, go }: { lang: Lang, go: (p: Page) => void }) {
         </div>
       </section>
 
-      <section className="shell next-chapter"><div><p className="eyebrow">{t('OUR NEXT CHAPTER')}</p><h2>{t('One Demo Day. Many possibilities ahead.')}</h2><p>{t('We have held our first Demo Day. Now we are planning more opportunities for students to build, connect and share their ideas.')}</p></div><div className="future-plans">{['Founder workshops','Mentor conversations','More Demo Days'].map(title=><div key={title}><span>{t('Planned')}</span><h3>{t(title)}</h3></div>)}</div></section>
+
     </main>
   )
 }
@@ -671,35 +664,30 @@ function Home({ lang, go }: { lang: Lang, go: (p: Page) => void }) {
 function Directory({ go }: { go: (p: Page) => void }) {
   const t = useT()
   const { submissions, select } = useModel()
-  const {store} = useTeams()
   const [search,setSearch] = useState('')
   const [industry,setIndustry] = useState('All')
   const [stage,setStage] = useState('All')
-  const [recruiting,setRecruiting] = useState(false)
   const [sort,setSort] = useState('newest')
   const [shown,setShown] = useState(6)
   const projects=submissions.filter(p=>p.status==='Approved'&&p.publication&&p.visible!==false)
   const industries=[...new Set(projects.map(p=>p.industry))]
-  const openTeam=(id:string)=>store.teams.find(team=>team.projectId===id&&team.open&&team.roles.length)
-  const filtered=projects.filter(project=>(industry==='All'||project.industry===industry)&&(stage==='All'||project.stage===stage)&&(!recruiting||Boolean(openTeam(project.id)))&&[project.name,project.description,t(project.description),project.industry,t(project.industry)].join(' ').toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>sort==='az'?a.name.localeCompare(b.name):(b.createdAt??'').localeCompare(a.createdAt??''))
-  const reset=()=>{setSearch('');setIndustry('All');setStage('All');setRecruiting(false);setShown(6)}
-  useEffect(()=>setShown(6),[search,industry,stage,recruiting,sort])
-  return <main className="shell page projects-page"><ProjectBrowseTabs active="projects" go={go} />
-    <div className="community-page-head"><div><p className="eyebrow">BUILT AT SDU</p><h1>{t('Small beginnings. Real possibilities.')}</h1><p>{t('Explore what students are building. Find an idea you love, a team to join, or a little inspiration to start.')}</p></div><button className="primary" onClick={()=>go('apply')}>{t('Share your project')}<span aria-hidden="true">＋</span></button></div>
-    <div className="projects-collection-intro"><div><span className="collection-symbol" aria-hidden="true">✳</span><div><strong>{t('Ideas from every field.')}</strong><p>{t('Education, culture, the environment, business — there is more than one way to make a difference.')}</p></div></div><div className="collection-count"><strong>{String(projects.length).padStart(2,'0')}</strong><span>{t('projects to discover')}</span></div></div>
+  const filtered=projects.filter(project=>(industry==='All'||project.industry===industry)&&(stage==='All'||project.stage===stage)&&[project.name,project.description,t(project.description),project.industry,t(project.industry)].join(' ').toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>sort==='az'?a.name.localeCompare(b.name):(b.createdAt??'').localeCompare(a.createdAt??''))
+  const reset=()=>{setSearch('');setIndustry('All');setStage('All');setShown(6)}
+  useEffect(()=>setShown(6),[search,industry,stage,sort])
+  return <main className="shell page projects-page">
+    <div className="community-page-head"><h1>{t('Projects')}</h1><button className="primary" onClick={()=>go('apply')}>{t('Add project')} ＋</button></div>
     <div className="community-search project-search"><span aria-hidden="true">⌕</span><input aria-label={t('Search projects')} placeholder={t('Search by name, idea or field…')} value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label={t('Sort startups')} value={sort} onChange={e=>setSort(e.target.value)}><option value="newest">{t('Newest first')}</option><option value="az">{t('A–Z')}</option></select></div>
     <div className="project-category-tabs" aria-label={t('Industry')}>{['All',...industries].map(field=><button key={field} aria-pressed={industry===field} className={industry===field?'active':''} onClick={()=>setIndustry(field)}>{t(field==='All'?'All projects':field)}<span>{field==='All'?projects.length:projects.filter(p=>p.industry===field).length}</span></button>)}</div>
-    <div className="project-results-toolbar"><p role="status">{filtered.length} {t('projects found')}</p><div><label className="project-stage-filter"><span>{t('Stage')}</span><select aria-label={t('Stage')} value={stage} onChange={e=>setStage(e.target.value)}><option value="All">{t('All stages')}</option>{['Idea','Prototype','MVP','Seed','Growth'].map(value=><option key={value} value={value}>{t(value)}</option>)}</select></label><label className="project-recruiting-filter"><input type="checkbox" checked={recruiting} onChange={e=>setRecruiting(e.target.checked)}/>{t('Looking for teammates')}</label>{(search||industry!=='All'||stage!=='All'||recruiting)&&<button className="inline-link" onClick={reset}>{t('Clear filters')}</button>}</div></div>
+    <div className="project-results-toolbar"><p role="status">{filtered.length} {t('projects found')}</p><div><label className="project-stage-filter"><span>{t('Stage')}</span><select aria-label={t('Stage')} value={stage} onChange={e=>setStage(e.target.value)}><option value="All">{t('All stages')}</option>{['Idea','Prototype','MVP','Seed','Growth'].map(value=><option key={value} value={value}>{t(value)}</option>)}</select></label>{(search||industry!=='All'||stage!=='All')&&<button className="inline-link" onClick={reset}>{t('Clear filters')}</button>}</div></div>
     <div className="project-card-grid">{filtered.slice(0,shown).map((project,index)=>{
-      const team=openTeam(project.id)
       return <button className={`project-discovery-card project-color-${index%4}`} key={project.id} onClick={()=>{select(project.name);go('profile')}}>
         <span className="project-card-visual">{project.cover?<img src={project.cover} alt=""/>:<><i className="project-visual-ring"/><i className="project-visual-square"/><span className="project-visual-word">{project.name}</span></>}<span className="project-card-category">{t(project.industry)}</span></span>
-        <span className="project-card-details"><span className="project-card-identity"><span className="project-card-logo">{project.image?<img src={project.image} alt=""/>:project.name.slice(0,2).toUpperCase()}</span><strong>{project.name}</strong><span className="project-card-arrow" aria-hidden="true">↗</span></span><span className="project-card-description">{t(project.description)}</span><span className="project-card-footer"><span>{t(project.stage)}</span>{team?<span className="project-team-label">{t('Team is growing')}</span>:<span>{t('View project')}</span>}</span></span>
+        <span className="project-card-details"><span className="project-card-identity"><span className="project-card-logo">{project.image?<img src={project.image} alt=""/>:project.name.slice(0,2).toUpperCase()}</span><strong>{project.name}</strong><span className="project-card-arrow" aria-hidden="true">↗</span></span><span className="project-card-description">{t(project.description)}</span><span className="project-card-footer"><span>{t(project.stage)}</span><span>{t('View project')}</span></span></span>
       </button>
     })}</div>
-    {!filtered.length&&<div className="community-empty"><span aria-hidden="true">⌕</span><h2>{t('No projects match just yet.')}</h2><p>{t(recruiting?'No published projects are looking for teammates with these filters. You can explore the team directory instead.':'Try a broader search or clear a filter. A different idea might surprise you.')}</p><div className="button-row"><button className="secondary" onClick={reset}>{t('Clear filters')}</button>{recruiting&&<button className="primary" onClick={()=>go('teams')}>{t('Find a team')}</button>}</div></div>}
+    {!filtered.length&&<div className="community-empty"><h2>{t('No projects found')}</h2><button className="secondary" onClick={reset}>{t('Clear filters')}</button></div>}
     {filtered.length>shown&&<div className="project-load-more"><p>{t('Showing')} {Math.min(shown,filtered.length)} {t('of')} {filtered.length}</p><button className="secondary" onClick={()=>setShown(shown+6)}>{t('Explore more projects')} ↓</button></div>}
-    <section className="project-community-cta"><span className="community-monogram" aria-hidden="true">↗</span><div><h2>{t('Your next collaborator could be here.')}</h2><p>{t('You do not need a finished project to find your people. Explore open teams or start your own.')}</p></div><button className="primary" onClick={()=>go('teams')}>{t('Find a team')} ↗</button></section>
+
   </main>
 }
 
@@ -707,7 +695,6 @@ function Profile({ go }: { go: (p: Page) => void }) {
   const t = useT()
   const { selected, submissions, events, account, userId, liveMode } = useModel()
   const [editing, setEditing] = useState(false)
-  const {store} = useTeams()
   const startup = submissions.find(
     (row) =>
       row.name === selected && ((row.status === "Approved" && row.publication && row.visible !== false) || (account === "student" && ownsStartup(row, userId, liveMode))),
@@ -721,7 +708,6 @@ function Profile({ go }: { go: (p: Page) => void }) {
         </button>
       </main>
     )
-  const linkedTeam = store.teams.find(team => team.projectId === startup.id)
   const connectedEvents = events.filter(event => event.published && startup.eventYears?.includes(event.date.slice(0,4)))
   return (
     <main className="shell page profile">
@@ -766,7 +752,7 @@ function Profile({ go }: { go: (p: Page) => void }) {
             <h2>{startup.name}</h2>
             <p className="startup-about">{startup.about || t(startup.description)}</p>
           </section>
-          <section className="profile-collaborate"><p className="eyebrow">{t('WORK TOGETHER')}</p><h2>{t(linkedTeam ? linkedTeam.name : 'Good ideas grow with people.')}</h2><p>{t(linkedTeam ? linkedTeam.description : 'Bring your skills to a team or find someone who complements yours. You do not have to build alone.')}</p>{linkedTeam?.roles.length ? <div className="team-roles"><div>{linkedTeam.roles.map(role => <span key={role}>{t(role)}</span>)}</div></div> : null}<button className="secondary" onClick={()=>go('teams')}>{t('Explore teams')} ↗</button></section>
+
           {connectedEvents.length > 0 && <section><p className="eyebrow">{t('CONNECTED EVENTS')}</p>{connectedEvents.map(event => <button key={event.id} className="event-profile-link" onClick={()=>go('demo')}>{event.title} · {event.date} ↗</button>)}</section>}
         </div>
         <aside className="profile-side">
@@ -866,7 +852,7 @@ function DemoDay({ go }: { go: (p: Page) => void }) {
           <div className="event-hero-copy">
             <button className="event-back" onClick={() => go('home')}>← {t('Back to website')}</button>
             <p className="event-kicker"><span />{t(current.title)}</p>
-            <h1>{t("The next generation")}<br /><em>{t("takes the stage.")}</em></h1>
+            <h1>SDU FOUNDERS CUP</h1>
             <p className="event-hero-description">{t('Meet student founders, discover fresh ideas and connect with the OFE community.')}</p>
             <div className="event-countdown"><span className="event-countdown-label">{t('Until we meet')}</span><Countdown date={current.date} /></div>
           </div>

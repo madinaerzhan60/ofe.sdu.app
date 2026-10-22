@@ -3,20 +3,14 @@ import { useT } from './model'
 export function AboutSection({go}:{go:(page:'apply'|'teams'|'demo')=>void}) {
   const t=useT()
   return <section id="about" className="shell about-story">
-    <div className="about-story-intro"><div><p className="eyebrow">{t('ABOUT OFE')}</p><h2>{t('Big things begin with a small “what if?”')}</h2><p>{t('OFE is SDU’s Office for Entrepreneurship. A starting point for students who want to turn curiosity into a project — in any field.')}</p><div className="about-field-tags">{['Education','Culture','Environment','Business','And your idea'].map(text=><span key={text}>{t(text)}</span>)}</div></div>
-    <aside className="about-belief"><span className="about-belief-symbol" aria-hidden="true">✳</span><p>{t('You do not need all the answers. A question worth exploring is enough to begin.')}</p><small>{t('FOR CURIOUS PEOPLE. FROM EVERY FIELD.')}</small></aside></div>
-    <div className="about-journey-heading"><h3>{t('Four ways to move your idea forward.')}</h3><p>{t('From the first question to new opportunities — explore what we are building for founders.')}</p></div>
+    <div className="about-story-intro"><div><p className="eyebrow">SDU · OFE</p><h2>{t('About')}</h2><p>{t('OFE supports student innovation, commercialises technological solutions and accelerates project teams.')}</p></div><aside className="about-belief"><span className="about-belief-symbol" aria-hidden="true">✳</span><h3>{t('Our aim')}</h3><p>{t('Student innovation. Technology with a future. Teams ready to grow.')}</p></aside></div>
+    <div className="about-journey-heading"><h3>{t('What we do')}</h3></div>
     <ol className="about-journey">{[
       ['01','Idea validation','Turn a promising thought into a problem worth solving. Talk to future users, test your assumptions and discover what people really need.'],
       ['02','Founder support','Build with people who have been there. Learn from mentors and experienced entrepreneurs as you work through your next steps.'],
       ['03','Community','Find your people. Meet ambitious students from different fields, share ideas and connect with future collaborators and co-founders.'],
       ['04','Market access',"Take your idea beyond campus. Explore connections with investors, partners and Kazakhstan's startup ecosystem."],
     ].map(([n,title,description])=><li key={n}><span>{n}</span><h4>{t(title)}</h4><p>{t(description)}</p></li>)}</ol>
-    <div className="about-questions"><div><p className="eyebrow">{t('BEFORE YOU START')}</p><h3>{t('You might be wondering…')}</h3><p>{t('It is okay to be at the beginning.')}</p></div><div className="about-faq">{[
-      ['Do I need a finished project?','No. You can start with an idea. Describe the problem and who you want to help; you can develop the rest step by step.'],
-      ['What if I am not from IT?','You belong here too. Education, design, business, culture and social initiatives all need people who want to create something useful.'],
-      ['What if I do not have a team?','Explore open roles through Projects → Find a team, or create a team around your idea. You do not have to do everything alone.'],
-    ].map(([question,answer])=><details key={question}><summary>{t(question)}<span aria-hidden="true">＋</span></summary><p>{t(answer)}</p></details>)}</div></div>
-    <div className="about-next-step"><div><span>26 NOVEMBER · 2026</span><h3>SDU FOUNDERS CUP</h3><p>{t('A date to keep in mind. Explore the event page for details and updates.')}</p></div><button className="primary" onClick={()=>go('demo')}>{t('Explore the event')} ↗</button></div>
+    <div className="about-next-step"><div><span>26 NOVEMBER · 2026</span><h3>SDU FOUNDERS CUP</h3></div><button className="primary" onClick={()=>go('demo')}>{t('Explore the event')} ↗</button></div>
   </section>
 }

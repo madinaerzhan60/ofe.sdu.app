@@ -1,3 +1,4 @@
+import { Teams } from "./teams"
 import { AuthPanel } from "./auth"
 import { ImageUpload, StartupEditor, EventEditor, demoOwnerId, ownsStartup } from "./media"
 import { emptyDraft } from "./model"
@@ -126,11 +127,11 @@ export function Application({go}: {go:Go}) {
   return (
     <main className={account==="student"?"shell page apply-page student-page":"shell page apply-page auth-page"}>
       <div className="apply-intro">
-        <p className="eyebrow">{t(account === "student" ? "STUDENT WORKSPACE" : "JOIN THE OFE PORTFOLIO")}</p>
-        <h1>{t(account === "student" ? "My workspace" : "Your place in the community.")}</h1>
-        <p>{t(account === "student" ? "Manage your applications and follow your startup’s progress." : "Tell us what you are building, for whom and why now.")}</p>
+        
+        <h1>{t(account === "student" ? "My workspace" : "Account")}</h1>
+        
       </div>
-      {!liveMode && account === "student" && <p className="prototype-note">{t('Interactive prototype · No real Google login or server storage. Changes reset when you reload.')}</p>}
+      {!liveMode && account === "student" && <p className="prototype-note">{t('Demo workspace · Changes are not saved to the server.')}</p>}
       {authLoading && <p role="status">{t('Please wait…')}</p>}
       <div className={account === 'student' ? 'application-panel' : 'application-panel auth-layout'}>
         {account !== 'student' && <aside className="auth-welcome"><div className="auth-welcome-top"><span className="auth-brand-mark">S</span><span>SDU · FOUNDERS COMMUNITY</span></div><div className="auth-welcome-copy"><span className="auth-welcome-label">{t('A GOOD PLACE TO BEGIN')}</span><h2>{t('Your people. Your ideas. Your next chapter.')}</h2><p>{t('A place to build, share and find support — whatever your field.')}</p><ul>{['Keep your projects in one place','Meet people who share your curiosity','Be part of SDU FOUNDERS CUP'].map(text => <li key={text}><span aria-hidden="true">✓</span>{t(text)}</li>)}</ul></div><div className="auth-cup-card"><div><span>26 NOV · 2026</span><strong>SDU<br />FOUNDERS CUP</strong></div><span className="auth-cup-spark" aria-hidden="true">✳</span></div></aside>}
@@ -160,12 +161,12 @@ export function Application({go}: {go:Go}) {
           )}
         </div></details></>}</div>}
         {account === "student" && (
-          <div className="student-layout"><aside className="student-sidebar"><div className="student-identity"><span className="student-avatar">S</span><div><strong>{liveMode ? userEmail : t('Student account')}</strong><small>{t(liveMode ? 'Your personal workspace' : 'Demo account · Student role')}</small></div></div><nav aria-label={t('Student navigation')}>{['My applications','My startup','Account'].map(item=><button key={item} className={tab===item?'active':''} onClick={()=>{setTab(item);setFormOpen(false);}}>{t(item)}<span aria-hidden="true">›</span></button>)}</nav><button className="inline-link" onClick={()=>{setAccount('signed-out');go('home');}}>{t('Sign out')}</button></aside><div className="student-content">
+          <div className="student-layout"><aside className="student-sidebar"><div className="student-identity"><span className="student-avatar">S</span><div><strong>{liveMode ? userEmail : t('Student account')}</strong><small>{t(liveMode ? 'Your personal workspace' : 'Demo account · Student role')}</small></div></div><nav aria-label={t('Student navigation')}>{['My applications','My startup','My teams','Account'].map(item=><button key={item} className={tab===item?'active':''} onClick={()=>{setTab(item);setFormOpen(false);}}>{t(item)}<span aria-hidden="true">›</span></button>)}</nav><button className="inline-link" onClick={()=>{setAccount('signed-out');go('home');}}>{t('Sign out')}</button></aside><div className="student-content"><div className="workspace-overview" aria-label={t('Project overview')}>{[['My applications',mine.length],['Pending',mine.filter(p=>p.status==='Pending').length],['Published',mine.filter(p=>p.status==='Approved'&&p.publication&&p.visible!==false).length]].map(([label,count])=><div key={label}><strong>{count}</strong><span>{t(String(label))}</span></div>)}</div>
             {tab==='My applications' && <><section className="my-applications">
               {confirmation && <div className="success-banner" role="status"><strong>{t('Application submitted')}</strong><p>{t('Your application is pending review. You can follow its status below.')}</p></div>}
               <div className="workspace-head"><h2>{t("My applications")}</h2><button className="primary" onClick={()=>{setFormOpen(true);setConfirmation(false);setSaved(false);requestAnimationFrame(()=>document.getElementById("application-form")?.scrollIntoView({block:"start"}));}}>{t(hasDraft ? 'Continue draft' : 'New application')}</button></div>
               {saved && <p role="status" className="draft-notice">{t('Draft saved for this session. You can return to it from your workspace.')}</p>}
-              {!mine.length && <p>{t("You have no applications yet.")}</p>}
+              {!mine.length && <div className="workspace-empty"><h3>{t("No applications yet")}</h3><p>{t("Add your project to get started.")}</p></div>}
               {mine.map((row) => (
                 <article className="submission-summary" key={row.id}>
                   <div>
@@ -365,6 +366,7 @@ export function Application({go}: {go:Go}) {
                 </>}
               </article>) : <div className="workspace-empty"><h3>{t('Your startup starts here')}</h3><p>{t('Once your application is approved, your startup will appear here.')}</p><button className="primary" onClick={()=>{setTab('My applications');setFormOpen(true);}}>{t('New application')}</button></div>}
             </section>}
+            {tab==='My teams' && <Teams go={go} embedded />}
             {tab==='Account' && <section className="workspace-section"><h2>{t('Account')}</h2><dl className="account-facts"><div><dt>{t('Account type')}</dt><dd>{t('Student')}</dd></div><div><dt>{t('Login mode')}</dt><dd>{t(liveMode ? 'Email account' : 'Prototype session')}</dd></div></dl><p className="draft-notice">{liveMode ? userEmail : t('Real SDU sign-in and profile details will be connected during development.')}</p><button className="secondary" onClick={()=>{setAccount('signed-out');go('home');}}>{t('Sign out')}</button></section>}
           </div></div>
         )}
