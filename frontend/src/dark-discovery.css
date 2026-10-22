@@ -141,3 +141,30 @@ html[data-theme="dark"] .app.app .profile .related .startup-grid { background:tr
 html[data-theme="dark"] .app.app .profile .related .startup-card { border:1px solid #422f50;background:#211829;box-shadow:none; }
 html[data-theme="dark"] .app.app .profile .related .startup-card:hover { background:#2b1e36;border-color:#8f60b3; }
 html[data-theme="dark"] .app.app .profile .related .startup-logo { background:#392348;color:#e6ccfa;border:1px solid #65457d; }
+
+/* Dark typography: readable body copy and controls without faint microtext. */
+html[data-theme="dark"] .app.app { -webkit-font-smoothing:auto; }
+html[data-theme="dark"] .app.app :is(.project-card-description,.startup-content > span:not(.tags),.profile .profile-side p:not(.eyebrow),.field-help,.auth-provider-note,.event-ticket-note) { color:#e1d5eb;font-size:14px;line-height:1.8; }
+html[data-theme="dark"] .app.app .projects-page .project-card-description { color:#e1d5eb;font-size:15px;line-height:1.75; }
+html[data-theme="dark"] .app.app .projects-page .project-card-identity strong { font-size:18px;font-weight:600; }
+html[data-theme="dark"] .app.app .projects-page :is(.project-card-footer,.project-card-footer > span,.project-card-footer > span:first-child,.project-card-category) { font-size:12px;color:#e7d8f2; }
+html[data-theme="dark"] .app.app .projects-page :is(.project-category-tabs button,.project-stage-filter,.project-results-toolbar p,.community-search select) { font-size:14px;color:#e1d5eb; }
+html[data-theme="dark"] .app.app .profile :is(.profile-side .eyebrow,.facts span,.facts strong,.project-sample-note) { font-size:14px;line-height:1.65; }
+html[data-theme="dark"] .app.app .profile .facts span { color:#d5c2e2; }
+html[data-theme="dark"] .app.app .profile .facts strong { color:#faf4ff; }
+html[data-theme="dark"] .app.app .profile .profile-main > section > p:not(.eyebrow) { font-size:16px;color:#e1d5eb; }
+html[data-theme="dark"] .app.app .profile .related .startup-content > span:not(.tags) { font-size:15px;line-height:1.75;color:#e1d5eb; }
+html[data-theme="dark"] .app.app :is(.tags span,.startup-content .tags span,.topic-filter-options small,.workspace-overview span,.student-identity small) { font-size:12px;line-height:1.6;color:#e2d2ed; }
+html[data-theme="dark"] .app.app :is(.topic-filter summary,.topic-filter-options button,.topic-filter-panel > input) { font-size:15px; }
+html[data-theme="dark"] .app.app .events-page :is(.event-field-label,.event-ticket-top > span:first-child,.event-ticket-badge,.event-ticket-note,.event-countdown-label,.event-date-display small,.event-location small) { font-size:12px;color:#ddc9ec;line-height:1.7; }
+html[data-theme="dark"] .app.app .events-page .event-hero-description { font-size:17px;line-height:1.8;color:#e3d4ed; }
+html[data-theme="dark"] .app.app .events-page :is(.event-date-display time,.event-location strong,.program-row strong) { font-size:16px;color:#faf4ff; }
+html[data-theme="dark"] .app.app .events-page :is(.countdown span,.event-day > span,.program-row > span) { font-size:12px;color:#eadbf6; }
+html[data-theme="dark"] .app.app .auth-layout .auth-panel :is(form small,.auth-provider-note,.auth-service-note,.auth-divider,.password-input button) { font-size:13px;color:#ddcfe7;line-height:1.7; }
+html[data-theme="dark"] .app.app :is(.about-journey li p,.about-story-intro > div > p:last-of-type) { font-size:15px;line-height:1.85;color:#e1d5eb; }
+html[data-theme="dark"] .app.app :is(.admin-project-identity p,.admin-project-state small,.admin-description,.admin-side-bottom p) { font-size:14px;line-height:1.7;color:#ddcfe7; }
+html[data-theme="dark"] .app.app .admin-project-tags span { font-size:12px; }
+@media(max-width:700px) {
+ html[data-theme="dark"] .app.app .projects-page .project-card-description { font-size:15px; }
+ html[data-theme="dark"] .app.app .profile .facts > div { flex-wrap:wrap;gap:6px 16px; }
+}
