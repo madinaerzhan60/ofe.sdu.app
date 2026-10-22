@@ -133,3 +133,11 @@ html[data-theme="dark"] .app.app .profile .related .startup-content { background
 html[data-theme="dark"] .app.app .profile .related .startup-content > span:not(.tags) { color:#d9c9e3; }
 html[data-theme="dark"] .app.app .profile .event-profile-link { background:#30203d;border-color:#79518e;color:#e4cbf5; }
 @media(max-width:700px) { html[data-theme="dark"] .app.app .profile .profile-body { padding-block:32px;gap:24px; }html[data-theme="dark"] .app.app .profile .project-sample-note { display:block;width:fit-content;margin-left:0; } }
+
+/* Related projects should read as separate cards, not a bordered table. */
+.profile .related .startup-grid { background:transparent;border:0;gap:18px;margin-top:24px; }
+.profile .related .startup-grid .startup-card { border:1px solid #e0d5e8;border-radius:16px; }
+html[data-theme="dark"] .app.app .profile .related .startup-grid { background:transparent;border:0; }
+html[data-theme="dark"] .app.app .profile .related .startup-card { border:1px solid #422f50;background:#211829;box-shadow:none; }
+html[data-theme="dark"] .app.app .profile .related .startup-card:hover { background:#2b1e36;border-color:#8f60b3; }
+html[data-theme="dark"] .app.app .profile .related .startup-logo { background:#392348;color:#e6ccfa;border:1px solid #65457d; }
