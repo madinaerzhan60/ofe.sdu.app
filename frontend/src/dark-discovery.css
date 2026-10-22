@@ -168,3 +168,13 @@ html[data-theme="dark"] .app.app .admin-project-tags span { font-size:12px; }
  html[data-theme="dark"] .app.app .projects-page .project-card-description { font-size:15px; }
  html[data-theme="dark"] .app.app .profile .facts > div { flex-wrap:wrap;gap:6px 16px; }
 }
+
+/* Comfortable reading size in the project information cards. */
+.app .profile .profile-side > section { padding:26px; }
+.app .profile .profile-side .eyebrow { font-size:14px;line-height:1.5; }
+.app .profile .profile-side p:not(.eyebrow) { font-size:16px;line-height:1.8; }
+.app .profile .profile-side .facts :is(span,strong) { font-size:16px;line-height:1.65; }
+html[data-theme="dark"] .app.app .profile .profile-side > section { padding:26px; }
+html[data-theme="dark"] .app.app .profile .profile-side .eyebrow { font-size:14px;line-height:1.5; }
+html[data-theme="dark"] .app.app .profile .profile-side p:not(.eyebrow) { font-size:16px;line-height:1.8;color:#eee3f5; }
+html[data-theme="dark"] .app.app .profile .profile-side .facts :is(span,strong) { font-size:16px;line-height:1.65; }
