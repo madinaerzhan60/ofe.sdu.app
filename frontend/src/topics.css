@@ -1,8 +1,8 @@
  .topic-filter { position:relative;width:fit-content;max-width:100%;margin:20px 0;z-index:5; }
 .topic-filter summary { list-style:none;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:44px;padding:11px 16px;border:1px solid #c8b4d9;border-radius:11px;background:#fff;color:#47235f;font-size:14px;cursor:pointer; }
 .topic-filter summary::-webkit-details-marker { display:none; }
-.topic-filter summary > span:last-child { font-size:18px;transition:transform .15s; }
-.topic-filter[open] summary > span:last-child { transform:rotate(180deg); }
+.topic-filter-icon { width:19px;height:19px;flex-shrink:0; }
+.topic-filter[open] summary { border-color:#925ac2; }
 .topic-filter summary:focus-visible,.topic-filter-options button:focus-visible { outline:3px solid #b28be8;outline-offset:2px; }
 .topic-filter-panel { position:absolute;top:calc(100% + 8px);left:0;width:330px;max-width:calc(100vw - 48px);padding:12px;background:#fff;border:1px solid #d9c9e5;border-radius:14px;box-shadow:0 16px 45px #24123526; }
 .app .topic-filter-panel > input { width:100%;min-height:42px;padding:10px 12px;font-size:14px;border:1px solid #ad97be;border-radius:8px;background:#fff;color:#291536; }
