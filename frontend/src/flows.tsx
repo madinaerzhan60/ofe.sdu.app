@@ -373,7 +373,7 @@ export function Application({go}: {go:Go}) {
   )
 }
 
-function AdminModal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+export function AdminModal({ title, onClose, children, eyebrow = "Project details" }: { title: string; onClose: () => void; children: ReactNode; eyebrow?: string }) {
   const dialog = useRef<HTMLDialogElement>(null)
   const t = useT()
   useEffect(() => {
@@ -393,7 +393,7 @@ function AdminModal({ title, onClose, children }: { title: string; onClose: () =
     const rect = e.currentTarget.getBoundingClientRect()
     if(e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom)onClose()
   }}>
-    <header className="admin-modal-header"><div><p>{t('Project details')}</p><h2 id="admin-modal-title">{title}</h2></div><button type="button" autoFocus aria-label={t('Close')} onClick={onClose}>×</button></header>
+    <header className="admin-modal-header"><div><p>{t(eyebrow)}</p><h2 id="admin-modal-title">{title}</h2></div><button type="button" autoFocus aria-label={t('Close')} onClick={onClose}>×</button></header>
     {children}
   </dialog>
 }
