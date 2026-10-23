@@ -3,6 +3,53 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { PGlite } from '@electric-sql/pglite'
 
+const accountMigration = new URL('../supabase/migrations/20261022_accounts.sql', import.meta.url)
+const foundationMigration = new URL('../supabase/migrations/20261023071333_database_foundation.sql', import.meta.url)
+
+const foundationProject = (id, ownerId, overrides = {}) => ({
+  id,
+  ownerId,
+  name: 'Community arts',
+  description: 'Art classes for the community',
+  industry: 'Arts & culture',
+  stage: 'Idea',
+  team: 'Alice',
+  product: 'Weekly workshops',
+  status: 'Pending',
+  publication: true,
+  consentVersion: '2026-10-22',
+  consentAt: new Date().toISOString(),
+  feedback: '',
+  createdAt: '2026-10-23T00:00:00.000Z',
+  visible: false,
+  eventYears: [],
+  ...overrides,
+})
+
+const createFoundationDatabase = async () => {
+  const db = new PGlite()
+  const users = {
+    alice: '00000000-0000-0000-0000-000000000021',
+    bob: '00000000-0000-0000-0000-000000000022',
+    admin: '00000000-0000-0000-0000-000000000023',
+  }
+  await db.exec(`create role anon; create role authenticated; create schema auth;
+    create table auth.users(id uuid primary key, raw_user_meta_data jsonb not null default '{}'::jsonb);
+    create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+    grant usage on schema auth,public to anon,authenticated;
+    grant execute on function auth.uid() to anon,authenticated;`)
+  await db.query('insert into auth.users(id) values ($1),($2),($3)', [users.alice, users.bob, users.admin])
+  await db.exec(await readFile(accountMigration, 'utf8'))
+  await db.query('insert into public.app_admins(user_id) values ($1)', [users.admin])
+  await db.exec(await readFile(foundationMigration, 'utf8'))
+  const login = async (id, role = 'authenticated') => {
+    await db.exec('reset role')
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [id ?? ''])
+    await db.exec(`set role ${role}`)
+  }
+  return { db, users, login }
+}
+
 test('database enforces ownership, moderation, publication and event registration', async () => {
   const db = new PGlite()
   const alice='00000000-0000-0000-0000-000000000001'
@@ -124,6 +171,127 @@ test('profiles are created automatically and isolated', async () => {
 
     await login(admin)
     assert.equal((await db.query('select * from profiles')).rows.length, 4)
+  } finally {
+    await db.close()
+  }
+})
+
+test('publication consent is versioned append-only and controls public reads', async () => {
+  const { db, users, login } = await createFoundationDatabase()
+  try {
+    const project = foundationProject('consented-project', users.alice)
+    await login(users.alice)
+    await db.query('insert into projects(id,owner_id,data) values ($1,$2,$3)', [project.id, users.alice, project])
+    assert.equal((await db.query('select * from publication_consents')).rows.length, 1)
+    assert.equal((await db.query('select project_has_current_consent($1) as value', [project.id])).rows[0].value, true)
+
+    await db.query("update projects set data=jsonb_set(data,'{name}','\"Arts collective\"') where id=$1", [project.id])
+    assert.equal((await db.query('select * from publication_consents')).rows.length, 1)
+
+    await assert.rejects(
+      db.query(
+        `insert into publication_consents(project_id,user_id,granted,policy_version,policy_document,recorded_at,source)
+         values ($1,$2,true,'2026-10-22','startup-publication-consent',now(),'frontend')`,
+        [project.id, users.alice],
+      ),
+    )
+    await assert.rejects(db.query('update publication_consents set granted=false where project_id=$1', [project.id]))
+    await assert.rejects(db.query('delete from publication_consents where project_id=$1', [project.id]))
+
+    await login(users.admin)
+    await db.query("update projects set data=data || '{\"status\":\"Approved\",\"visible\":true}'::jsonb where id=$1", [project.id])
+    assert.equal((await db.query('select * from publication_consents')).rows.length, 1)
+
+    await login(null, 'anon')
+    assert.equal((await db.query('select id from projects where id=$1', [project.id])).rows.length, 1)
+
+    await login(users.bob)
+    assert.equal((await db.query('select * from publication_consents')).rows.length, 0)
+
+    await login(users.alice)
+    const withdrawnAt = new Date().toISOString()
+    await db.query(
+      `update projects
+       set data=data || jsonb_build_object('publication',false,'consentAt',$2::text)
+       where id=$1`,
+      [project.id, withdrawnAt],
+    )
+    assert.equal((await db.query('select * from publication_consents')).rows.length, 2)
+    assert.equal((await db.query('select project_has_current_consent($1) as value', [project.id])).rows[0].value, false)
+
+    await login(null, 'anon')
+    assert.equal((await db.query('select id from projects where id=$1', [project.id])).rows.length, 0)
+
+    await login(users.admin)
+    assert.equal((await db.query('select * from publication_consents')).rows.length, 2)
+    await assert.rejects(
+      db.query(
+        `update projects
+         set data=data || jsonb_build_object('publication',true,'consentAt',$2::text)
+         where id=$1`,
+        [project.id, new Date().toISOString()],
+      ),
+    )
+  } finally {
+    await db.close()
+  }
+})
+
+test('project payload rejects unsafe keys and invalid consent metadata', async () => {
+  const { db, users, login } = await createFoundationDatabase()
+  try {
+    await login(users.alice)
+    const insert = (id, overrides = {}) => {
+      const project = foundationProject(id, users.alice, overrides)
+      return db.query('insert into projects(id,owner_id,data) values ($1,$2,$3)', [id, users.alice, project])
+    }
+
+    await assert.rejects(insert('unknown-key', { internalNotes: 'must stay private' }))
+    await assert.rejects(insert('missing-version', { consentVersion: undefined }))
+    await assert.rejects(insert('malformed-time', { consentAt: 'not-a-timestamp' }))
+    await assert.rejects(insert('stale-policy', { consentVersion: '2026-01-01' }))
+    await assert.rejects(insert('future-time', { consentAt: new Date(Date.now() + 10 * 60 * 1000).toISOString() }))
+    await insert('valid-consent')
+    assert.equal((await db.query("select count(*)::int as count from projects where id='valid-consent'")).rows[0].count, 1)
+  } finally {
+    await db.close()
+  }
+})
+
+test('migration backfills only valid current-policy consent', async () => {
+  const db = new PGlite()
+  const alice = '00000000-0000-0000-0000-000000000031'
+  const admin = '00000000-0000-0000-0000-000000000032'
+  try {
+    await db.exec(`create role anon; create role authenticated; create schema auth;
+      create table auth.users(id uuid primary key, raw_user_meta_data jsonb not null default '{}'::jsonb);
+      create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+      grant usage on schema auth,public to anon,authenticated;
+      grant execute on function auth.uid() to anon,authenticated;`)
+    await db.query('insert into auth.users(id) values ($1),($2)', [alice, admin])
+    await db.exec(await readFile(accountMigration, 'utf8'))
+    await db.query('insert into public.app_admins(user_id) values ($1)', [admin])
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [alice])
+    await db.exec('set role authenticated')
+    for (const project of [
+      foundationProject('legacy-grant', alice),
+      foundationProject('legacy-withdrawal', alice, { publication: false }),
+      foundationProject('legacy-stale', alice, { consentVersion: '2026-01-01' }),
+      foundationProject('legacy-malformed', alice, { consentAt: 'not-a-timestamp' }),
+    ]) {
+      await db.query('insert into projects(id,owner_id,data) values ($1,$2,$3)', [project.id, alice, project])
+    }
+    await db.exec('reset role')
+    await db.exec(await readFile(foundationMigration, 'utf8'))
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [admin])
+    await db.exec('set role authenticated')
+    assert.deepEqual(
+      (await db.query('select project_id, granted from publication_consents order by project_id')).rows,
+      [
+        { project_id: 'legacy-grant', granted: true },
+        { project_id: 'legacy-withdrawal', granted: false },
+      ],
+    )
   } finally {
     await db.close()
   }
