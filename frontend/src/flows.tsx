@@ -1,3 +1,4 @@
+import { PublicationConsent } from './publication-consent'
 import { StorageImage, uploadImage } from './storage'
 import { Teams } from "./teams"
 import { AuthPanel } from "./auth"
@@ -387,6 +388,7 @@ export function Application({go}: {go:Go}) {
                   <p>{t(row.description)}</p><p>{t(row.status==='Approved'&&row.publication&&row.visible!==false?'Published':'Hidden')}</p>
                   <button className="secondary" onClick={() => {setEditingStartup(row.id);setStartupSaved(false)}}>{t('Edit startup page')}</button>
                 </>}
+                <PublicationConsent row={row} />
               </article>) : <div className="workspace-empty"><h3>{t('Your startup starts here')}</h3><p>{t('Once your application is approved, your startup will appear here.')}</p><button className="primary" onClick={()=>{setTab('My applications');setFormOpen(true);}}>{t('New application')}</button></div>}
             </section>}
             {tab==='My teams' && <Teams go={go} embedded />}

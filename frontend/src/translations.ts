@@ -910,3 +910,17 @@ Object.assign(translations, {
 'Follow this page for registration updates.':['Следите за открытием регистрации на этой странице.','Тіркелу туралы жаңалықтарды осы беттен қараңыз.'],
 'The application was saved, but its images could not be attached. Try submitting again.':['Заявка сохранена, но изображения прикрепить не удалось. Повторите отправку.','Өтінім сақталды, бірақ суреттерді тіркеу мүмкін болмады. Қайта жіберіңіз.'],
 })
+
+Object.assign(translations, {
+'Publication permission':['Согласие на публикацию','Жариялауға келісім'],
+'Permission granted':['Согласие дано','Келісім берілген'],
+'Permission not granted':['Согласие не дано','Келісім берілмеген'],
+'You control whether your project may appear in the public directory. Approval by a reviewer is also required.':['Вы решаете, можно ли показывать проект в публичном каталоге. Также необходимо одобрение модератора.','Жобаңыздың ашық каталогта көрсетілуіне өзіңіз рұқсат бересіз. Модератордың мақұлдауы да қажет.'],
+'Read publication consent':['Прочитать согласие на публикацию','Жариялауға келісімді оқу'],
+'I allow my project to be published.':['Разрешаю публикацию моего проекта.','Жобамды жариялауға рұқсат беремін.'],
+'Saving without permission removes your project from the public directory. Your application stays in your workspace.':['После сохранения без согласия проект исчезнет из публичного каталога. Заявка останется в вашем кабинете.','Келісімсіз сақтағаннан кейін жоба ашық каталогтан алынады. Өтінім жеке кабинетіңізде қалады.'],
+'Save consent':['Сохранить согласие','Келісімді сақтау'],
+'Publication consent saved.':['Согласие на публикацию сохранено.','Жариялауға келісім сақталды.'],
+'Consent updated for this demo session only.':['Согласие изменено только для текущей демосессии.','Келісім тек осы демосессия үшін өзгертілді.'],
+'Could not save your publication consent. Check your connection and try again.':['Не удалось сохранить согласие. Проверьте соединение и попробуйте снова.','Келісімді сақтау мүмкін болмады. Байланысты тексеріп, қайталап көріңіз.'],
+})

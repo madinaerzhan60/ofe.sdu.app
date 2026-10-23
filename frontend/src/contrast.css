@@ -299,3 +299,14 @@ html[data-theme="dark"] .app.app .header .language button { background:transpare
 html[data-theme="dark"] .app.app .header .language button:hover { background:#3b294a; color:#fff; }
 html[data-theme="dark"] .app.app .header .language button.active { background:#725096; color:#fff; box-shadow:0 1px 4px #0002; }
 @media(max-width:600px) { .app.app .header .language { grid-template-columns:repeat(3,28px); gap:2px; padding:3px; } }
+
+.app .publication-consent { margin-top:24px; padding:22px; border:1px solid var(--line); border-radius:16px; background:var(--surface-solid); color:var(--ink); }
+.publication-consent-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+.app .publication-consent-heading h3 { margin:0; font-size:18px; }
+.publication-consent-heading > span { color:var(--muted); font-size:12px; }
+.app .publication-consent > p { color:var(--muted); font-size:13px; line-height:1.7; margin:12px 0; max-width:65ch; }
+.app .publication-consent .publication-consent-switch { display:flex; align-items:center; gap:12px; margin:20px 0 12px; cursor:pointer; }
+.app .publication-consent-switch input { flex:0 0 20px; width:20px; height:20px; margin:0; accent-color:var(--purple); }
+.app .publication-consent > .secondary { margin-top:12px; }
+.app .publication-consent button:disabled { cursor:not-allowed; opacity:.6; }
+.app .publication-consent .success-banner { margin:16px 0 0; }
