@@ -185,6 +185,12 @@ test('publication consent is versioned append-only and controls public reads', a
     assert.equal((await db.query('select * from publication_consents')).rows.length, 1)
     assert.equal((await db.query('select project_has_current_consent($1) as value', [project.id])).rows[0].value, true)
 
+    await login(null, 'anon')
+    assert.equal((await db.query('select project_has_current_consent($1) as value', [project.id])).rows[0].value, false)
+    await login(users.bob)
+    assert.equal((await db.query('select project_has_current_consent($1) as value', [project.id])).rows[0].value, false)
+    await login(users.alice)
+
     await db.query("update projects set data=jsonb_set(data,'{name}','\"Arts collective\"') where id=$1", [project.id])
     assert.equal((await db.query('select * from publication_consents')).rows.length, 1)
 
@@ -249,6 +255,9 @@ test('project payload rejects unsafe keys and invalid consent metadata', async (
     await assert.rejects(insert('unknown-key', { internalNotes: 'must stay private' }))
     await assert.rejects(insert('missing-version', { consentVersion: undefined }))
     await assert.rejects(insert('malformed-time', { consentAt: 'not-a-timestamp' }))
+    await assert.rejects(insert('relative-time', { consentAt: 'now' }))
+    await assert.rejects(insert('infinite-time', { consentAt: '-infinity' }))
+    await assert.rejects(insert('date-only', { consentAt: '2020-01-01' }))
     await assert.rejects(insert('stale-policy', { consentVersion: '2026-01-01' }))
     await assert.rejects(insert('future-time', { consentAt: new Date(Date.now() + 10 * 60 * 1000).toISOString() }))
     await insert('valid-consent')
@@ -278,6 +287,7 @@ test('migration backfills only valid current-policy consent', async () => {
       foundationProject('legacy-withdrawal', alice, { publication: false }),
       foundationProject('legacy-stale', alice, { consentVersion: '2026-01-01' }),
       foundationProject('legacy-malformed', alice, { consentAt: 'not-a-timestamp' }),
+      foundationProject('legacy-impossible-date', alice, { consentAt: '2026-99-99T00:00:00Z' }),
     ]) {
       await db.query('insert into projects(id,owner_id,data) values ($1,$2,$3)', [project.id, alice, project])
     }

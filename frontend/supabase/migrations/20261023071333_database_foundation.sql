@@ -114,16 +114,46 @@ on public.publication_consents for select
 to authenticated
 using (user_id = (select auth.uid()) or (select public.is_admin()));
 
+create or replace function public.parse_consent_timestamp(raw_value text)
+returns timestamptz
+language plpgsql
+immutable
+strict
+set search_path = ''
+as $$
+declare
+  parsed_value timestamptz;
+begin
+  if raw_value !~ '^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[0-1])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,6})?(Z|[+-]((0[0-9]|1[0-3]):[0-5][0-9]|14:00))$' then
+    return null;
+  end if;
+
+  begin
+    parsed_value := raw_value::timestamptz;
+  exception when others then
+    return null;
+  end;
+
+  if not isfinite(parsed_value) then
+    return null;
+  end if;
+
+  return parsed_value;
+end;
+$$;
+
+revoke all on function public.parse_consent_timestamp(text) from public, anon, authenticated;
+
 with candidates as (
   select
     p.id as project_id,
     p.owner_id as user_id,
     (p.data->>'publication')::boolean as granted,
-    case
-      when jsonb_typeof(p.data->'consentAt') = 'string'
-        and p.data->>'consentAt' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T'
-      then (p.data->>'consentAt')::timestamptz
-    end as consent_at
+    public.parse_consent_timestamp(
+      case
+        when jsonb_typeof(p.data->'consentAt') = 'string' then p.data->>'consentAt'
+      end
+    ) as consent_at
   from public.projects p
   where jsonb_typeof(p.data->'publication') = 'boolean'
     and jsonb_typeof(p.data->'consentVersion') = 'string'
@@ -306,11 +336,10 @@ begin
     raise exception 'Publication consent policy is not current';
   end if;
 
-  begin
-    consent_time := (new.data->>'consentAt')::timestamptz;
-  exception when others then
+  consent_time := public.parse_consent_timestamp(new.data->>'consentAt');
+  if consent_time is null then
     raise exception 'Publication consent timestamp is invalid';
-  end;
+  end if;
 
   if consent_time > now() + interval '5 minutes' then
     raise exception 'Publication consent timestamp is in the future';
@@ -352,15 +381,29 @@ security definer
 set search_path = ''
 as $$
   select coalesce((
-    select consent.granted
-    from public.publication_consents consent
-    join public.publication_consent_policies policy
-      on policy.version = consent.policy_version
-      and policy.document_id = consent.policy_document
-      and policy.is_current
-    where consent.project_id = target_project_id
-    order by consent.id desc
-    limit 1
+    select latest_consent.granted
+    from public.projects project
+    cross join lateral (
+      select consent.granted
+      from public.publication_consents consent
+      join public.publication_consent_policies policy
+        on policy.version = consent.policy_version
+        and policy.document_id = consent.policy_document
+        and policy.is_current
+      where consent.project_id = project.id
+      order by consent.id desc
+      limit 1
+    ) latest_consent
+    where project.id = target_project_id
+      and (
+        project.owner_id = (select auth.uid())
+        or (select public.is_admin())
+        or (
+          project.data->>'status' = 'Approved'
+          and project.data->>'visible' = 'true'
+          and latest_consent.granted
+        )
+      )
   ), false)
 $$;
 
