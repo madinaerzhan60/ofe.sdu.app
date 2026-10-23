@@ -4,7 +4,7 @@ The app uses Supabase Auth for email/password accounts and Postgres row-level se
 
 ## Connect
 
-1. Create a Supabase project and apply `supabase/migrations/20261022_accounts.sql` once in SQL Editor.
+1. Create a Supabase project and apply these migrations once, in order: `supabase/migrations/20261022_accounts.sql`, `supabase/migrations/20261023071333_database_foundation.sql`, `supabase/migrations/20261023074400_event_registration_user_index.sql`, `supabase/migrations/20261023115503_storage_security_hardening.sql`, `supabase/migrations/20261023120625_storage_token_guards.sql`, then `supabase/migrations/20261023123211_storage_update_operation.sql`.
 2. Copy `.env.example` to `.env.local`. Fill in the project URL and **publishable** key from the project Connect dialog. Never use a secret or service-role key.
 3. In Authentication → URL Configuration, add the final website address as Site URL and add the exact allowed redirect URLs. Add `http://localhost:8443/` only for local development.
 4. Enable email/password sign-up and email confirmation. Set a minimum password length of at least 10 characters.
@@ -25,6 +25,13 @@ Only the project owner can grant this role. Account metadata supplied at sign-up
 
 ## Verify before public launch
 
+Run the automated checks from this `frontend` directory first:
+
+```bash
+pnpm test:security
+pnpm build
+```
+
 - Sign up using a real email, confirm it, sign in, sign out, and use password recovery.
 - Submit a project; reload and verify it persists.
 - With another account, verify the first account's unpublished project cannot be read or changed through direct API requests.
@@ -32,6 +39,40 @@ Only the project owner can grant this role. Account metadata supplied at sign-up
 - With an admin account, approve the project. Confirm visitors see it only when the author allowed publication.
 - Register for a published event, reload, and verify there is only one registration per user and event.
 - Test failed requests: forms must not report successful saves or close after a rejected write.
+
+### Hosted Storage smoke test
+
+Use the private `startup-media` bucket; never make it public. Test through the same publishable-key client the frontend will use:
+
+- Owner: create a project first, then upload `logo.webp` and `cover.webp` below `<owner_uuid>/<project_id>/`. Confirm PNG, JPEG, and WebP files at or below 5 MB work.
+- Validation: confirm another UUID prefix, another user's project ID, an unsupported MIME type, and a file above 5 MB are denied.
+- Other student: confirm private project media cannot be listed, downloaded, changed, or deleted.
+- Administrator: confirm the media can be read for moderation but cannot be rewritten through ordinary browser permissions.
+- Guest: confirm Pending, Rejected, hidden, withdrawn-consent, and stale-consent project media cannot be read.
+- Publication: approve the project, enable visibility, and keep current granted consent; confirm its media can then be read by a guest through the private-bucket authenticated download endpoint with the publishable-key authorization header.
+- Immutability: while the project is publicly eligible, confirm the owner cannot replace or delete its media.
+- Withdrawal: withdraw publication consent and confirm guest media access stops immediately.
+- Token guards: confirm browser calls to `createSignedUploadUrl()`, `createSignedUrl()`, and `createSignedUrls()` are denied for this bucket. Direct authenticated uploads and downloads must remain allowed when the role/state rules permit them.
+
+Store only the object path in `projects.data.image` or `projects.data.cover`. Public bucket URLs and signed Storage URLs are forbidden for this contract because access must be rechecked on every request.
+
+## Hosted migration verification (2026-10-23)
+
+Project `ofe-sdu-app` has the `storage_security_hardening`, `storage_token_guards`, and `storage_update_operation` migrations applied once each. The live catalogue check confirmed:
+
+- `startup-media` is private, limited to 5,242,880 bytes, and allows `image/png`, `image/jpeg`, and `image/webp`.
+- The owner INSERT/UPDATE/DELETE policies and shared SELECT policy exist on `storage.objects`.
+- All four media policies use Storage operation guards; browser signed-upload and signed-download issuance is excluded while direct authenticated operations remain allowed.
+- The owner INSERT policy allows both `object.upload` and `object.upload_update`, which preserves normal private-project uploads and replacements without permitting `object.sign_upload_url`.
+- `private.is_admin()` and `private.project_has_current_consent(text)` hold the privileged implementations.
+- `public.is_admin()` remains available as a `SECURITY INVOKER` compatibility RPC.
+- No externally executable `SECURITY DEFINER` function remains in `public`.
+
+The Security Advisor now reports only two informational `RLS enabled, no policy` notices. They are intentional for `app_admins` and `publication_consent_policies`: browser grants are revoked and these administrative tables are deliberately locked. See [Supabase lint 0008](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
+
+The Performance Advisor reports unused-index informational notices because the new database has no application rows yet. Keep the ownership, consent-history, event-link, and registration indexes until representative traffic exists, then reassess with [Supabase lint 0005](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index).
+
+Then follow the hosted database checks, role matrix, legacy event-year diagnostic query, and rollback guidance in [`docs/DATABASE_FOUNDATION.md`](docs/DATABASE_FOUNDATION.md).
 
 `localhost` is still only local. A publicly reachable HTTPS hosting address and the configured Supabase project are both required for other people to use accounts.
 
