@@ -296,3 +296,106 @@ test('migration backfills only valid current-policy consent', async () => {
     await db.close()
   }
 })
+
+test('only admins assign projects to events', async () => {
+  const { db, users, login } = await createFoundationDatabase()
+  try {
+    const project = foundationProject('event-project', users.alice)
+    await login(users.alice)
+    await db.query('insert into projects(id,owner_id,data) values ($1,$2,$3)', [project.id, users.alice, project])
+
+    await login(users.admin)
+    for (const event of [
+      { id: 'demo-day', title: 'Demo Day', date: '2026-11-13', place: 'Campus', published: true },
+      { id: 'winter-showcase', title: 'Winter Showcase', date: '2026-12-05', place: 'Campus', published: true },
+    ]) {
+      await db.query('insert into events(id,data) values ($1,$2)', [event.id, event])
+    }
+
+    await login(users.alice)
+    await assert.rejects(
+      db.query('insert into project_events(project_id,event_id,assigned_by) values ($1,$2,$3)', [project.id, 'demo-day', users.alice]),
+    )
+    await login(users.bob)
+    await assert.rejects(
+      db.query('insert into project_events(project_id,event_id,assigned_by) values ($1,$2,$3)', [project.id, 'demo-day', users.bob]),
+    )
+
+    await login(users.admin)
+    await db.query(
+      `insert into project_events(project_id,event_id,assigned_by)
+       values ($1,$2,$4),($1,$3,$4)`,
+      [project.id, 'demo-day', 'winter-showcase', users.admin],
+    )
+
+    await login(users.alice)
+    assert.equal((await db.query('select * from project_events')).rows.length, 2)
+    assert.equal(
+      (await db.query('delete from project_events where project_id=$1 returning event_id', [project.id])).rows.length,
+      0,
+    )
+    assert.equal((await db.query('select * from project_events')).rows.length, 2)
+
+    await login(users.bob)
+    assert.equal((await db.query('select * from project_events')).rows.length, 0)
+    await login(null, 'anon')
+    assert.equal((await db.query('select * from project_events')).rows.length, 0)
+
+    await login(users.admin)
+    await db.query("update projects set data=data || '{\"status\":\"Approved\",\"visible\":true}'::jsonb where id=$1", [project.id])
+    await login(null, 'anon')
+    assert.equal((await db.query('select event_id from project_events order by event_id')).rows.length, 2)
+
+    await login(users.admin)
+    await db.query("update events set data=jsonb_set(data,'{published}','false') where id='winter-showcase'")
+    await login(null, 'anon')
+    assert.deepEqual((await db.query('select event_id from project_events')).rows, [{ event_id: 'demo-day' }])
+
+    await login(users.admin)
+    assert.equal(
+      (await db.query("delete from project_events where project_id=$1 and event_id='winter-showcase' returning event_id", [project.id])).rows.length,
+      1,
+    )
+  } finally {
+    await db.close()
+  }
+})
+
+test('legacy eventYears backfill links only unique event years and is idempotent', async () => {
+  const db = new PGlite()
+  const alice = '00000000-0000-0000-0000-000000000041'
+  const admin = '00000000-0000-0000-0000-000000000042'
+  try {
+    await db.exec(`create role anon; create role authenticated; create schema auth;
+      create table auth.users(id uuid primary key, raw_user_meta_data jsonb not null default '{}'::jsonb);
+      create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+      grant usage on schema auth,public to anon,authenticated;
+      grant execute on function auth.uid() to anon,authenticated;`)
+    await db.query('insert into auth.users(id) values ($1),($2)', [alice, admin])
+    await db.exec(await readFile(accountMigration, 'utf8'))
+    await db.query('insert into public.app_admins(user_id) values ($1)', [admin])
+
+    for (const event of [
+      { id: 'unique-2025', date: '2025-11-10', published: true },
+      { id: 'first-2026', date: '2026-05-01', published: true },
+      { id: 'second-2026', date: '2026-11-13', published: true },
+    ]) {
+      await db.query('insert into events(id,data) values ($1,$2)', [event.id, event])
+    }
+    const project = foundationProject('legacy-event-project', alice, {
+      publication: false,
+      eventYears: ['2025', '2026', '2027'],
+    })
+    await db.query('insert into projects(id,owner_id,data) values ($1,$2,$3)', [project.id, alice, project])
+
+    await db.exec(await readFile(foundationMigration, 'utf8'))
+    assert.deepEqual(
+      (await db.query('select project_id, event_id, assigned_by from project_events')).rows,
+      [{ project_id: project.id, event_id: 'unique-2025', assigned_by: null }],
+    )
+    await db.exec('select public.backfill_legacy_project_events()')
+    assert.equal((await db.query('select * from project_events')).rows.length, 1)
+  } finally {
+    await db.close()
+  }
+})

@@ -380,3 +380,110 @@ using (
     and (select public.project_has_current_consent(id))
   )
 );
+
+create table public.project_events (
+  project_id text not null references public.projects(id) on delete cascade,
+  event_id text not null references public.events(id) on delete cascade,
+  assigned_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  primary key (project_id, event_id)
+);
+
+create index project_events_event_idx on public.project_events(event_id);
+create index project_events_assigned_by_idx
+on public.project_events(assigned_by)
+where assigned_by is not null;
+
+alter table public.project_events enable row level security;
+revoke all on table public.project_events from anon, authenticated;
+grant select on table public.project_events to anon, authenticated;
+grant insert, delete on table public.project_events to authenticated;
+
+create policy project_event_read
+on public.project_events for select
+to anon, authenticated
+using (
+  (select public.is_admin())
+  or exists (
+    select 1
+    from public.projects project
+    where project.id = project_id
+      and project.owner_id = (select auth.uid())
+  )
+  or (
+    exists (
+      select 1
+      from public.projects project
+      where project.id = project_id
+        and project.data->>'status' = 'Approved'
+        and project.data->>'visible' = 'true'
+        and (select public.project_has_current_consent(project.id))
+    )
+    and exists (
+      select 1
+      from public.events event
+      where event.id = event_id
+        and event.data->>'published' = 'true'
+    )
+  )
+);
+
+create policy project_event_insert_admin
+on public.project_events for insert
+to authenticated
+with check (
+  (select public.is_admin())
+  and assigned_by = (select auth.uid())
+);
+
+create policy project_event_delete_admin
+on public.project_events for delete
+to authenticated
+using ((select public.is_admin()));
+
+create or replace function public.backfill_legacy_project_events()
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  inserted_count bigint;
+begin
+  with expanded_years as (
+    select
+      project.id as project_id,
+      years.event_year
+    from public.projects project
+    cross join lateral jsonb_array_elements_text(
+      case
+        when jsonb_typeof(project.data->'eventYears') = 'array' then project.data->'eventYears'
+        else '[]'::jsonb
+      end
+    ) as years(event_year)
+    where years.event_year ~ '^[0-9]{4}$'
+  ), unique_matches as (
+    select
+      expanded.project_id,
+      expanded.event_year,
+      min(event.id) as event_id
+    from expanded_years expanded
+    join public.events event
+      on jsonb_typeof(event.data->'date') = 'string'
+      and left(event.data->>'date', 4) = expanded.event_year
+    group by expanded.project_id, expanded.event_year
+    having count(*) = 1
+  )
+  insert into public.project_events(project_id, event_id, assigned_by)
+  select project_id, event_id, null
+  from unique_matches
+  on conflict (project_id, event_id) do nothing;
+
+  get diagnostics inserted_count = row_count;
+  return inserted_count;
+end;
+$$;
+
+revoke all on function public.backfill_legacy_project_events() from public, anon, authenticated;
+
+select public.backfill_legacy_project_events();
