@@ -30,7 +30,7 @@ export type EventData = {
   place: string
   published: boolean
 }
-export type Draft = { image?: string; cover?: string; about?: string; name: string; description: string; industry: string; stage: string; team: string; product: string; processing: boolean; publication: boolean }
+export type Draft = { imageFile?: Blob; coverFile?: Blob; image?: string; cover?: string; about?: string; name: string; description: string; industry: string; stage: string; team: string; product: string; processing: boolean; publication: boolean }
 export const emptyDraft: Draft = {name:'',description:'',industry:'',stage:'',team:'',product:'',processing:false,publication:false};
 export const policies = [
   "Privacy Policy",
