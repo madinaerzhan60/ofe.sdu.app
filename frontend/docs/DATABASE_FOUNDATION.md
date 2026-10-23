@@ -10,6 +10,8 @@ Apply these files once, in timestamp order:
 2. `supabase/migrations/20261023071333_database_foundation.sql`
 3. `supabase/migrations/20261023074400_event_registration_user_index.sql`
 4. `supabase/migrations/20261023115503_storage_security_hardening.sql`
+5. `supabase/migrations/20261023120625_storage_token_guards.sql`
+6. `supabase/migrations/20261023123211_storage_update_operation.sql`
 
 Use the Supabase SQL Editor or the team's established migration deployment workflow. Do not paste a service-role key into the frontend or any committed file.
 
@@ -73,9 +75,11 @@ The frontend handoff is:
 1. Insert the project first so ownership can be checked by RLS.
 2. Upload the image to the authenticated user's UUID prefix and that project's ID.
 3. Store the object path—not a data URL or public URL—in `projects.data.image` or `projects.data.cover`.
-4. Use an authenticated download or a signed URL for display. Never build a public bucket URL; the bucket must remain private.
+4. Display the object with the private-bucket authenticated download endpoint through the Supabase client. The current user JWT—or the publishable-key `anon` role for eligible public media—must be sent so RLS is checked on every request.
 
-Owners may upload, replace, or delete their own media while the project is not publicly eligible. Once the project is Approved, visible, and covered by current granted consent, its media is immutable to the owner. Administrators can read media for moderation but do not receive a browser-side write bypass. Anonymous and other authenticated users can read only media attached to projects that satisfy all public-eligibility checks. Withdrawing consent or hiding/rejecting the project immediately removes public media access.
+Do not call `createSignedUploadUrl()`, `createSignedUrl()`, or `createSignedUrls()` for this bucket. Signed tokens are intentionally blocked because Supabase redeems them with elevated access after their initial RLS check; a token minted before approval or consent withdrawal could otherwise outlive the later state change. Public bucket URLs are also forbidden.
+
+Owners may upload, replace, or delete their own media through direct authenticated Storage requests while the project is not publicly eligible. Once the project is Approved, visible, and covered by current granted consent, its media is immutable to the owner. Administrators can read media for moderation but do not receive a browser-side write bypass. Anonymous and other authenticated users can read only media attached to projects that satisfy all public-eligibility checks. Withdrawing consent or hiding/rejecting the project immediately denies every new media request.
 
 The current frontend still creates data URLs in `src/media.tsx`. Developer 1 or Developer 3 must replace that browser-only step with the upload sequence above when wiring the UI to Supabase; this database change intentionally does not alter the finished frontend.
 

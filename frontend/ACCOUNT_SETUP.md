@@ -4,7 +4,7 @@ The app uses Supabase Auth for email/password accounts and Postgres row-level se
 
 ## Connect
 
-1. Create a Supabase project and apply these migrations once, in order: `supabase/migrations/20261022_accounts.sql`, `supabase/migrations/20261023071333_database_foundation.sql`, `supabase/migrations/20261023074400_event_registration_user_index.sql`, then `supabase/migrations/20261023115503_storage_security_hardening.sql`.
+1. Create a Supabase project and apply these migrations once, in order: `supabase/migrations/20261022_accounts.sql`, `supabase/migrations/20261023071333_database_foundation.sql`, `supabase/migrations/20261023074400_event_registration_user_index.sql`, `supabase/migrations/20261023115503_storage_security_hardening.sql`, `supabase/migrations/20261023120625_storage_token_guards.sql`, then `supabase/migrations/20261023123211_storage_update_operation.sql`.
 2. Copy `.env.example` to `.env.local`. Fill in the project URL and **publishable** key from the project Connect dialog. Never use a secret or service-role key.
 3. In Authentication → URL Configuration, add the final website address as Site URL and add the exact allowed redirect URLs. Add `http://localhost:8443/` only for local development.
 4. Enable email/password sign-up and email confirmation. Set a minimum password length of at least 10 characters.
@@ -49,18 +49,21 @@ Use the private `startup-media` bucket; never make it public. Test through the s
 - Other student: confirm private project media cannot be listed, downloaded, changed, or deleted.
 - Administrator: confirm the media can be read for moderation but cannot be rewritten through ordinary browser permissions.
 - Guest: confirm Pending, Rejected, hidden, withdrawn-consent, and stale-consent project media cannot be read.
-- Publication: approve the project, enable visibility, and keep current granted consent; confirm its media can then be read by a guest through an authenticated or signed request.
+- Publication: approve the project, enable visibility, and keep current granted consent; confirm its media can then be read by a guest through the private-bucket authenticated download endpoint with the publishable-key authorization header.
 - Immutability: while the project is publicly eligible, confirm the owner cannot replace or delete its media.
 - Withdrawal: withdraw publication consent and confirm guest media access stops immediately.
+- Token guards: confirm browser calls to `createSignedUploadUrl()`, `createSignedUrl()`, and `createSignedUrls()` are denied for this bucket. Direct authenticated uploads and downloads must remain allowed when the role/state rules permit them.
 
-Store only the object path in `projects.data.image` or `projects.data.cover`. Public bucket URLs are forbidden because the bucket is private.
+Store only the object path in `projects.data.image` or `projects.data.cover`. Public bucket URLs and signed Storage URLs are forbidden for this contract because access must be rechecked on every request.
 
 ## Hosted migration verification (2026-10-23)
 
-Project `ofe-sdu-app` has the `storage_security_hardening` migration applied once. The live catalogue check confirmed:
+Project `ofe-sdu-app` has the `storage_security_hardening`, `storage_token_guards`, and `storage_update_operation` migrations applied once each. The live catalogue check confirmed:
 
 - `startup-media` is private, limited to 5,242,880 bytes, and allows `image/png`, `image/jpeg`, and `image/webp`.
 - The owner INSERT/UPDATE/DELETE policies and shared SELECT policy exist on `storage.objects`.
+- All four media policies use Storage operation guards; browser signed-upload and signed-download issuance is excluded while direct authenticated operations remain allowed.
+- The owner INSERT policy allows both `object.upload` and `object.upload_update`, which preserves normal private-project uploads and replacements without permitting `object.sign_upload_url`.
 - `private.is_admin()` and `private.project_has_current_consent(text)` hold the privileged implementations.
 - `public.is_admin()` remains available as a `SECURITY INVOKER` compatibility RPC.
 - No externally executable `SECURITY DEFINER` function remains in `public`.

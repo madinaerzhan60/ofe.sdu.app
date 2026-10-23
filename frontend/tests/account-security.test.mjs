@@ -9,6 +9,14 @@ const storageSecurityMigration = new URL(
   '../supabase/migrations/20261023115503_storage_security_hardening.sql',
   import.meta.url,
 )
+const storageTokenGuardMigration = new URL(
+  '../supabase/migrations/20261023120625_storage_token_guards.sql',
+  import.meta.url,
+)
+const storageUpdateOperationMigration = new URL(
+  '../supabase/migrations/20261023123211_storage_update_operation.sql',
+  import.meta.url,
+)
 
 const foundationProject = (id, ownerId, overrides = {}) => ({
   id,
@@ -53,6 +61,19 @@ const createFoundationDatabase = async () => {
       bucket_id text not null references storage.buckets(id),
       name text not null unique
     );
+    create function storage.allow_only_operation(expected_operation text)
+    returns boolean language sql stable set search_path = '' as $$
+      select coalesce(
+        regexp_replace(current_setting('storage.operation',true),'^storage\\.','')
+          = regexp_replace(expected_operation,'^storage\\.',''),
+        false
+      )
+    $$;
+    create function storage.allow_any_operation(expected_operations text[])
+    returns boolean language sql stable set search_path = '' as $$
+      select coalesce(bool_or(storage.allow_only_operation(expected_operation)),false)
+      from unnest(expected_operations) as expected(expected_operation)
+    $$;
     alter table storage.objects enable row level security;
     grant usage on schema auth,public,storage to anon,authenticated;
     grant execute on function auth.uid() to anon,authenticated;
@@ -68,7 +89,10 @@ const createFoundationDatabase = async () => {
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [id ?? ''])
     await db.exec(`set role ${role}`)
   }
-  return { db, users, login }
+  const storageOperation = async (operation) => {
+    await db.query("select set_config('storage.operation',$1,false)", [operation])
+  }
+  return { db, users, login, storageOperation }
 }
 
 test('database enforces ownership, moderation, publication and event registration', async () => {
@@ -337,9 +361,11 @@ test('privileged helpers are private without breaking admin checks', async () =>
 })
 
 test('startup media is owner controlled and public only after approval and consent', async () => {
-  const { db, users, login } = await createFoundationDatabase()
+  const { db, users, login, storageOperation } = await createFoundationDatabase()
   try {
     await db.exec(await readFile(storageSecurityMigration, 'utf8'))
+    await db.exec(await readFile(storageTokenGuardMigration, 'utf8'))
+    await db.exec(await readFile(storageUpdateOperationMigration, 'utf8'))
 
     const aliceProject = foundationProject('alice-startup', users.alice)
     const bobProject = foundationProject('bob-startup', users.bob)
@@ -350,7 +376,23 @@ test('startup media is owner controlled and public only after approval and conse
 
     const mediaPath = `${users.alice}/${aliceProject.id}/logo.webp`
     await login(users.alice)
+    await storageOperation('storage.object.upload')
     await db.query("insert into storage.objects(bucket_id,name) values ('startup-media',$1)", [mediaPath])
+    await storageOperation('storage.object.upload_update')
+    assert.deepEqual(
+      (
+        await db.query(
+          `insert into storage.objects(bucket_id,name)
+           values ('startup-media',$1)
+           on conflict(name) do update set bucket_id=excluded.bucket_id
+           returning name`,
+          [mediaPath],
+        )
+      ).rows,
+      [{ name: mediaPath }],
+      'ordinary authenticated updates must remain allowed while private',
+    )
+    await storageOperation('storage.object.upload')
     await assert.rejects(
       db.query("insert into storage.objects(bucket_id,name) values ('startup-media',$1)", [
         `${users.bob}/${aliceProject.id}/cover.webp`,
@@ -361,32 +403,40 @@ test('startup media is owner controlled and public only after approval and conse
         `${users.alice}/${bobProject.id}/cover.webp`,
       ]),
     )
+    await storageOperation('storage.object.get_authenticated')
     assert.deepEqual((await db.query('select name from storage.objects')).rows, [{ name: mediaPath }])
 
     await login(users.bob)
+    await storageOperation('storage.object.get_authenticated')
     assert.equal((await db.query('select name from storage.objects')).rows.length, 0)
     await login(users.admin)
+    await storageOperation('storage.object.get_authenticated')
     assert.deepEqual((await db.query('select name from storage.objects')).rows, [{ name: mediaPath }])
 
     await login(null, 'anon')
+    await storageOperation('storage.object.get_authenticated')
     assert.equal((await db.query('select name from storage.objects')).rows.length, 0, 'Pending media must stay private')
 
     await login(users.admin)
     await db.query("update projects set data=data || '{\"status\":\"Rejected\",\"visible\":true}'::jsonb where id=$1", [aliceProject.id])
     await login(null, 'anon')
+    await storageOperation('storage.object.get_authenticated')
     assert.equal((await db.query('select name from storage.objects')).rows.length, 0, 'Rejected media must stay private')
 
     await login(users.admin)
     await db.query("update projects set data=data || '{\"status\":\"Approved\",\"visible\":false}'::jsonb where id=$1", [aliceProject.id])
     await login(null, 'anon')
+    await storageOperation('storage.object.get_authenticated')
     assert.equal((await db.query('select name from storage.objects')).rows.length, 0, 'Hidden media must stay private')
 
     await login(users.admin)
     await db.query("update projects set data=data || '{\"visible\":true}'::jsonb where id=$1", [aliceProject.id])
     await login(null, 'anon')
+    await storageOperation('storage.object.get_authenticated')
     assert.deepEqual((await db.query('select name from storage.objects')).rows, [{ name: mediaPath }])
 
     await login(users.alice)
+    await storageOperation('storage.object.upload_update')
     assert.equal(
       (
         await db.query(
@@ -397,6 +447,7 @@ test('startup media is owner controlled and public only after approval and conse
       0,
       'owners must not replace publicly visible media',
     )
+    await storageOperation('storage.object.delete')
     assert.equal(
       (await db.query('delete from storage.objects where name=$1 returning name', [mediaPath])).rows.length,
       0,
@@ -410,7 +461,23 @@ test('startup media is owner controlled and public only after approval and conse
       [aliceProject.id, new Date().toISOString()],
     )
     await login(null, 'anon')
+    await storageOperation('storage.object.get_authenticated')
     assert.equal((await db.query('select name from storage.objects')).rows.length, 0, 'Withdrawn media must stay private')
+
+    await login(users.alice)
+    await db.query(
+      `update projects
+       set data=data || jsonb_build_object(
+         'publication',true,
+         'consentVersion','2026-10-22',
+         'consentAt',$2::text
+       )
+       where id=$1`,
+      [aliceProject.id, new Date().toISOString()],
+    )
+    await login(null, 'anon')
+    await storageOperation('storage.object.get_authenticated')
+    assert.equal((await db.query('select name from storage.objects')).rows.length, 1, 'Fresh consent must restore access')
 
     await db.exec('reset role')
     await db.exec(`
@@ -419,7 +486,23 @@ test('startup media is owner controlled and public only after approval and conse
       values ('2026-10-23','startup-publication-consent-v2',now(),true);
     `)
     await login(null, 'anon')
+    await storageOperation('storage.object.get_authenticated')
     assert.equal((await db.query('select name from storage.objects')).rows.length, 0, 'Stale-consent media must stay private')
+
+    await login(users.alice)
+    await db.query(
+      `update projects
+       set data=data || jsonb_build_object(
+         'publication',true,
+         'consentVersion','2026-10-23',
+         'consentAt',$2::text
+       )
+       where id=$1`,
+      [aliceProject.id, new Date().toISOString()],
+    )
+    await login(null, 'anon')
+    await storageOperation('storage.object.get_authenticated')
+    assert.equal((await db.query('select name from storage.objects')).rows.length, 1, 'Fresh policy consent must restore access')
 
     await db.exec('reset role')
     const bucket = (
@@ -430,6 +513,54 @@ test('startup media is owner controlled and public only after approval and conse
     assert.equal(bucket.public, false)
     assert.equal(Number(bucket.file_size_limit), 5 * 1024 * 1024)
     assert.deepEqual(bucket.allowed_mime_types, ['image/png', 'image/jpeg', 'image/webp'])
+  } finally {
+    await db.close()
+  }
+})
+
+test('signed storage tokens cannot outlive project authorization', async () => {
+  const { db, users, login, storageOperation } = await createFoundationDatabase()
+  try {
+    await db.exec(await readFile(storageSecurityMigration, 'utf8'))
+    await db.exec(await readFile(storageTokenGuardMigration, 'utf8'))
+    await db.exec(await readFile(storageUpdateOperationMigration, 'utf8'))
+
+    const project = foundationProject('token-guard-project', users.alice)
+    const logoPath = `${users.alice}/${project.id}/logo.webp`
+    const coverPath = `${users.alice}/${project.id}/cover.webp`
+    await login(users.alice)
+    await db.query('insert into projects(id,owner_id,data) values ($1,$2,$3)', [project.id, users.alice, project])
+    await storageOperation('storage.object.upload')
+    await db.query("insert into storage.objects(bucket_id,name) values ('startup-media',$1)", [logoPath])
+
+    await storageOperation('storage.object.sign_upload_url')
+    await assert.rejects(
+      db.query("insert into storage.objects(bucket_id,name) values ('startup-media',$1)", [coverPath]),
+      undefined,
+      'browser clients must not mint signed uploads that bypass later state changes',
+    )
+
+    await login(users.admin)
+    await db.query("update projects set data=data || '{\"status\":\"Approved\",\"visible\":true}'::jsonb where id=$1", [project.id])
+
+    await login(null, 'anon')
+    await storageOperation('storage.object.sign')
+    assert.equal((await db.query('select name from storage.objects')).rows.length, 0)
+    await storageOperation('storage.object.sign_many')
+    assert.equal((await db.query('select name from storage.objects')).rows.length, 0)
+    await storageOperation('storage.object.get_authenticated')
+    assert.deepEqual((await db.query('select name from storage.objects')).rows, [{ name: logoPath }])
+
+    await login(users.alice)
+    await db.query(
+      `update projects
+       set data=data || jsonb_build_object('publication',false,'consentAt',$2::text)
+       where id=$1`,
+      [project.id, new Date().toISOString()],
+    )
+    await login(null, 'anon')
+    await storageOperation('storage.object.get_authenticated')
+    assert.equal((await db.query('select name from storage.objects')).rows.length, 0)
   } finally {
     await db.close()
   }
