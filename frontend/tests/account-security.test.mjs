@@ -40,8 +40,25 @@ const createFoundationDatabase = async () => {
   await db.exec(`create role anon; create role authenticated; create schema auth;
     create table auth.users(id uuid primary key, raw_user_meta_data jsonb not null default '{}'::jsonb);
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
-    grant usage on schema auth,public to anon,authenticated;
-    grant execute on function auth.uid() to anon,authenticated;`)
+    create schema storage;
+    create table storage.buckets(
+      id text primary key,
+      name text not null,
+      public boolean not null default false,
+      file_size_limit bigint,
+      allowed_mime_types text[]
+    );
+    create table storage.objects(
+      id bigint generated always as identity primary key,
+      bucket_id text not null references storage.buckets(id),
+      name text not null unique
+    );
+    alter table storage.objects enable row level security;
+    grant usage on schema auth,public,storage to anon,authenticated;
+    grant execute on function auth.uid() to anon,authenticated;
+    grant select on storage.objects to anon,authenticated;
+    grant insert,update,delete on storage.objects to authenticated;
+    grant usage,select on sequence storage.objects_id_seq to authenticated;`)
   await db.query('insert into auth.users(id) values ($1),($2),($3)', [users.alice, users.bob, users.admin])
   await db.exec(await readFile(accountMigration, 'utf8'))
   await db.query('insert into public.app_admins(user_id) values ($1)', [users.admin])
@@ -314,6 +331,105 @@ test('privileged helpers are private without breaking admin checks', async () =>
       ).rows,
       [],
     )
+  } finally {
+    await db.close()
+  }
+})
+
+test('startup media is owner controlled and public only after approval and consent', async () => {
+  const { db, users, login } = await createFoundationDatabase()
+  try {
+    await db.exec(await readFile(storageSecurityMigration, 'utf8'))
+
+    const aliceProject = foundationProject('alice-startup', users.alice)
+    const bobProject = foundationProject('bob-startup', users.bob)
+    await login(users.alice)
+    await db.query('insert into projects(id,owner_id,data) values ($1,$2,$3)', [aliceProject.id, users.alice, aliceProject])
+    await login(users.bob)
+    await db.query('insert into projects(id,owner_id,data) values ($1,$2,$3)', [bobProject.id, users.bob, bobProject])
+
+    const mediaPath = `${users.alice}/${aliceProject.id}/logo.webp`
+    await login(users.alice)
+    await db.query("insert into storage.objects(bucket_id,name) values ('startup-media',$1)", [mediaPath])
+    await assert.rejects(
+      db.query("insert into storage.objects(bucket_id,name) values ('startup-media',$1)", [
+        `${users.bob}/${aliceProject.id}/cover.webp`,
+      ]),
+    )
+    await assert.rejects(
+      db.query("insert into storage.objects(bucket_id,name) values ('startup-media',$1)", [
+        `${users.alice}/${bobProject.id}/cover.webp`,
+      ]),
+    )
+    assert.deepEqual((await db.query('select name from storage.objects')).rows, [{ name: mediaPath }])
+
+    await login(users.bob)
+    assert.equal((await db.query('select name from storage.objects')).rows.length, 0)
+    await login(users.admin)
+    assert.deepEqual((await db.query('select name from storage.objects')).rows, [{ name: mediaPath }])
+
+    await login(null, 'anon')
+    assert.equal((await db.query('select name from storage.objects')).rows.length, 0, 'Pending media must stay private')
+
+    await login(users.admin)
+    await db.query("update projects set data=data || '{\"status\":\"Rejected\",\"visible\":true}'::jsonb where id=$1", [aliceProject.id])
+    await login(null, 'anon')
+    assert.equal((await db.query('select name from storage.objects')).rows.length, 0, 'Rejected media must stay private')
+
+    await login(users.admin)
+    await db.query("update projects set data=data || '{\"status\":\"Approved\",\"visible\":false}'::jsonb where id=$1", [aliceProject.id])
+    await login(null, 'anon')
+    assert.equal((await db.query('select name from storage.objects')).rows.length, 0, 'Hidden media must stay private')
+
+    await login(users.admin)
+    await db.query("update projects set data=data || '{\"visible\":true}'::jsonb where id=$1", [aliceProject.id])
+    await login(null, 'anon')
+    assert.deepEqual((await db.query('select name from storage.objects')).rows, [{ name: mediaPath }])
+
+    await login(users.alice)
+    assert.equal(
+      (
+        await db.query(
+          "update storage.objects set name=$2 where name=$1 returning name",
+          [mediaPath, `${users.alice}/${aliceProject.id}/cover.webp`],
+        )
+      ).rows.length,
+      0,
+      'owners must not replace publicly visible media',
+    )
+    assert.equal(
+      (await db.query('delete from storage.objects where name=$1 returning name', [mediaPath])).rows.length,
+      0,
+      'owners must not delete publicly visible media',
+    )
+
+    await db.query(
+      `update projects
+       set data=data || jsonb_build_object('publication',false,'consentAt',$2::text)
+       where id=$1`,
+      [aliceProject.id, new Date().toISOString()],
+    )
+    await login(null, 'anon')
+    assert.equal((await db.query('select name from storage.objects')).rows.length, 0, 'Withdrawn media must stay private')
+
+    await db.exec('reset role')
+    await db.exec(`
+      update publication_consent_policies set is_current=false where is_current;
+      insert into publication_consent_policies(version,document_id,effective_at,is_current)
+      values ('2026-10-23','startup-publication-consent-v2',now(),true);
+    `)
+    await login(null, 'anon')
+    assert.equal((await db.query('select name from storage.objects')).rows.length, 0, 'Stale-consent media must stay private')
+
+    await db.exec('reset role')
+    const bucket = (
+      await db.query(
+        "select public,file_size_limit,allowed_mime_types from storage.buckets where id='startup-media'",
+      )
+    ).rows[0]
+    assert.equal(bucket.public, false)
+    assert.equal(Number(bucket.file_size_limit), 5 * 1024 * 1024)
+    assert.deepEqual(bucket.allowed_mime_types, ['image/png', 'image/jpeg', 'image/webp'])
   } finally {
     await db.close()
   }

@@ -197,3 +197,142 @@ to authenticated
 using ((select private.is_admin()));
 
 drop function public.project_has_current_consent(text);
+
+insert into storage.buckets(id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'startup-media',
+  'startup-media',
+  false,
+  5 * 1024 * 1024,
+  array['image/png', 'image/jpeg', 'image/webp']
+)
+on conflict (id) do update
+set name = excluded.name,
+    public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists startup_media_read on storage.objects;
+create policy startup_media_read
+on storage.objects for select
+to anon, authenticated
+using (
+  bucket_id = 'startup-media'
+  and (
+    (select private.is_admin())
+    or exists (
+      select 1
+      from public.projects project
+      where project.id = split_part(name, '/', 2)
+        and project.owner_id = (select auth.uid())
+        and name in (
+          (select auth.uid())::text || '/' || project.id || '/logo.webp',
+          (select auth.uid())::text || '/' || project.id || '/cover.webp'
+        )
+    )
+    or exists (
+      select 1
+      from public.projects project
+      where project.id = split_part(name, '/', 2)
+        and split_part(name, '/', 1) = project.owner_id::text
+        and name in (
+          project.owner_id::text || '/' || project.id || '/logo.webp',
+          project.owner_id::text || '/' || project.id || '/cover.webp'
+        )
+        and project.data->>'status' = 'Approved'
+        and project.data->>'visible' = 'true'
+        and (select private.project_has_current_consent(project.id))
+    )
+  )
+);
+
+drop policy if exists startup_media_owner_insert on storage.objects;
+create policy startup_media_owner_insert
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'startup-media'
+  and split_part(name, '/', 1) = (select auth.uid())::text
+  and exists (
+    select 1
+    from public.projects project
+    where project.id = split_part(name, '/', 2)
+      and project.owner_id = (select auth.uid())
+      and name in (
+        (select auth.uid())::text || '/' || project.id || '/logo.webp',
+        (select auth.uid())::text || '/' || project.id || '/cover.webp'
+      )
+      and not (
+        project.data->>'status' = 'Approved'
+        and project.data->>'visible' = 'true'
+        and (select private.project_has_current_consent(project.id))
+      )
+  )
+);
+
+drop policy if exists startup_media_owner_update on storage.objects;
+create policy startup_media_owner_update
+on storage.objects for update
+to authenticated
+using (
+  bucket_id = 'startup-media'
+  and split_part(name, '/', 1) = (select auth.uid())::text
+  and exists (
+    select 1
+    from public.projects project
+    where project.id = split_part(name, '/', 2)
+      and project.owner_id = (select auth.uid())
+      and name in (
+        (select auth.uid())::text || '/' || project.id || '/logo.webp',
+        (select auth.uid())::text || '/' || project.id || '/cover.webp'
+      )
+      and not (
+        project.data->>'status' = 'Approved'
+        and project.data->>'visible' = 'true'
+        and (select private.project_has_current_consent(project.id))
+      )
+  )
+)
+with check (
+  bucket_id = 'startup-media'
+  and split_part(name, '/', 1) = (select auth.uid())::text
+  and exists (
+    select 1
+    from public.projects project
+    where project.id = split_part(name, '/', 2)
+      and project.owner_id = (select auth.uid())
+      and name in (
+        (select auth.uid())::text || '/' || project.id || '/logo.webp',
+        (select auth.uid())::text || '/' || project.id || '/cover.webp'
+      )
+      and not (
+        project.data->>'status' = 'Approved'
+        and project.data->>'visible' = 'true'
+        and (select private.project_has_current_consent(project.id))
+      )
+  )
+);
+
+drop policy if exists startup_media_owner_delete on storage.objects;
+create policy startup_media_owner_delete
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'startup-media'
+  and split_part(name, '/', 1) = (select auth.uid())::text
+  and exists (
+    select 1
+    from public.projects project
+    where project.id = split_part(name, '/', 2)
+      and project.owner_id = (select auth.uid())
+      and name in (
+        (select auth.uid())::text || '/' || project.id || '/logo.webp',
+        (select auth.uid())::text || '/' || project.id || '/cover.webp'
+      )
+      and not (
+        project.data->>'status' = 'Approved'
+        and project.data->>'visible' = 'true'
+        and (select private.project_has_current_consent(project.id))
+      )
+  )
+);

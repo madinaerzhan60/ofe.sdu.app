@@ -8,6 +8,8 @@ Apply these files once, in timestamp order:
 
 1. `supabase/migrations/20261022_accounts.sql`
 2. `supabase/migrations/20261023071333_database_foundation.sql`
+3. `supabase/migrations/20261023074400_event_registration_user_index.sql`
+4. `supabase/migrations/20261023115503_storage_security_hardening.sql`
 
 Use the Supabase SQL Editor or the team's established migration deployment workflow. Do not paste a service-role key into the frontend or any committed file.
 
@@ -41,6 +43,7 @@ For legacy data, the migration creates a link only when a four-digit year matche
 | Consent changes | No direct table writes | Via compatible project fields only | No access | Cannot impersonate owner |
 | Project-event links | Public links only | Read own links | Public links only | Create/read/delete |
 | Events | Published only | Published only | Published only | Create/update/read |
+| Startup media | Public-project media only | Read own; manage while non-public | Public-project media only | Read for moderation |
 
 Browser roles cannot write `app_admins`, `publication_consent_policies`, or `publication_consents` directly. Administrator assignment remains a project-owner or trusted server operation.
 
@@ -55,6 +58,26 @@ Anonymous catalogue access to the compatibility `projects` table requires all of
 - the newest consent row for the current policy is granted
 
 Changing unrelated project content does not duplicate the consent history. A withdrawal appends a new row and immediately removes anonymous visibility.
+
+## Startup media contract
+
+The `startup-media` bucket is private. It accepts PNG, JPEG, and WebP objects up to 5 MB, and every object name must use exactly one of these forms:
+
+```text
+<owner_uuid>/<project_id>/logo.webp
+<owner_uuid>/<project_id>/cover.webp
+```
+
+The frontend handoff is:
+
+1. Insert the project first so ownership can be checked by RLS.
+2. Upload the image to the authenticated user's UUID prefix and that project's ID.
+3. Store the object path—not a data URL or public URL—in `projects.data.image` or `projects.data.cover`.
+4. Use an authenticated download or a signed URL for display. Never build a public bucket URL; the bucket must remain private.
+
+Owners may upload, replace, or delete their own media while the project is not publicly eligible. Once the project is Approved, visible, and covered by current granted consent, its media is immutable to the owner. Administrators can read media for moderation but do not receive a browser-side write bypass. Anonymous and other authenticated users can read only media attached to projects that satisfy all public-eligibility checks. Withdrawing consent or hiding/rejecting the project immediately removes public media access.
+
+The current frontend still creates data URLs in `src/media.tsx`. Developer 1 or Developer 3 must replace that browser-only step with the upload sequence above when wiring the UI to Supabase; this database change intentionally does not alter the finished frontend.
 
 ## Legacy event-year diagnostics
 
