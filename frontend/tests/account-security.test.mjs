@@ -5,6 +5,10 @@ import { PGlite } from '@electric-sql/pglite'
 
 const accountMigration = new URL('../supabase/migrations/20261022_accounts.sql', import.meta.url)
 const foundationMigration = new URL('../supabase/migrations/20261023071333_database_foundation.sql', import.meta.url)
+const storageSecurityMigration = new URL(
+  '../supabase/migrations/20261023115503_storage_security_hardening.sql',
+  import.meta.url,
+)
 
 const foundationProject = (id, ownerId, overrides = {}) => ({
   id,
@@ -262,6 +266,54 @@ test('project payload rejects unsafe keys and invalid consent metadata', async (
     await assert.rejects(insert('future-time', { consentAt: new Date(Date.now() + 10 * 60 * 1000).toISOString() }))
     await insert('valid-consent')
     assert.equal((await db.query("select count(*)::int as count from projects where id='valid-consent'")).rows[0].count, 1)
+  } finally {
+    await db.close()
+  }
+})
+
+test('privileged helpers are private without breaking admin checks', async () => {
+  const { db, users, login } = await createFoundationDatabase()
+  try {
+    await db.exec(await readFile(storageSecurityMigration, 'utf8'))
+
+    await login(users.alice)
+    assert.equal((await db.query('select private.is_admin() as value')).rows[0].value, false)
+    assert.equal((await db.query('select public.is_admin() as value')).rows[0].value, false)
+
+    await login(users.admin)
+    assert.equal((await db.query('select private.is_admin() as value')).rows[0].value, true)
+    assert.equal((await db.query('select public.is_admin() as value')).rows[0].value, true)
+
+    await db.exec('reset role')
+    assert.equal(
+      (
+        await db.query(
+          `select count(*)::int as count
+           from pg_proc procedure
+           join pg_namespace namespace on namespace.oid = procedure.pronamespace
+           where namespace.nspname = 'public'
+             and procedure.proname = 'project_has_current_consent'`,
+        )
+      ).rows[0].count,
+      0,
+    )
+    assert.deepEqual(
+      (
+        await db.query(
+          `select procedure.proname
+           from pg_proc procedure
+           join pg_namespace namespace on namespace.oid = procedure.pronamespace
+           where namespace.nspname = 'public'
+             and procedure.prosecdef
+             and (
+               has_function_privilege('anon', procedure.oid, 'EXECUTE')
+               or has_function_privilege('authenticated', procedure.oid, 'EXECUTE')
+             )
+           order by procedure.proname`,
+        )
+      ).rows,
+      [],
+    )
   } finally {
     await db.close()
   }
