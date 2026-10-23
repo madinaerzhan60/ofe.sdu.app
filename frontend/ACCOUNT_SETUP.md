@@ -4,7 +4,7 @@ The app uses Supabase Auth for email/password accounts and Postgres row-level se
 
 ## Connect
 
-1. Create a Supabase project and apply `supabase/migrations/20261022_accounts.sql` once in SQL Editor.
+1. Create a Supabase project and apply these migrations once, in order: `supabase/migrations/20261022_accounts.sql`, then `supabase/migrations/20261023071333_database_foundation.sql`.
 2. Copy `.env.example` to `.env.local`. Fill in the project URL and **publishable** key from the project Connect dialog. Never use a secret or service-role key.
 3. In Authentication → URL Configuration, add the final website address as Site URL and add the exact allowed redirect URLs. Add `http://localhost:8443/` only for local development.
 4. Enable email/password sign-up and email confirmation. Set a minimum password length of at least 10 characters.
@@ -25,6 +25,13 @@ Only the project owner can grant this role. Account metadata supplied at sign-up
 
 ## Verify before public launch
 
+Run the automated checks from this `frontend` directory first:
+
+```bash
+pnpm test:security
+pnpm build
+```
+
 - Sign up using a real email, confirm it, sign in, sign out, and use password recovery.
 - Submit a project; reload and verify it persists.
 - With another account, verify the first account's unpublished project cannot be read or changed through direct API requests.
@@ -32,6 +39,8 @@ Only the project owner can grant this role. Account metadata supplied at sign-up
 - With an admin account, approve the project. Confirm visitors see it only when the author allowed publication.
 - Register for a published event, reload, and verify there is only one registration per user and event.
 - Test failed requests: forms must not report successful saves or close after a rejected write.
+
+Then follow the hosted database checks, role matrix, legacy event-year diagnostic query, and rollback guidance in [`docs/DATABASE_FOUNDATION.md`](docs/DATABASE_FOUNDATION.md).
 
 `localhost` is still only local. A publicly reachable HTTPS hosting address and the configured Supabase project are both required for other people to use accounts.
 
