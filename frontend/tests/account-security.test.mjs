@@ -10,7 +10,7 @@ test('database enforces ownership, moderation, publication and event registratio
   const admin='00000000-0000-0000-0000-000000000003'
   try {
     await db.exec(`create role anon; create role authenticated; create schema auth;
-      create table auth.users(id uuid primary key);
+      create table auth.users(id uuid primary key, raw_user_meta_data jsonb not null default '{}'::jsonb);
       create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
       grant usage on schema auth,public to anon,authenticated;
       grant execute on function auth.uid() to anon,authenticated;`)
@@ -67,4 +67,64 @@ test('database enforces ownership, moderation, publication and event registratio
     await login(bob)
     await assert.rejects(db.query('insert into event_registrations(event_id,user_id) values ($1,$2)',[event.id,bob]))
   } finally {await db.close()}
+})
+
+test('profiles are created automatically and isolated', async () => {
+  const db = new PGlite()
+  const alice = '00000000-0000-0000-0000-000000000011'
+  const bob = '00000000-0000-0000-0000-000000000012'
+  const admin = '00000000-0000-0000-0000-000000000013'
+  const noName = '00000000-0000-0000-0000-000000000014'
+  try {
+    await db.exec(`create role anon; create role authenticated; create schema auth;
+      create table auth.users(id uuid primary key, raw_user_meta_data jsonb not null default '{}'::jsonb);
+      create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+      grant usage on schema auth,public to anon,authenticated;
+      grant execute on function auth.uid() to anon,authenticated;`)
+    await db.query(
+      `insert into auth.users(id, raw_user_meta_data)
+       values ($1, '{"display_name":"Alice"}'), ($2, '{}'), ($3, '{"display_name":"Admin"}')`,
+      [alice, bob, admin],
+    )
+    await db.exec(await readFile(new URL('../supabase/migrations/20261022_accounts.sql', import.meta.url), 'utf8'))
+    await db.query('insert into public.app_admins(user_id) values ($1)', [admin])
+    await db.exec(await readFile(new URL('../supabase/migrations/20261023071333_database_foundation.sql', import.meta.url), 'utf8'))
+
+    const login = async (id, role = 'authenticated') => {
+      await db.exec('reset role')
+      await db.query("select set_config('request.jwt.claim.sub',$1,false)", [id ?? ''])
+      await db.exec(`set role ${role}`)
+    }
+
+    await login(alice)
+    assert.deepEqual(
+      (await db.query('select user_id, display_name from profiles order by user_id')).rows,
+      [{ user_id: alice, display_name: 'Alice' }],
+    )
+    await db.query("update profiles set display_name='Alicia' where user_id=$1", [alice])
+    assert.equal((await db.query('select display_name from profiles')).rows[0].display_name, 'Alicia')
+
+    await login(bob)
+    assert.deepEqual(
+      (await db.query('select user_id from profiles order by user_id')).rows,
+      [{ user_id: bob }],
+    )
+    assert.equal(
+      (await db.query("update profiles set display_name='Stolen' where user_id=$1 returning user_id", [alice])).rows.length,
+      0,
+    )
+
+    await db.exec('reset role')
+    await db.query('insert into auth.users(id) values ($1)', [noName])
+    await login(noName)
+    assert.equal((await db.query('select display_name from profiles')).rows[0].display_name, '')
+
+    await login(null, 'anon')
+    await assert.rejects(db.query('select * from profiles'))
+
+    await login(admin)
+    assert.equal((await db.query('select * from profiles')).rows.length, 4)
+  } finally {
+    await db.close()
+  }
 })
