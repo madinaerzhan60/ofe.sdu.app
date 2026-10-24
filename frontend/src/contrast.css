@@ -187,11 +187,6 @@
 .app .auth-layout .auth-panel :is(.auth-provider-note,.auth-divider,.auth-service-note,.auth-eyebrow) { color:#574661; }
 .app .auth-layout .auth-panel .password-input button { color:#523368; }
 
-/* Deep purple gives the original OFE pillars a stronger rhythm. */
-.about-journey li:nth-child(2),.about-journey li:nth-child(4) { background:#351453;border-color:#351453; }
-.about-journey li:nth-child(2) h4,.about-journey li:nth-child(4) h4 { color:#fff; }
-.about-journey li:nth-child(2) p,.about-journey li:nth-child(4) p { color:#eee2f8; }
-.about-journey li:nth-child(2) > span,.about-journey li:nth-child(4) > span { background:#68408c;color:#fff; }
 .about-next-step { background:#351453;border-color:#351453; }
 .about-next-step h3 { color:#fff; }
 .about-next-step span,.about-next-step p { color:#ead9f6; }
@@ -310,3 +305,56 @@ html[data-theme="dark"] .app.app .header .language button.active { background:#7
 .app .publication-consent > .secondary { margin-top:12px; }
 .app .publication-consent button:disabled { cursor:not-allowed; opacity:.6; }
 .app .publication-consent .success-banner { margin:16px 0 0; }
+
+/* Keep application consent text on the same theme surface as its form. */
+.app .consent-box { background:var(--surface-solid); color:var(--ink); border:1px solid var(--line); }
+.app .consent-box label, .app .consent-box label > span { color:var(--ink); }
+.app .consent-box p { color:var(--muted); }
+.app .consent-box .inline-link { color:var(--purple); text-decoration:underline; text-underline-offset:3px; }
+html[data-theme="dark"] .app .consent-box .inline-link { color:#d8b4fe; }
+
+/* Restore the original Events font stack. */
+.app .events-page { font-family:Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+
+/* Cleaner event typography and project cards in both themes. */
+.app .events-page { font-family:Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.app.app .events-page .demo-hero h1 { font-weight:700; letter-spacing:-.035em; line-height:1.08; }
+.app.app .events-page .event-title-name { font-size:clamp(36px,5vw,64px); font-weight:700; line-height:1.1; letter-spacing:-.035em; }
+.app.app .events-page .event-title-university { font-size:18px; font-weight:600; letter-spacing:.12em; }
+.app .events-page h2 { font-size:clamp(28px,3.5vw,42px); font-weight:650; letter-spacing:-.03em; }
+.app .event-register { text-decoration:none; }
+.app.app .startup-grid { background:transparent; border:0; gap:18px; }
+html[data-theme="dark"] .app.app .startup-card { border:1px solid #493353; }
+.app.app .header .language { overflow:hidden; border-radius:999px; padding:4px; }
+.app.app .header .language button { border-radius:999px; }
+html[data-theme="dark"] .app.app .header .language { background:#251a31; border-color:#493553; }
+html[data-theme="dark"] .app.app .header .language button.active { background:#8054b0; color:#fff; border-radius:999px; }
+.app.app .auth-layout { display:block; max-width:480px; margin-inline:auto; min-height:0; background:var(--surface-solid); }
+.app.app .auth-content { padding:32px; }
+.app.app .auth-panel { max-width:none; padding:0; }
+.app.app .auth-page { max-width:600px; }
+.app.app .auth-page .apply-intro { display:none; }
+.app.app .auth-panel .auth-eyebrow { display:none; }
+.app.app .auth-panel h2 { font-size:28px; letter-spacing:-.025em; }
+.app .archive-grid button:disabled { cursor:default; opacity:1; }
+.app .archive-grid button:disabled:hover { transform:none; }
+@media(max-width:600px) { .app.app .auth-content { padding:24px; } }
+
+/* Event invitation and the dedicated archive entrance. */
+.app.app .events-page .demo-hero { background:#211438; padding:64px 0 76px; }
+.app.app .events-page .event-hero-layout { gap:64px; grid-template-columns:minmax(0,1fr) 360px; }
+.app.app .events-page .event-ticket { margin-top:0; border-radius:20px; padding:28px; box-shadow:0 16px 40px #10092122; }
+.app.app .events-page .event-kicker { font-size:11px;letter-spacing:.1em; }
+.app.app .events-page .event-title-name { font-size:clamp(34px,4.6vw,60px); letter-spacing:-.04em; font-weight:650; }
+.app.app .events-page .event-back { margin-bottom:28px; }
+.app.app .events-page .event-register:disabled { background:#ede6f4;color:#6d4588;border-color:#dfd0eb; }
+.app .archive-feature { display:grid;grid-template-columns:1fr 1.25fr;gap:48px;align-items:center;padding:40px;border-radius:24px;border:1px solid var(--line);background:var(--surface-solid);text-decoration:none;color:var(--ink); }
+.archive-feature-mark { display:flex;align-items:center;gap:24px;font-size:130px;font-weight:700;line-height:1;letter-spacing:-.08em;color:#b49bcf; }
+.archive-feature-mark>span { font-size:18px;line-height:1.3;letter-spacing:.05em;color:var(--ink); }
+.archive-feature-copy { display:flex;flex-direction:column;gap:16px; }
+.archive-feature-copy>strong { font-size:clamp(24px,3vw,36px);font-weight:600;letter-spacing:-.04em;line-height:1.2; }
+.archive-feature-copy>span:not(.eyebrow):not(.archive-feature-link) { color:var(--muted);font-size:14px;line-height:1.8; }
+.archive-feature-link { color:var(--purple);font-size:14px; }
+html[data-theme="dark"] .archive-feature-link { color:#d8b4fe; }
+.finalist-editor fieldset { border:1px solid var(--line);padding:20px;border-radius:12px;margin:20px 0; }
+@media(max-width:800px) { .app.app .events-page .event-hero-layout { grid-template-columns:1fr;gap:32px; }.app .archive-feature { grid-template-columns:1fr;gap:24px;padding:28px; }.archive-feature-mark { font-size:90px; } }

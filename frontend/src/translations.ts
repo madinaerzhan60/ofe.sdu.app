@@ -924,3 +924,168 @@ Object.assign(translations, {
 'Consent updated for this demo session only.':['Согласие изменено только для текущей демосессии.','Келісім тек осы демосессия үшін өзгертілді.'],
 'Could not save your publication consent. Check your connection and try again.':['Не удалось сохранить согласие. Проверьте соединение и попробуйте снова.','Келісімді сақтау мүмкін болмады. Байланысты тексеріп, қайталап көріңіз.'],
 })
+
+Object.assign(translations, {
+'Use your @sdu.edu.kz email.':['Используйте почту @sdu.edu.kz.','@sdu.edu.kz поштаңызды пайдаланыңыз.'],
+'Archive website':['Сайт первого Demo Day','Алғашқы Demo Day сайты'],
+'Registration link':['Ссылка на регистрацию','Тіркелу сілтемесі']
+});
+
+Object.assign(translations, {'Demo only. Accounts are not saved.':['Демоверсия. Аккаунты не сохраняются.','Демо. Аккаунттар сақталмайды.'],'Demo only. No email was sent.':['Демоверсия. Письмо не отправлено.','Демо. Хат жіберілген жоқ.']});
+
+Object.assign(translations, {'Add team member':['Добавить участника','Қатысушы қосу'],'Add member':['Добавить участника','Қатысушы қосу'],'Team member added.':['Участник добавлен.','Қатысушы қосылды.'],'Teams stay in this browser session.':['Команды сохраняются в текущей сессии браузера.','Командалар браузердің осы сессиясында сақталады.'],'THE FIRST CHAPTER':['ПЕРВАЯ ГЛАВА','АЛҒАШҚЫ ТАРАУ'],'The finalists. The ideas. The beginning.':['Финалисты. Идеи. Начало.','Финалистер. Идеялар. Бастау.'],'Discover last year’s finalists and the startups they built.':['Познакомьтесь с финалистами прошлого года и их стартапами.','Өткен жылғы финалистермен және олардың стартаптарымен танысыңыз.'],'Explore the first Demo Day':['Открыть первый Demo Day','Алғашқы Demo Day сайтын ашу'],'Create archive':['Создать архив','Мұрағат жасау'],'Last year’s finalists':['Финалисты прошлого года','Өткен жылғы финалистер'],'Add finalist':['Добавить финалиста','Финалист қосу'],'Finalist':['Финалист','Финалист'],'Image URL':['Ссылка на изображение','Сурет сілтемесі'],'Website':['Сайт','Сайт']});
+
+Object.assign(translations, {'IDEAS BECOME REAL':['ИДЕИ СТАНОВЯТСЯ РЕАЛЬНОСТЬЮ','ИДЕЯЛАР ШЫНДЫҚҚА АЙНАЛАДЫ'],'MEET THE NEXT GENERATION':['ЗНАКОМЬТЕСЬ С НОВЫМ ПОКОЛЕНИЕМ','ЖАҢА БУЫНМЕН ТАНЫСЫҢЫЗ']});
+
+Object.assign(translations, {'Discover student startups, find teammates and share your project at SDU.':['Стартапы студентов SDU, поиск участников команды и публикация своего проекта.','SDU студенттерінің стартаптары, команда мүшелерін іздеу және өз жобаңызды жариялау.']});
+
+Object.assign(translations, {'OFE is SDU’s Office for Entrepreneurship. We help students develop ideas, build teams and present their projects.':['OFE — офис предпринимательства SDU. Помогаем студентам развивать идеи, собирать команды и представлять проекты.','OFE — SDU кәсіпкерлік кеңсесі. Студенттерге идеяларын дамытуға, команда құруға және жобаларын таныстыруға көмектесеміз.'],'From idea to project':['От идеи к проекту','Идеядан жобаға'],'Test your idea with potential users and define your next step.':['Проверьте идею с будущими пользователями и определите следующий шаг.','Идеяңызды болашақ пайдаланушылармен тексеріп, келесі қадамды анықтаңыз.'],'Get feedback and guidance from mentors and entrepreneurs.':['Получите обратную связь и рекомендации менторов и предпринимателей.','Менторлар мен кәсіпкерлерден пікір және кеңес алыңыз.'],'Find teammates and connect with other student founders.':['Найдите участников команды и познакомьтесь с другими студентами-основателями.','Команда мүшелерін тауып, басқа студент-негізін қалаушылармен танысыңыз.'],'Present your project to partners and the startup community.':['Представьте проект партнёрам и стартап-сообществу.','Жобаңызды серіктестерге және стартап қауымдастығына таныстырыңыз.']});
+
+Object.assign(translations, {
+'On the platform':['На платформе','Платформада'],
+'Browse student startups and learn about their ideas and progress.':['Просматривайте студенческие стартапы, их идеи и стадии развития.','Студенттік стартаптарды, олардың идеялары мен даму кезеңдерін қараңыз.'],
+'Your team':['Ваша команда','Сіздің командаңыз'],
+'Add team members and their roles to your project workspace.':['Добавляйте участников команды и указывайте их роли в личном кабинете.','Жеке кабинетте команда мүшелерін қосып, олардың рөлдерін көрсетіңіз.'],
+'Submit a project':['Подать заявку','Өтінім беру'],
+'Send your project for review and follow its application status.':['Отправьте заявку с описанием проекта на рассмотрение и отслеживайте её статус.','Жобаңыздың сипаттамасы бар өтінімді қарауға жіберіп, оның мәртебесін бақылаңыз.'],
+'Events & Demo Day':['Мероприятия и Demo Day','Іс-шаралар және Demo Day'],
+'View upcoming event details and photos from the first Demo Day.':['Узнавайте о предстоящих мероприятиях и смотрите фото первого Demo Day.','Алдағы іс-шаралар туралы біліп, алғашқы Demo Day фотоларын көріңіз.']
+});
+
+Object.assign(translations, {
+  "Team": [
+    "Команда",
+    "Команда"
+  ],
+  "Project": [
+    "Проект",
+    "Жоба"
+  ],
+  "Email": [
+    "Электронная почта",
+    "Электрондық пошта"
+  ],
+  "Office for Entrepreneurship": [
+    "Офис предпринимательства",
+    "Кәсіпкерлік кеңсесі"
+  ],
+  "SDU Office for Entrepreneurship": [
+    "Офис предпринимательства SDU",
+    "SDU кәсіпкерлік кеңсесі"
+  ],
+  "© 2026 SDU Office for Entrepreneurship": [
+    "© 2026 Офис предпринимательства SDU",
+    "© 2026 SDU кәсіпкерлік кеңсесі"
+  ],
+  "26 November · 2026": [
+    "26 ноября · 2026",
+    "26 қараша · 2026"
+  ],
+  "SDU · Entrepreneurship": [
+    "SDU · Предпринимательство",
+    "SDU · Кәсіпкерлік"
+  ],
+  "Back to OFE": [
+    "Вернуться в OFE",
+    "OFE-ге оралу"
+  ],
+  "Small beginnings.": [
+    "Большие идеи",
+    "Үлкен идеялар"
+  ],
+  "Extraordinary ideas.": [
+    "начинаются с малого.",
+    "кішкентай қадамнан басталады."
+  ],
+  "Our first Demo Day brought student founders and their ideas into the spotlight. Meet last year’s finalists and discover what they are building.": [
+    "Первый Demo Day объединил студентов — авторов стартапов. Познакомьтесь с финалистами и их проектами.",
+    "Алғашқы Demo Day студент-стартапшыларды біріктірді. Финалистермен және олардың жобаларымен танысыңыз."
+  ],
+  "Explore the finalists": [
+    "Смотреть финалистов",
+    "Финалистерді көру"
+  ],
+  "THE FOUNDERS & THEIR STARTUPS": [
+    "АВТОРЫ И ИХ СТАРТАПЫ",
+    "АВТОРЛАР ЖӘНЕ ОЛАРДЫҢ СТАРТАПТАРЫ"
+  ],
+  "Loading finalists…": [
+    "Загружаем финалистов…",
+    "Финалистер жүктелуде…"
+  ],
+  "We couldn’t load the finalists. Please refresh and try again.": [
+    "Не удалось загрузить финалистов. Обновите страницу и попробуйте ещё раз.",
+    "Финалистерді жүктеу мүмкін болмады. Бетті жаңартып, қайталап көріңіз."
+  ],
+  "THE STORY CONTINUES": [
+    "ИСТОРИЯ ПРОДОЛЖАЕТСЯ",
+    "ТАРИХ ЖАЛҒАСАДЫ"
+  ],
+  "Meet the finalists soon.": [
+    "Финалисты скоро появятся здесь.",
+    "Финалистер жақында осында жарияланады."
+  ],
+  "Startup stories, teams and event highlights will appear here as the archive is added.": [
+    "Здесь появятся проекты финалистов, составы команд и материалы мероприятия.",
+    "Мұнда финалистердің жобалары, команда құрамы және іс-шара материалдары жарияланады."
+  ],
+  "FINALIST": [
+    "ФИНАЛИСТ",
+    "ФИНАЛИСТ"
+  ],
+  "Visit startup": [
+    "Открыть сайт проекта",
+    "Жоба сайтына өту"
+  ],
+  "Ideas start here.": [
+    "Здесь начинаются проекты.",
+    "Жобалар осы жерден басталады."
+  ],
+  "Back to the community": [
+    "Вернуться на платформу",
+    "Платформаға оралу"
+  ],
+  "Group photo at the SDU Demo Day award ceremony": [
+    "Участники награждения SDU Demo Day",
+    "SDU Demo Day марапаттау рәсіміне қатысушылар"
+  ],
+  "Image upload failed.": [
+    "Не удалось загрузить изображение.",
+    "Суретті жүктеу мүмкін болмады."
+  ]
+});
+
+Object.assign(translations, {
+  "Other role": [
+    "Другая роль",
+    "Басқа рөл"
+  ],
+  "New application": [
+    "Подать заявку",
+    "Өтінім беру"
+  ],
+  "Project details": [
+    "Данные проекта",
+    "Жоба мәліметтері"
+  ],
+  "Continue draft": [
+    "Продолжить черновик",
+    "Өтінім нобайын жалғастыру"
+  ],
+  "Save draft": [
+    "Сохранить черновик",
+    "Өтінім нобайын сақтау"
+  ],
+  "Discard draft": [
+    "Удалить черновик",
+    "Өтінім нобайын жою"
+  ],
+  "Discard this draft? This cannot be undone.": [
+    "Удалить черновик? Это действие нельзя отменить.",
+    "Өтінім нобайын жою керек пе? Бұл әрекетті қайтару мүмкін емес."
+  ],
+  "Changes are saved to the platform.": [
+    "Изменения сохраняются на платформе.",
+    "Өзгерістер платформада сақталады."
+  ]
+});

@@ -1,6 +1,6 @@
 import { useEffect, useState, type ImgHTMLAttributes } from 'react'
 import { backend } from './backend'
-import { uploadProjectImage, mediaObjectPath, type MediaTarget } from './media-storage'
+import { uploadProjectImage, downloadProjectImage, type MediaTarget } from './media-storage'
 export type { MediaTarget } from './media-storage'
 
 export const storageBucket = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET?.trim() || 'startup-media'
@@ -26,11 +26,9 @@ export function StorageImage({ src, ...props }: ImgHTMLAttributes<HTMLImageEleme
       const client = backend
       void (async () => {
         try {
-          const { data: { session }, error } = await client.auth.getSession()
-          if (error || !session || !active) return
-          const result = await client.storage.from(storageBucket).download(mediaObjectPath(source))
-          if (result.error || !result.data || !active) return
-          objectUrl = URL.createObjectURL(result.data)
+          const blob = await downloadProjectImage(client, storageBucket, source)
+          if (!active) return
+          objectUrl = URL.createObjectURL(blob)
           setResolved({ source, url: objectUrl, actor })
         } catch { /* Keep the accessible fallback on denied or failed downloads. */ }
       })()

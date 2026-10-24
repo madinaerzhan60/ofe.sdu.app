@@ -1,3 +1,5 @@
+import {eventDate} from './event-date'
+import {useLanguage} from './use-language'
 import { StorageImage } from './storage'
 import { ThemeToggle } from "./theme"
 import { AboutSection } from "./about"
@@ -174,16 +176,12 @@ const pageLabels: Record<Page, string> = {
   policy: "Policies",
 }
 
-function PrototypeBanner({go,page}: {go:(p:Page)=>void,page:Page}) {
- const t=useT();const {account,setAccount}=useModel();
- return <div className="prototype-toolbar"><span>{t('Interactive prototype')}</span><div role="group" aria-label={t('Preview role')}><button className={account!=="student"&&page!=="admin"?'active':''} onClick={()=>{setAccount('signed-out');go('home');}}>{t('Visitor')}</button><button className={account==='student'&&page!=="admin"?'active':''} onClick={()=>{setAccount('student');go('apply');}}>{t('Student account')}</button><button className={page==='admin'?'active':''} onClick={()=>go('admin')}>{t('Admin preview')} ↗</button></div></div>;
-}
 
 function Logo({ onClick }: { onClick: () => void }) {
   const t = useT()
   return (
     <button className="brand" onClick={onClick} aria-label={t("OFE home")}>
-      <img src="/ofe-logo.png" alt="SDU Office for Entrepreneurship" />
+      <img src="/sdu-entrepreneurship-emblem.png" alt="SDU Office for Entrepreneurship" />
     </button>
   )
 }
@@ -199,7 +197,7 @@ function AccountMenu({go}: {go: (page: Page)=>void}) {
 
  const close=()=>{if(menu.current)menu.current.open=false;};
  useEffect(()=>{const dismiss=(event:PointerEvent)=>{if(menu.current&&!menu.current.contains(event.target as Node))close();};document.addEventListener('pointerdown',dismiss);return()=>document.removeEventListener('pointerdown',dismiss);},[]);
- return <details ref={menu} className="account-menu" onKeyDown={e=>{if(e.key==='Escape')close();}}><summary aria-label={t('My account')}><span className="account-name">{t('My account')}</span></summary><div className="account-popover"><span>{liveMode ? userEmail : t('Demo student · SDU account')}</span><button onClick={()=>{close();setWorkspaceTab('My applications');go('apply');}}>{t('My applications')}</button><button onClick={()=>{close();setWorkspaceTab('My startup');go('apply');}}>{t('My startup')}</button><button onClick={()=>{close();setWorkspaceTab('My teams');go('apply');}}>{t('My teams')}</button>{isAdmin && <button onClick={()=>{close();go('admin')}}>{t('Workspace management')}</button>}<button onClick={()=>{close();setAccount('signed-out');go('home');}}>{t('Sign out')}</button></div></details>;
+ return <details ref={menu} className="account-menu" onKeyDown={e=>{if(e.key==='Escape')close();}}><summary aria-label={t('My account')}><span className="account-name">{t('My account')}</span></summary><div className="account-popover"><span>{liveMode ? userEmail : t('Demo student · SDU account')}</span>{!isAdmin && <><button onClick={()=>{close();setWorkspaceTab('My applications');go('apply');}}>{t('My applications')}</button><button onClick={()=>{close();setWorkspaceTab('My startup');go('apply');}}>{t('My startup')}</button><button onClick={()=>{close();setWorkspaceTab('My teams');go('apply');}}>{t('My teams')}</button></>}{isAdmin && <button onClick={()=>{close();go('admin')}}>{t('Workspace management')}</button>}<button onClick={()=>{close();setAccount('signed-out');go('home');}}>{t('Sign out')}</button></div></details>;
 }
 
 function Header({
@@ -214,7 +212,7 @@ function Header({
   go: (p: Page) => void
 }) {
   const t = useT()
-  const {account} = useModel()
+  const {account,isAdmin} = useModel()
   const [open, setOpen] = useState(false)
   const [compact, setCompact] = useState(false)
   useEffect(() => {
@@ -235,7 +233,7 @@ function Header({
     { label: c.nav[0], page: "startups" as Page },
     { label: c.nav[1], page: "demo" as Page },
     { label: c.nav[2], page: "home" as Page, anchor: true },
-    { label: account === "student" ? t("My workspace") : c.nav[3], page: "apply" as Page },
+    { label: account === "student" ? t("My workspace") : c.nav[3], page: (account === "student" && isAdmin ? "admin" : "apply") as Page },
   ]
   const navigate = (p: Page) => {
     go(p)
@@ -275,7 +273,7 @@ function Header({
             </button>
           ))}
           <div className="mobile-actions">
-            <button className="login" onClick={() => navigate("apply")}>
+            <button className="login" onClick={() => navigate(isAdmin ? "admin" : "apply")}>
               {account === "student" ? t("My workspace") : c.login}
             </button>
           </div>
@@ -315,7 +313,7 @@ function Header({
 
 function Footer({ go, page }: { go: (p: Page) => void; page: Page }) {
   const t = useT()
-  const { openPolicy,account } = useModel()
+  const { openPolicy,account,isAdmin } = useModel()
   return (
     <>
       {account !== "student" && page !== "apply" && <section className="footer-cta shell reveal">
@@ -337,7 +335,7 @@ function Footer({ go, page }: { go: (p: Page) => void; page: Page }) {
           <strong>{t("Platform")}</strong>
           <button onClick={() => go("startups")}>{t("Startups")}</button>
           <button onClick={() => go("demo")}>{t("Demo Day")}</button>
-          <button onClick={() => go("apply")}>{t(account === "student" ? "My workspace" : "Apply")}</button>
+          <button onClick={() => go(account === "student" && isAdmin ? "admin" : "apply")}>{t(account === "student" ? "My workspace" : "Apply")}</button>
         </div>
         <div>
           <strong>{t("Office")}</strong>
@@ -351,7 +349,7 @@ function Footer({ go, page }: { go: (p: Page) => void; page: Page }) {
           >
             {t("About OFE")}
           </button>
-          <button onClick={() => go("admin")}>{t("Admin preview")}</button>
+          {isAdmin && <button onClick={() => go("admin")}>{t("Workspace management")}</button>}
         </div>
         <div>
           <strong>{t("Policies")}</strong>
@@ -444,7 +442,7 @@ function StartupCard({
 function HeroVisual() {
   const t = useT()
   return (
-    <figure className="hero-photo">
+    <div className="hero-photo-stage"><figure className="hero-photo">
       <img
         src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1400&q=85"
         alt={t(
@@ -454,15 +452,8 @@ function HeroVisual() {
         width={1000}
         height={1200}
       />
-      <figcaption>
-        <span>{t("BIG IDEAS START TOGETHER")}</span>
-        <strong>
-          {t("Find your people.")}
-          <br />
-          {t("Build your next big thing.")}
-        </strong>
-      </figcaption>
-    </figure>
+
+    </figure></div>
   )
 }
 
@@ -539,7 +530,7 @@ function DetailDialog({
           onClick={onClose}
           autoFocus
         >
-          {t("×")}
+          ×
         </button>
         <p className="eyebrow">{t("OFFICE FOR ENTREPRENEURSHIP")}</p>
         <h2 id="detail-title">{t(title)}</h2>
@@ -557,19 +548,17 @@ function Home({ lang, go }: { lang: Lang, go: (p: Page) => void }) {
     .filter((r) => r.status === "Approved" && r.publication && r.visible !== false)
     .map((r) => ({ ...r, initials: r.name.slice(0, 2).toUpperCase() }))
   const c = copy[lang]
-  const upcomingEvents = events.filter(e => e.id !== "archive" && e.published && e.date).map(current => ({image:current.image,date:new Date(`${current.date}T15:00:00+05:00`),day:current.date.slice(8),month:current.date.slice(5,7),title:current.title,meta:t('Planned')+' · '+t(current.place)}));
   return (
     <main>
       <section className="hero shell">
         <div className="hero-copy">
           {current && <button className="hero-pill" onClick={() => go("demo")}>
             <span />
-            {t(current.title)} · {new Intl.DateTimeFormat(lang === "RU" ? "ru-RU" : lang === "KK" ? "kk-KZ" : "en-GB", {day:"numeric",month:"long"}).format(new Date(current.date + "T12:00:00+05:00"))}
+            {t(current.title)} · {eventDate(current.date,lang).short}
           </button>}
-          <p className="eyebrow founders-edition">SDU · 2026</p>
-          <h1 className="founders-title">SDU<br />FOUNDERS CUP</h1>
-          <p className="founders-tagline">{c.hero}</p>
-          <p className="hero-sub">{c.sub}</p>
+          <p className="eyebrow founders-edition">OFE · SDU · 2026</p>
+          <h1 className="founders-title"><span className="home-title-line">SDU</span><span className="home-title-line">FOUNDERS CUP</span></h1>
+          <p className="hero-sub">{t('Discover student startups, find teammates and share your project at SDU.')}</p>
           <div className="button-row">
             <button className="primary" onClick={() => go("startups")}>
               {c.explore}
@@ -578,7 +567,6 @@ function Home({ lang, go }: { lang: Lang, go: (p: Page) => void }) {
               {c.submit}
             </button>
           </div>
-          <p className="hero-caption">{c.caption}</p>
         </div>
         <HeroVisual />
       </section>
@@ -624,38 +612,7 @@ function Home({ lang, go }: { lang: Lang, go: (p: Page) => void }) {
         </div>
       </section>
 
-      <section className="section shell two-col reveal">
-        <div className="section-head">
-          <p className="eyebrow">{t("03 — CALENDAR")}</p>
-          <h2>{c.events}</h2>
-        </div>
-        <div className="event-list">
-          {upcomingEvents.map((event) => (
-            <div className="event-row" key={event.title + event.date.toISOString()}>
-              <button onClick={() => go("demo")}>
-                {event.image && <StorageImage className="event-thumbnail" src={event.image} alt="" />}
-                <span className="event-date">
-                  <strong>{event.day}</strong>
-                  {event.month}
-                </span>
-                <span>
-                  <strong>{t(event.title)}</strong>
-                  <small>{event.meta}</small>
-                </span>
-              </button>
-              <button
-                className="calendar-button"
-                onClick={() => go("demo")}
-                aria-label={`${t("View event")} · ${t(event.title)}`}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M7 17 17 7M7 7h10v10" />
-                </svg>
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
+
 
 
     </main>
@@ -690,9 +647,9 @@ function Directory({ go }: { go: (p: Page) => void }) {
   useEffect(()=>setShown(6),[search,industry,stage,sort])
   return <main className="shell page projects-page">
     <div className="community-page-head"><h1>{t('Projects')}</h1><button className="primary" onClick={()=>go('apply')}>{t('Add project')} ＋</button></div>
-    <div className="community-search project-search"><span aria-hidden="true">⌕</span><input aria-label={t('Search projects')} placeholder={t('Search by name, idea or field…')} value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label={t('Sort startups')} value={sort} onChange={e=>setSort(e.target.value)}><option value="newest">{t('Newest first')}</option><option value="az">{t('A–Z')}</option></select></div>
-    <TopicFilter value={industry} onChange={setIndustry} topics={industries.map(name=>({name,count:projects.filter(p=>p.industry===name).length}))} />
-    <div className="project-results-toolbar"><p role="status">{filtered.length} {t('projects found')}</p><div><label className="project-stage-filter"><span>{t('Stage')}</span><select aria-label={t('Stage')} value={stage} onChange={e=>setStage(e.target.value)}><option value="All">{t('All stages')}</option>{['Idea','Prototype','MVP','Seed','Growth'].map(value=><option key={value} value={value}>{t(value)}</option>)}</select></label>{(search||industry!=='All'||stage!=='All')&&<button className="inline-link" onClick={reset}>{t('Clear filters')}</button>}</div></div>
+    <div className="community-search project-search"><span aria-hidden="true">⌕</span><input aria-label={t('Search projects')} placeholder={t('Search by name, idea or field…')} value={search} onChange={e=>setSearch(e.target.value)}/><div className={`project-sort-control${sort !== 'newest' ? ' is-selected' : ''}`}><select aria-label={t('Sort startups')} value={sort} onChange={e=>setSort(e.target.value)}><option value="newest">{t('Newest first')}</option><option value="az">{t('A–Z')}</option></select><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="m4 6 4 4 4-4"/></svg></div></div>
+    <div className="project-filter-row"><TopicFilter value={industry} onChange={setIndustry} topics={industries.map(name=>({name,count:projects.filter(p=>p.industry===name).length}))} /><label className={`project-stage-filter${stage !== 'All' ? ' is-selected' : ''}`}><span>{t('Stage')}</span><select aria-label={t('Stage')} value={stage} onChange={e=>setStage(e.target.value)}><option value="All">{t('All stages')}</option>{['Idea','Prototype','MVP','Seed','Growth'].map(value=><option key={value} value={value}>{t(value)}</option>)}</select></label></div>
+    <div className="project-results-toolbar"><p role="status">{filtered.length} {t('projects found')}</p><div>{(search||industry!=='All'||stage!=='All')&&<button className="inline-link" onClick={reset}>{t('Clear filters')}</button>}</div></div>
     <div className="project-card-grid">{filtered.slice(0,shown).map((project,index)=>{
       return <button className={`project-discovery-card project-color-${index%4}`} key={project.id} onClick={()=>{select(project.name);go('profile')}}>
         <span className="project-card-visual">{project.cover?<StorageImage src={project.cover} alt=""/>:<><i className="project-visual-ring"/><i className="project-visual-square"/><span className="project-visual-word">{project.name}</span></>}<span className="project-card-category">{t(project.industry)}</span></span>
@@ -812,53 +769,20 @@ function Profile({ go }: { go: (p: Page) => void }) {
   )
 }
 
+function externalUrl(value?: string): string | undefined {
+  try { const url = new URL(value?.trim() || ''); return ['https:', 'http:'].includes(url.protocol) ? url.href : undefined } catch { return undefined }
+}
+
 function DemoDay({ go }: { go: (p: Page) => void }) {
   const t = useT()
-  const { events, submissions, select,registered,setRegistered, lang, liveMode, userId } = useModel()
+  const { events, submissions, lang } = useModel()
   const publishedEvent = events.find((e) => e.id === "current" && e.published) ?? events.find(e => e.id !== "archive" && e.published && e.date)
-  const current = publishedEvent ?? {id:'announced-founders-cup',title:'SDU FOUNDERS CUP',date:'2026-11-26',place:'Venue to be confirmed',published:false}
-  const registrationAvailable = Boolean(publishedEvent)
+  const current: EventData = publishedEvent ?? {id:'announced-founders-cup',title:'SDU FOUNDERS CUP',date:'2026-11-26',place:'Venue to be confirmed',published:false}
   const past = events.find((e) => e.id === "archive" && e.published)
-  const [registrationOpen, setRegistrationOpen] = useState(false)
-  const [registrationBusy,setRegistrationBusy] = useState(false)
-  const [registrationError,setRegistrationError] = useState('')
-  useEffect(() => {
-    if(!backend || !userId || !registrationAvailable) {if(liveMode)setRegistered(false);return}
-    let active=true
-    backend.from('event_registrations').select('event_id').eq('event_id',current.id).eq('user_id',userId).maybeSingle().then(({data,error})=>{if(active){setRegistered(Boolean(data));if(error)setRegistrationError('Could not load your data. Check your connection and try again.')}})
-    return () => {active=false}
-  },[userId,current?.id])
-  const [archive, setArchive] = useState<string[] | null>(null)
-  return (
+  const registrationUrl = externalUrl(current.registrationUrl || import.meta.env.VITE_EVENT_REGISTRATION_URL)
+  const archiveUrl = '/archive.html'
+return (
     <main className="events-page">
-      {registrationOpen && (
-        <DetailDialog
-          title={t(liveMode ? "You are registered" : "Demo registration recorded")}
-          onClose={() => setRegistrationOpen(false)}
-        >
-          <p>
-            {t(liveMode ? "Your registration is saved to your account." : "This is a preview confirmation. No registration was sent.")}
-          </p>
-          <button className="secondary" onClick={() => setRegistrationOpen(false)}>
-            {t("Close")}
-          </button>
-        </DetailDialog>
-      )}
-      {archive && (
-        <DetailDialog
-          title={t("Our first Demo Day")}
-          onClose={() => setArchive(null)}
-        >
-          <p className="detail-intro">
-            {t("The start of our Demo Day journey.")}
-          </p>
-          {past?.image && <StorageImage className="archive-photo" src={past.image} alt={past.title} />}<p className="detail-intro">{t('We have held one Demo Day. Verified dates, participating teams and event materials will be added after OFE review.')}</p><div className="archive-placeholder"><span aria-hidden="true">01</span><h3>{t('Our first Demo Day')}</h3><p>{t('Event details to be confirmed')}</p></div>
-          <button className="secondary" onClick={() => setArchive(null)}>
-            {t("Back to Demo Day")}
-          </button>
-        </DetailDialog>
-      )}
-
       {!current ? <section className="shell page"><h1>{t('No upcoming Demo Day')}</h1><p>{t('Check the archive for previous editions.')}</p></section> : <>      <section className="demo-hero">
         {current.image && <StorageImage className="demo-event-image" src={current.image} alt={current.title} />}
         {!current && (
@@ -873,23 +797,15 @@ function DemoDay({ go }: { go: (p: Page) => void }) {
             <div className="event-countdown"><span className="event-countdown-label">{t('Until we meet')}</span><Countdown date={current.date} /></div>
           </div>
           <aside className="event-ticket" aria-label={t('Event details')}>
+            <div className="event-poster" aria-hidden="true"><div className="event-poster-meta"><span>SDU · OFE</span><span>{current.date.split('-').reverse().join(' · ')}</span></div><div className="event-poster-type"><span>FOUNDERS</span><span>CUP<span className="poster-arrow">↗</span></span></div><svg className="poster-spark" viewBox="0 0 100 100"><path d="M50 0 58 32 85 15 68 42 100 50 68 58 85 85 58 68 50 100 42 68 15 85 32 58 0 50 32 42 15 15 42 32Z" /></svg><span className="event-poster-footer">{t('IDEAS BECOME REAL')}</span></div>
             <div className="event-ticket-top"><span>{t('YOU’RE INVITED')}</span><span className="event-ticket-badge">{t('Demo Day')}</span></div>
             <div className="event-date-display">
-              <div className="event-day"><span>{new Intl.DateTimeFormat(lang === 'RU' ? 'ru-RU' : lang === 'KK' ? 'kk-KZ' : 'en-GB', {month:'short', timeZone:'Asia/Qyzylorda'}).format(new Date(current.date + 'T12:00:00+05:00')).replace('.', '')}</span><strong>{current.date.slice(8)}</strong></div>
-              <div><span className="event-field-label">{t('DATE')}</span><time dateTime={current.date}>{new Intl.DateTimeFormat(lang === 'RU' ? 'ru-RU' : lang === 'KK' ? 'kk-KZ' : 'en-GB', {day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Qyzylorda'}).format(new Date(current.date + 'T12:00:00+05:00'))}</time><small>{new Intl.DateTimeFormat(lang === 'RU' ? 'ru-RU' : lang === 'KK' ? 'kk-KZ' : 'en-GB', {weekday:'long', timeZone:'Asia/Qyzylorda'}).format(new Date(current.date + 'T12:00:00+05:00'))}</small></div>
+              <div className="event-day"><span>{eventDate(current.date,lang).month.replace('.', '')}</span><strong>{current.date.slice(8)}</strong></div>
+              <div><span className="event-field-label">{t('DATE')}</span><time dateTime={current.date}>{eventDate(current.date,lang).full}</time><small>{eventDate(current.date,lang).weekday}</small></div>
             </div>
             <div className="event-location"><span className="event-location-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><div><span className="event-field-label">{t('PLACE')}</span><strong>{t(current.place)}</strong><small>{t('Follow this page for event updates.')}</small></div></div>
             <div className="ticket-perforation" aria-hidden="true" />
-            {registrationError && <p className="form-error" role="alert">{t(registrationError)}</p>}
-            <button className="event-register" disabled={!registrationAvailable || registered || registrationBusy} onClick={async () => {
-              if(liveMode && !userId){go('apply');return}
-              setRegistrationBusy(true);setRegistrationError('')
-              try {
-                if(backend){const result=await backend.from('event_registrations').insert({event_id:current.id,user_id:userId});if(result.error && result.error.code !== '23505')throw result.error}
-                setRegistered(true);setRegistrationOpen(true)
-              }catch{setRegistrationError('Your changes were not saved. Check your connection and permissions, then try again.')}
-              finally{setRegistrationBusy(false)}
-            }}>{t(!registrationAvailable ? 'Registration opens soon' : registrationBusy ? 'Please wait…' : registered ? (liveMode ? 'You are registered' : 'Demo registration recorded') : 'Register to attend')}<span aria-hidden="true">{registered ? '✓' : '↗'}</span></button>
+            {registrationUrl ? <a className="event-register" href={registrationUrl} target="_blank" rel="noopener noreferrer">{t('Register to attend')}<span aria-hidden="true">↗</span></a> : <button className="event-register" disabled>{t('Registration opens soon')}<span aria-hidden="true">↗</span></button>}
             <button className="event-calendar" onClick={() => {
               const escape = (value: string) => value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;')
               const date = current.date.replace(/-/g, '')
@@ -897,9 +813,10 @@ function DemoDay({ go }: { go: (p: Page) => void }) {
               const calendar = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//OFE//Events//EN','BEGIN:VEVENT',`UID:${current.id}-${date}@ofe.local`,`DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z/,'Z')}`,`DTSTART;VALUE=DATE:${date}`,`DTEND;VALUE=DATE:${next.toISOString().slice(0,10).replace(/-/g,'')}`,`SUMMARY:${escape(current.title)}`,`LOCATION:${escape(current.place)}`,'END:VEVENT','END:VCALENDAR'].join('\r\n')
               const url = URL.createObjectURL(new Blob([calendar], {type:'text/calendar;charset=utf-8'})); const link = document.createElement('a'); link.href=url; link.download='ofe-demo-day.ics'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000)
             }}>{t('Add to calendar')}<span aria-hidden="true">＋</span></button>
-            <p className="event-ticket-note">{t(!registrationAvailable ? 'Follow this page for registration updates.' : liveMode ? 'Sign in to save your event registration.' : 'Registration is a demo preview.')}</p>
+
           </aside>
         </div>
+        <div className="event-ticker" aria-hidden="true"><div><span><b>SDU FOUNDERS CUP</b><i>✳</i>{t('MEET THE NEXT GENERATION')}<i>✳</i><b>{t('IDEAS BECOME REAL')}</b><i>✳</i></span><span><b>SDU FOUNDERS CUP</b><i>✳</i>{t('MEET THE NEXT GENERATION')}<i>✳</i><b>{t('IDEAS BECOME REAL')}</b><i>✳</i></span></div></div>
       </section>
       <section className="section shell program">
         <div className="section-head">
@@ -951,27 +868,11 @@ function DemoDay({ go }: { go: (p: Page) => void }) {
           <p className="eyebrow">{t("ARCHIVE")}</p>
           <h2>{t("Our first Demo Day")}</h2>
         </div>
-        <div className="archive-grid">
-          {(past ? [["01", "Our first Demo Day", "Event details to be confirmed"]] : []).map((a, i) => (
-            <button
-              key={a[0]}
-              onClick={() => setArchive(a)}
-              aria-label={`${t("View archive")} · ${a[0]}`}
-            >
-              <span className={`archive-visual v${i}`}>
-                <b>{t("OFE")}</b>
-                <small>{t("DEMO DAY")}</small>
-              </span>
-              <strong>
-                {t("Our first Demo Day")}
-              </strong>
-              <span>
-                {t(a[2])}
-              </span>
-              <i>{t("View archive")}</i>
-            </button>
-          ))}
-        </div>
+        <a className="archive-feature" href={archiveUrl}>
+          <span className="archive-feature-mark" aria-hidden="true">01<span>OFE<br/>DEMO DAY</span></span>
+          <span className="archive-feature-copy"><span className="eyebrow">{t('THE FIRST CHAPTER')}</span><strong>{t('The finalists. The ideas. The beginning.')}</strong><span>{t('Discover last year’s finalists and the startups they built.')}</span><span className="archive-feature-link">{t('Explore the first Demo Day')} →</span></span>
+        </a>
+
       </section>
     </main>
   )
@@ -1027,7 +928,7 @@ export default function App() {
   const account = platform.liveMode ? (platform.userId ? 'student' : 'signed-out') : demoAccount
   const setAccount = (value: 'signed-out' | 'student' | 'denied') => {
     if (!platform.liveMode) {setDemoAccount(value);return}
-    if (value === 'signed-out') void backend!.auth.signOut().then(({error}) => {if(error)window.alert('Could not sign out. Please try again.')})
+    if (value === 'signed-out') void backend!.auth.signOut().then(({error}) => {if(error)window.alert(lang === 'RU' ? 'Не удалось выйти. Попробуйте ещё раз.' : lang === 'KK' ? 'Шығу мүмкін болмады. Қайталап көріңіз.' : 'Could not sign out. Please try again.')})
   }
   const [page, setPage] = useState<Page>(window.location.hash === "#admin" ? "admin" : "home")
   useEffect(() => {
@@ -1035,9 +936,10 @@ export default function App() {
     window.addEventListener('hashchange', openAdmin)
     return () => window.removeEventListener('hashchange', openAdmin)
   }, [])
-  const [lang, setLang] = useState<Lang>("EN")
+  const [lang, setLang] = useLanguage()
   useEffect(() => {setDraft(emptyDraft);setResubmitId(null);setRegistered(false)}, [platform.userId])
   const go = (p: Page) => {
+    if (p === 'apply' && platform.isAdmin) p = 'admin'
     setPage(p)
     window.history.replaceState(null, '', p === 'admin' ? '#admin' : window.location.pathname + window.location.search)
     window.scrollTo({
@@ -1047,6 +949,13 @@ export default function App() {
         : "smooth",
     })
   }
+  useEffect(() => {
+    if (page === 'apply' && platform.isAdmin) {
+      setPage('admin')
+      window.history.replaceState(null, '', '#admin')
+      window.scrollTo({top:0,behavior:'instant'})
+    }
+  }, [page, platform.isAdmin])
   useEffect(() => {
     document.documentElement.lang = lang.toLowerCase()
   }, [lang])
@@ -1097,7 +1006,7 @@ export default function App() {
           </DetailDialog>
         )}
         <Header lang={lang} setLang={setLang} page={page} go={go} />
-        {!platform.liveMode && <PrototypeBanner go={go} page={page} />}
+
         {platform.error && <BackendNotice message={platform.error} onClose={platform.clearError} />}
         {platform.recovery && <DetailDialog title={lang === 'RU' ? 'Новый пароль' : 'New password'} onClose={platform.finishRecovery}><AuthPanel recovery /></DetailDialog>}
         {page === "home" && <Home lang={lang} go={go} />}
@@ -1105,7 +1014,7 @@ export default function App() {
         {page === "teams" && <Teams go={go} />}
         {page === "profile" && <Profile go={go} />}
         {page === "demo" && <DemoDay go={go} />}
-        {page === "apply" && <Application go={go} />}
+        {page === "apply" && (platform.isAdmin ? <AdminDashboard go={go} /> : <Application go={go} />)}
         {page === "admin" && <AdminDashboard go={go} />}
         {page === "policy" && <PolicyPage go={go} />}
         {page !== "admin" && <Footer go={go} page={page} />}

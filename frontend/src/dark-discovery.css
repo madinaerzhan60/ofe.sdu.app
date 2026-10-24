@@ -178,3 +178,276 @@ html[data-theme="dark"] .app.app .profile .profile-side > section { padding:26px
 html[data-theme="dark"] .app.app .profile .profile-side .eyebrow { font-size:14px;line-height:1.5; }
 html[data-theme="dark"] .app.app .profile .profile-side p:not(.eyebrow) { font-size:16px;line-height:1.8;color:#eee3f5; }
 html[data-theme="dark"] .app.app .profile .profile-side .facts :is(span,strong) { font-size:16px;line-height:1.65; }
+
+/* Layered plum tones: a dark foreground and soft light behind the invitation. */
+html[data-theme] .app.app .events-page .demo-hero {
+ background:radial-gradient(ellipse at 76% 46%,#72466838 0%,transparent 54%),radial-gradient(ellipse at 46% 115%,#68427948 0%,transparent 62%),linear-gradient(112deg,#140e22 0%,#21132f 45%,#33203f 76%,#20152f 100%);
+ border-bottom:1px solid #b99ac51a;
+}
+html[data-theme] .app.app .events-page .demo-hero::after {
+ content:'';position:absolute;inset:0;width:auto;height:auto;border:0;border-radius:0;box-shadow:none;
+ background:linear-gradient(180deg,#100b201a 0%,transparent 28%,transparent 65%,#10091d42 100%);pointer-events:none;z-index:-1;
+}
+html[data-theme] .app.app .events-page .event-title-name { background:none;color:#fff;-webkit-text-fill-color:currentColor;text-shadow:0 3px 24px #10071c24; }
+html[data-theme] .app.app .events-page .event-hero-description { color:#d6c9df; }
+html[data-theme] .app.app .events-page .event-ticket { box-shadow:0 30px 75px #09051150,0 4px 16px #09051124; }
+html[data-theme="light"] .app.app .events-page .event-ticket { background:linear-gradient(155deg,#fff 25%,#faf7fc 100%);border:1px solid #fff; }
+html[data-theme="dark"] .app.app .events-page .event-ticket { background:linear-gradient(145deg,#382b46,#261c34);border:1px solid #92769c52; }
+html[data-theme] .app.app .events-page .countdown div { background:linear-gradient(145deg,#ffffff09,#ffffff03);border:1px solid #e3cbed1c;box-shadow:inset 0 1px 0 #ffffff05; }
+
+/* Founders Cup: moving event poster, editorial scale and staged entrances. */
+html[data-theme] .app.app .events-page .demo-hero { padding-bottom:0;background-size:130% 130%;animation:event-atmosphere 22s ease-in-out infinite alternate; }
+html[data-theme] .app.app .events-page .event-hero-layout { align-items:center;padding-bottom:64px; }
+html[data-theme] .app.app .events-page .event-hero-copy>* { animation:event-arrive .8s cubic-bezier(.16,1,.3,1) both; }
+html[data-theme] .app.app .events-page .event-kicker { animation-delay:.08s; }
+html[data-theme] .app.app .events-page .event-hero-copy h1 { animation-delay:.15s; }
+html[data-theme] .app.app .events-page .event-hero-description { animation-delay:.24s; }
+html[data-theme] .app.app .events-page .event-countdown { animation-delay:.32s; }
+html[data-theme] .app.app .events-page .event-title-name { font-size:clamp(45px,6vw,82px);line-height:.98;letter-spacing:-.055em;font-weight:750;max-width:650px; }
+html[data-theme] .app.app .events-page .event-title-university { font-size:16px;letter-spacing:.18em;margin-bottom:18px; }
+html[data-theme] .app.app .events-page .event-ticket { overflow:hidden;animation:event-arrive 1s .22s cubic-bezier(.16,1,.3,1) both;transition:transform .35s ease,box-shadow .35s ease; }
+.event-poster { position:relative;isolation:isolate;overflow:hidden;min-height:205px;margin:-28px -28px 24px;padding:20px 24px;background:#c4acf0;color:#2c1844;border-bottom:1px solid #38234918; }
+.event-poster::before { content:'';position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(0deg,transparent,transparent 39px,#3220440b 39px,#3220440b 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,#3220440b 39px,#3220440b 40px); }
+.event-poster-meta { display:flex;justify-content:space-between;font-size:9px;letter-spacing:.12em;font-weight:600; }
+.event-poster-type { display:flex;flex-direction:column;font-size:clamp(36px,3.8vw,49px);font-weight:850;line-height:.93;letter-spacing:-.065em;margin:25px 0 22px;position:relative;z-index:1; }
+.event-poster-type>span:nth-child(2) { display:flex;align-items:center;gap:16px; }
+.poster-arrow { font-weight:400;font-size:52px;line-height:.8; }
+.poster-spark { position:absolute;right:15px;bottom:24px;width:100px;height:100px;fill:#e6f0b5;filter:drop-shadow(0 3px 0 #2814430d);animation:poster-turn 32s linear infinite; }
+.event-poster-footer { font-size:9px;font-weight:650;letter-spacing:.12em;position:relative;z-index:1; }
+.event-ticker { border-top:1px solid #e5cbff22;border-bottom:1px solid #e5cbff22;background:#ffffff04;overflow:hidden;user-select:none; }
+.event-ticker>div { display:flex;width:max-content;animation:event-ticker 36s linear infinite; }
+.event-ticker>div>span { display:flex;align-items:center;gap:32px;flex:none;padding:18px 16px;font-size:11px;font-weight:500;letter-spacing:.12em;color:#d6c4e8;white-space:nowrap; }
+.event-ticker b { color:#f1e7fc;font-weight:650; }.event-ticker i { font-style:normal;color:#c5a4ed;font-size:21px; }
+@keyframes event-arrive { from { opacity:0;transform:translateY(22px); } to { opacity:1;transform:translateY(0); } }
+@keyframes poster-turn { to { transform:rotate(360deg); } }
+@keyframes event-ticker { to { transform:translateX(-50%); } }
+@keyframes event-atmosphere { from { background-position:0% 30%; } to { background-position:100% 75%; } }
+@media(hover:hover) { html[data-theme] .app.app .events-page .event-ticket:hover { transform:translateY(-5px);box-shadow:0 35px 85px #09051160; }.event-ticker:hover>div { animation-play-state:paused; } }
+@media(min-width:1000px) { html[data-theme] .app.app .events-page .event-hero-layout { grid-template-columns:minmax(0,1fr) 380px;gap:64px; } }
+@media(max-width:800px) { html[data-theme] .app.app .events-page .event-title-name { font-size:clamp(40px,9.5vw,68px); }.event-poster-type { font-size:49px; }.event-poster { min-height:205px; } }
+@media(prefers-reduced-motion:reduce) { html[data-theme] .app.app .events-page .demo-hero,.event-ticker>div,.poster-spark { animation:none; } html[data-theme] .app.app .events-page .event-hero-copy>*,html[data-theme] .app.app .events-page .event-ticket { animation:none; } }
+
+@media(max-width:800px) { .event-poster-type { font-size:clamp(32px,8.5vw,49px); }.poster-spark { width:80px;height:80px; } html[data-theme] .app.app .events-page .event-hero-copy { min-width:0; } html[data-theme] .app.app .events-page .countdown { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%;max-width:360px; } html[data-theme] .app.app .events-page .countdown div { min-width:0;padding:14px 4px; } html[data-theme] .app.app .events-page .countdown strong { font-size:clamp(20px,6vw,28px); } }
+
+/* Keep the mobile navigation control visible against both header themes. */
+@media(max-width:800px) {
+ .app.app .header .hamburger { display:flex;flex:0 0 40px;width:40px;height:40px;align-items:center;justify-content:center;padding:8px;border:1px solid #d9cfe3;border-radius:12px;background:#f5f0f9;color:#38234c;gap:5px; }
+ .app.app .header .hamburger span { display:block;width:19px;height:2px;flex-shrink:0;border:0;background:currentColor;border-radius:2px; }
+ .app.app .header .hamburger:focus-visible { outline:2px solid #ad80df;outline-offset:3px; }
+ .app.app .header .nav.open { top:calc(100% + 8px);z-index:30;border-radius:16px;padding:12px;border:1px solid #d9cfe3;box-shadow:0 12px 32px #160b2420; }
+ html[data-theme="dark"] .app.app .header .hamburger { color:#f6ecff;background:#352443;border-color:#76578e; }
+ html[data-theme="dark"] .app.app .header .hamburger span { background:currentColor;border:0; }
+ html[data-theme="dark"] .app.app .header .nav.open { background:#291c36;border-color:#76578e;box-shadow:0 16px 40px #0006; }
+ html[data-theme="dark"] .app.app .header .nav.open button { color:#f0e3fc;border-color:#523a65; }
+ html[data-theme="dark"] .app.app .header .nav.open button.active { background:#503365;color:#fff; }
+}
+@media(max-width:380px) {
+ .app.app .header,.app.app .header.compact { padding-inline:8px;gap:6px; }
+ .app.app .header .brand img,.app.app .header.compact .brand img { width:34px;height:34px; }
+ .app.app .header .header-right { gap:5px; }
+ .app.app .header .language { grid-template-columns:repeat(3,24px);gap:1px;padding:3px; }
+ .app.app .header .theme-toggle { width:32px;height:34px; }
+ .app.app .header .hamburger { width:36px;flex-basis:36px;height:36px; }
+}
+
+/* Dark controls keep dark hover and keyboard-focus surfaces. */
+html[data-theme="dark"] .app.app :is(.account-popover button,.account-menu summary,.secondary,.event-calendar,.google-signin) { color:#f0e3fc;background:#30203e;border-color:#705185; }
+html[data-theme="dark"] .app.app :is(.account-popover button,.account-menu summary,.secondary,.event-calendar,.google-signin):not(:disabled):is(:hover,:focus-visible) { background:#49305d;color:#fff;border-color:#a27bbb; }
+html[data-theme="dark"] .app.app .account-popover button { background:transparent; }
+html[data-theme="dark"] .app.app .account-popover button:is(:hover,:focus-visible) { background:#49305d;color:#fff; }
+html[data-theme="dark"] .app.app :is(.auth-tabs button,.community-tabs button,.student-sidebar nav button,.admin-side>button,.table-toolbar button):not(:disabled):is(:hover,:focus-visible) { background:#49305d;color:#fff;border-color:#8f6aa7; }
+html[data-theme="dark"] .app.app :is(.auth-tabs button.active,.community-tabs button.active,.student-sidebar nav button.active) { background:#684090;color:#fff; }
+html[data-theme="dark"] .app.app :is(.secondary,.account-popover button,.event-calendar,.google-signin,.account-menu summary):focus-visible { outline:2px solid #c39aef;outline-offset:2px; }
+html[data-theme="dark"] .admin-modal .secondary { background:#30203e;color:#f0e3fc;border-color:#705185; }
+html[data-theme="dark"] .admin-modal .secondary:not(:disabled):is(:hover,:focus-visible) { background:#49305d;color:#fff;border-color:#a27bbb; }
+html[data-theme="dark"] .app.app select { color-scheme:dark; }
+
+/* Fill the admin grid behind the sticky sidebar, including its top gap. */
+html[data-theme="dark"] .app.app .admin-page { background:#21172c; }
+html[data-theme="dark"] { color-scheme:dark;scrollbar-color:#705184 #181120; }
+html[data-theme="dark"] body { background:#181120; }
+
+/* Home and About: clear hierarchy, staged entrances and restrained motion. */
+.app.app .hero-copy>* { animation:home-enter .8s cubic-bezier(.16,1,.3,1) both; }
+.app.app .hero-copy .founders-edition { animation-delay:.04s; }
+.app.app .hero-copy h1 { animation-delay:.12s; }
+.app.app .hero-copy .hero-sub { animation-delay:.22s; }
+.app.app .hero-copy .button-row { animation-delay:.32s; }
+.app.app .hero-photo { animation:home-enter 1s .2s cubic-bezier(.16,1,.3,1) both; }
+.app.app .hero-photo>img { animation:home-photo-drift 20s ease-in-out infinite alternate;transform-origin:50% 50%; }
+.app.app .about-story { padding-block:80px; }
+.app.app .about-story-intro { gap:64px;align-items:stretch; }
+.app.app .about-story-intro>div { display:flex;flex-direction:column;justify-content:center; }
+.app.app .about-story-intro h2 { margin-bottom:22px;font-size:clamp(40px,5vw,64px);font-weight:500; }
+.app.app .about-story-intro>div>p:last-of-type { font-size:17px;line-height:1.85;max-width:510px; }
+.app.app .about-belief { position:relative;overflow:hidden;min-height:250px;background:linear-gradient(130deg,#ece1f7,#f6effb);border:1px solid #dac6e9;padding:30px;gap:30px; }
+.app.app .about-belief-top { display:flex;align-items:center;justify-content:space-between;gap:20px; }
+.app.app .about-belief-top>span:last-child { font-size:9px;line-height:1.6;letter-spacing:.14em;color:#79538f; }
+.app.app .about-belief-symbol { display:inline-block;font-size:48px;line-height:1;margin:0;color:#8750b4;animation:poster-turn 45s linear infinite; }
+.app.app .about-belief h3 { font-size:clamp(25px,3vw,36px);font-weight:500;letter-spacing:-.04em;color:#31203e;line-height:1.2; }
+.about-path { display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px; }
+.about-path>span { padding:8px 14px;border:1px solid #bfa5d1;border-radius:99px;color:#60387e;background:#ffffff55; }
+.about-path>i { font-style:normal;color:#8c64a3; }
+.app.app .about-journey li { min-height:220px;padding:26px;border-radius:18px;background:#fff;transition:opacity .65s ease,transform .65s cubic-bezier(.16,1,.3,1),border-color .25s,box-shadow .25s; }
+.app.app .about-journey li:nth-child(2) { transition-delay:.07s; }.app.app .about-journey li:nth-child(3) { transition-delay:.14s; }.app.app .about-journey li:nth-child(4) { transition-delay:.21s; }
+.about-service-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;color:#8250a3; }
+.about-service-top svg { width:29px;height:29px; }.about-service-top>span { font-size:11px;letter-spacing:.08em;opacity:.7; }
+.app.app .about-journey h4 { font-size:19px;font-weight:550;margin-bottom:12px; }
+.app.app .about-journey li p { font-size:14px;line-height:1.75; }
+html[data-theme="dark"] .app.app .about-belief { background:linear-gradient(130deg,#342142,#251a32);border-color:#624575; }
+html[data-theme="dark"] .app.app .about-belief h3 { color:#f5eafd; }
+html[data-theme="dark"] .app.app .about-belief-top>span:last-child { color:#c5abd8; }
+html[data-theme="dark"] .app.app .about-path>span { background:#ffffff06;color:#e6d2f4;border-color:#705186; }
+html[data-theme="dark"] .app.app .about-service-top { color:#c0a0da; }
+html[data-theme="dark"] .app.app .about-journey li:nth-child(n) { background:#23192e;border-color:#4e395c; }
+@media(hover:hover) { .app.app .about-journey li.revealed:hover { transform:translateY(-6px);border-color:#a27abc;box-shadow:0 14px 30px #28123d10; }.app.app .hero .button-row button { transition:transform .2s ease,box-shadow .2s ease; }.app.app .hero .button-row button:hover { transform:translateY(-3px);box-shadow:0 8px 20px #44215f22; } }
+@keyframes home-enter { from { opacity:0;transform:translateY(22px); } to { opacity:1;transform:translateY(0); } }
+@keyframes home-photo-drift { from { transform:scale(1); } to { transform:scale(1.045); } }
+@media(max-width:700px) { .app.app .about-story { padding-block:52px; }.app.app .about-story-intro { gap:28px; }.app.app .about-belief { padding:24px;min-height:230px; }.app.app .about-journey li { min-height:0;padding:22px; }.about-service-top { margin-bottom:24px; } }
+@media(prefers-reduced-motion:reduce) { .app.app .hero-copy>*,.app.app .hero-photo,.app.app .hero-photo>img,.app.app .about-belief-symbol { animation:none; }.app.app .about-journey li,.app.app .hero .button-row button { transition:none; } }
+
+html[data-theme="dark"] .app.app .about-story{border-color:#493353}
+
+/* Visible movement on the home introduction, without shifting its layout. */
+.app.app .hero .home-title-line { display:block;animation:home-title-reveal 1.1s cubic-bezier(.16,1,.3,1) both; }
+.app.app .hero .home-title-line:first-child { animation-delay:.16s; }
+.app.app .hero .home-title-line:last-child { animation-delay:.34s; }
+.app.app .hero-photo { animation:home-enter 1s .2s cubic-bezier(.16,1,.3,1) both,home-photo-float 7s 1.2s ease-in-out infinite; }
+.app.app .hero-photo>img { animation:home-photo-drift 12s ease-in-out infinite alternate; }
+.app.app .hero .button-row>.primary { position:relative;isolation:isolate;overflow:hidden; }
+.app.app .hero .button-row>.primary::after { content:'';position:absolute;inset:-40% auto -40% -70%;width:45%;background:linear-gradient(100deg,transparent,#ffffff25,transparent);transform:skewX(-18deg);pointer-events:none;animation:home-button-shine 6s 1.5s ease-in-out infinite; }
+@keyframes home-title-reveal { from { opacity:0;transform:translateY(24px);clip-path:inset(0 0 100% 0); } to { opacity:1;transform:translateY(0);clip-path:inset(0); } }
+@keyframes home-photo-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+@keyframes home-button-shine { 0%,55% { left:-70%;opacity:0; } 60% { opacity:1; } 82%,100% { left:150%;opacity:0; } }
+@media(max-width:700px) { @keyframes home-photo-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } } }
+@media(prefers-reduced-motion:reduce) { .app.app .hero .home-title-line,.app.app .hero-photo,.app.app .hero-photo>img,.app.app .hero .button-row>.primary::after { animation:none; }.app.app .hero .home-title-line { opacity:1;clip-path:none; }.app.app .hero .button-row>.primary::after { display:none; } }
+
+/* Explicit card text colors prevent old alternating-card styles leaking through. */
+html[data-theme="light"] .app.app .about-journey li h4 { color:#30233b; }
+html[data-theme="light"] .app.app .about-journey li p { color:#5d5467; }
+html[data-theme="light"] .app.app .about-journey li { border-color:#d9d1e2; }
+html[data-theme="dark"] .app.app .about-journey li h4 { color:#f5eafa; }
+html[data-theme="dark"] .app.app .about-journey li p { color:#e1d5eb; }
+
+/* About: colorful ambient motion and a sequenced idea-to-project journey. */
+.app.app .about-belief { isolation:isolate; }
+.app.app .about-belief::before { content:'';position:absolute;z-index:-1;inset:-30%;background:radial-gradient(ellipse at 20% 35%,#b582f060,transparent 48%),radial-gradient(ellipse at 85% 25%,#dc8ebc38,transparent 45%),radial-gradient(ellipse at 60% 90%,#79baaf30,transparent 50%);animation:about-color-drift 13s ease-in-out infinite alternate;pointer-events:none; }
+.app.app .about-belief::after { content:'';position:absolute;left:8%;right:8%;bottom:0;height:1px;background:linear-gradient(90deg,transparent,#cd98f9,#91d4c6,#e9aed1,transparent);opacity:.7;pointer-events:none; }
+.app.app .about-belief-symbol { color:#bd8bf1;filter:drop-shadow(0 0 10px #b481df44); }
+.app.app .about-path>span { animation:about-step-glow 7.5s ease-in-out infinite; }
+.app.app .about-path>span:nth-of-type(2) { animation-delay:2.5s; }
+.app.app .about-path>span:nth-of-type(3) { animation-delay:5s; }
+.app.app .about-path>i { animation:about-arrow-flow 2.5s ease-in-out infinite; }
+.app.app .about-path>i:nth-of-type(2) { animation-delay:1.25s; }
+.app.app .about-journey li { position:relative;isolation:isolate;overflow:hidden; }
+.app.app .about-journey li::before { content:'';position:absolute;z-index:-1;width:180px;height:180px;right:-85px;top:-95px;border-radius:50%;background:radial-gradient(circle,#af7cdb20,transparent 68%);pointer-events:none;animation:about-card-aura 8s ease-in-out infinite alternate; }
+.app.app .about-journey li:nth-child(2)::before { background:radial-gradient(circle,#69bdae22,transparent 68%);animation-delay:-2s; }
+.app.app .about-journey li:nth-child(3)::before { background:radial-gradient(circle,#e091ba20,transparent 68%);animation-delay:-4s; }
+.app.app .about-journey li:nth-child(4)::before { background:radial-gradient(circle,#d4b16a22,transparent 68%);animation-delay:-6s; }
+.app.app .about-service-top svg { width:46px;height:46px;padding:10px;box-sizing:border-box;border-radius:14px;background:#b384e522;color:#9d5bc4;animation:about-icon-float 5s ease-in-out infinite; }
+.app.app .about-journey li:nth-child(2) .about-service-top svg { color:#247e72;background:#58baa222;animation-delay:-1.25s; }
+.app.app .about-journey li:nth-child(3) .about-service-top svg { color:#ac4f84;background:#df8fbd22;animation-delay:-2.5s; }
+.app.app .about-journey li:nth-child(4) .about-service-top svg { color:#927026;background:#d7b56a26;animation-delay:-3.75s; }
+html[data-theme="dark"] .app.app .about-service-top svg { color:#d5a9fc; }
+html[data-theme="dark"] .app.app .about-journey li:nth-child(2) .about-service-top svg { color:#95e0cc; }
+html[data-theme="dark"] .app.app .about-journey li:nth-child(3) .about-service-top svg { color:#f4b1d6; }
+html[data-theme="dark"] .app.app .about-journey li:nth-child(4) .about-service-top svg { color:#ebcf94; }
+@keyframes about-color-drift { 0% { transform:translate(-3%,-2%) rotate(-8deg) scale(1); } 100% { transform:translate(5%,4%) rotate(8deg) scale(1.14); } }
+@keyframes about-step-glow { 0%,30%,100% { box-shadow:none; } 10%,20% { box-shadow:0 0 0 3px #ba8be522,0 0 20px #b888da30; border-color:#ab78d1; } }
+@keyframes about-arrow-flow { 0%,100% { transform:translate(0,0);opacity:.45; } 50% { transform:translate(3px,-3px);opacity:1; } }
+@keyframes about-card-aura { from { transform:translate(0,0) scale(1); } to { transform:translate(-35px,35px) scale(1.35); } }
+@keyframes about-icon-float { 0%,100% { transform:translateY(0) rotate(0); } 50% { transform:translateY(-5px) rotate(4deg); } }
+@media(prefers-reduced-motion:reduce) { .app.app .about-belief::before,.app.app .about-path>span,.app.app .about-path>i,.app.app .about-journey li::before,.app.app .about-service-top svg { animation:none; } }
+
+/* Chosen home treatment: soft ambient light and a traveling frame highlight. */
+@property --hero-frame-angle { syntax:'<angle>';initial-value:0deg;inherits:false; }
+.app.app .hero-photo-stage { position:relative;isolation:isolate;min-width:0;width:100%;border-radius:28px;animation:home-enter 1s .2s cubic-bezier(.16,1,.3,1) both,home-photo-float 7s 1.2s ease-in-out infinite; }
+.app.app .hero-photo-stage::before { content:'';position:absolute;inset:-20px;z-index:-1;border-radius:inherit;background:radial-gradient(ellipse at 15% 25%,#a278ef88,transparent 55%),radial-gradient(ellipse at 85% 65%,#dc91bb66,transparent 55%),radial-gradient(ellipse at 50% 90%,#8a71d85c,transparent 58%);filter:blur(28px);opacity:.55;pointer-events:none;animation:hero-halo-breathe 9s ease-in-out infinite alternate; }
+.app.app .hero-photo-stage::after { content:'';position:absolute;inset:-2px;padding:2px;border-radius:inherit;pointer-events:none;background:conic-gradient(from var(--hero-frame-angle),#ab83d742 0deg,#ab83d742 80deg,#e4c0ff 125deg,#f5c5dc 150deg,#b89be866 195deg,#ab83d742 250deg,#ab83d742 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;animation:hero-frame-travel 10s linear infinite; }
+.app.app .hero-photo-stage .hero-photo { animation:none;border-radius:inherit; }
+.app.app .hero-photo-stage .hero-photo>img { transition:scale .65s ease; }
+html[data-theme="light"] .app.app .hero-photo-stage::before { opacity:.38; }
+@keyframes hero-frame-travel { to { --hero-frame-angle:360deg; } }
+@keyframes hero-halo-breathe { from { transform:translate(-7px,-5px) scale(.97);opacity:.4; } to { transform:translate(8px,7px) scale(1.05);opacity:.65; } }
+@media(hover:hover) { .app.app .hero-photo-stage:hover .hero-photo>img { scale:1.035; } }
+@media(max-width:480px) { .app.app .hero-photo-stage { border-radius:22px; }.app.app .hero-photo-stage::before { inset:-12px;filter:blur(22px); } }
+@media(prefers-reduced-motion:reduce) { .app.app .hero-photo-stage,.app.app .hero-photo-stage::before,.app.app .hero-photo-stage::after { animation:none; }.app.app .hero-photo-stage .hero-photo>img { transition:none; } }
+
+/* White-and-gold SDU emblem remains readable in either theme. */
+html[data-theme] .app.app .brand { background:#21172c;border:1px solid #6d537d55;border-radius:10px;padding:5px 8px;flex-shrink:0; }
+html[data-theme] .app.app .brand img { object-fit:contain;filter:none; }
+
+/* Translucent event invitation at the end of About. */
+.app.app .about-next-step { position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(115deg,#ad8bd31a,#b399c70a);border:1px solid #b493cf55;box-shadow:inset 0 1px 0 #ffffff38,0 10px 30px #28173b08;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px); }
+.app.app .about-next-step::before { content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,#ffffff14,transparent 45%,#b892db0a);pointer-events:none; }
+html[data-theme="light"] .app.app .about-next-step h3 { color:#30203f; }
+html[data-theme="light"] .app.app .about-next-step span { color:#715184; }
+html[data-theme="dark"] .app.app .about-next-step { background:linear-gradient(115deg,#b38ddb13,#ffffff04);border-color:#b89ac73d;box-shadow:inset 0 1px 0 #f1dcff0d,0 12px 32px #08030f18; }
+html[data-theme="dark"] .app.app .about-next-step h3 { color:#f5eefa; }
+html[data-theme="dark"] .app.app .about-next-step span { color:#cdb8dc; }
+@media(prefers-reduced-transparency:reduce) { .app.app .about-next-step { background:#eee7f5;backdrop-filter:none;-webkit-backdrop-filter:none; }html[data-theme="dark"] .app.app .about-next-step { background:#281d34; } }
+
+/* Minimal transparent event banner. */
+html[data-theme] .app.app .about-next-step { background:transparent;box-shadow:none;border-color:#a68ab329;backdrop-filter:none;-webkit-backdrop-filter:none; }
+html[data-theme] .app.app .about-next-step::before { content:none; }
+
+/* White luminous outline around the transparent event invitation. */
+html[data-theme] .app.app .about-next-step { background:transparent;border:1px solid #ffffffd9;box-shadow:0 0 7px #ffffff40,0 0 22px #ffffff16,inset 0 0 8px #ffffff0c; }
+html[data-theme="light"] .app.app .about-next-step { border-color:#fff;box-shadow:0 0 0 1px #b8a7c566,0 0 12px #fff,inset 0 0 10px #ffffff88; }
+
+/* Remove the platform's gray arrow gutter from form selects. */
+.app.app form select,.admin-modal select { appearance:none;-webkit-appearance:none;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%23704b89' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;background-size:16px; }
+html[data-theme="dark"] .app.app form select,html[data-theme="dark"] .admin-modal select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%23dfbdf7' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;background-size:16px; }
+
+.admin-modal .admin-modal-header>button{display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;box-sizing:border-box}.admin-modal .admin-modal-header>button>svg{display:block;flex:none;width:18px;height:18px}
+
+.app.app .about-instagram { display:inline-flex;align-items:center;gap:10px;align-self:flex-start;margin-top:24px;padding:12px 16px;border:1px solid #c5a6d7;border-radius:999px;color:#75418e;background:#bb86cc0d;text-decoration:none;font-size:14px;line-height:1.4;transition:transform .2s,background .2s,border-color .2s; }
+.app.app .about-instagram svg { flex:none; }.app.app .about-instagram:hover { transform:translateY(-2px);background:#bb86cc20;border-color:#a875bd; }
+.app.app .about-instagram:focus-visible { outline:2px solid #b68adc;outline-offset:3px; }
+html[data-theme="dark"] .app.app .about-instagram { color:#ead4fa;border-color:#8e6b9f;background:#b991d20c; }
+html[data-theme="dark"] .app.app .about-instagram:hover { background:#b991d221;border-color:#c89fe0; }
+@media(prefers-reduced-motion:reduce) { .app.app .about-instagram { transition:none; } }
+
+/* Emblem sits directly on the header/footer with no surrounding badge. */
+html[data-theme] .app.app .brand { background:transparent;border:0;box-shadow:none;border-radius:0; }
+
+html[data-theme="light"] .app.app .about-next-step { background:transparent;border:1px solid #9459c9;box-shadow:0 0 6px #8f4fc72b,0 0 18px #a575d414,inset 0 0 6px #a575d408; }
+
+html[data-theme="light"] .app.app .brand img { filter:brightness(0) saturate(100%) invert(15%) sepia(28%) saturate(2454%) hue-rotate(235deg) brightness(91%) contrast(96%); }
+html[data-theme="dark"] .app.app .brand img { filter:none; }
+
+.app.app .hero-photo-stage { box-shadow:0 24px 50px #32134830,0 8px 20px #25123a1c,0 0 45px #b384d52b; }
+html[data-theme="light"] .app.app .hero-photo-stage::before { opacity:.65; }
+html[data-theme="dark"] .app.app .hero-photo-stage { box-shadow:0 26px 60px #05010d70,0 0 48px #ae7cda38; }
+
+/* Admin return action needs its own dark state, including nested sidebar buttons. */
+html[data-theme="dark"] .app.app .admin-side .admin-side-bottom>button { background:#49305d;color:#fff;border:1px solid #9570ac;min-height:44px; }
+html[data-theme="dark"] .app.app .admin-side .admin-side-bottom>button:is(:hover,:focus-visible) { background:#604078;color:#fff;border-color:#c49bdf; }
+html[data-theme="dark"] .app.app .admin-side .admin-side-bottom>button:focus-visible { outline:2px solid #c49bdf;outline-offset:3px; }
+
+/* Readable, consistent typography for the administration workspace. */
+html[data-theme] .app.app .admin-page { font-family:"Segoe UI",Arial,sans-serif;font-size:15px;line-height:1.6;letter-spacing:normal; }
+html[data-theme] .app.app .admin-page :is(button,input,select,textarea) { font-family:inherit; }
+html[data-theme] .app.app .admin-head h1 { font-size:clamp(30px,3vw,40px);font-weight:600;line-height:1.2;letter-spacing:-.025em; }
+html[data-theme] .app.app .admin-description { font-size:15px;line-height:1.8;max-width:740px; }
+html[data-theme] .app.app .admin-page :is(.admin-breadcrumb,.admin-nav-label,.admin-demo-badge) { font-size:12px;line-height:1.6; }
+html[data-theme] .app.app .admin-page .eyebrow { font-size:11px;font-weight:600;letter-spacing:.08em; }
+html[data-theme] .app.app .admin-side button { font-size:14px;line-height:1.45;font-weight:500;min-height:46px; }
+html[data-theme] .app.app .admin-brand strong { font-size:19px;font-weight:650;letter-spacing:0; }
+html[data-theme] .app.app .admin-brand small { font-size:12px;line-height:1.5; }
+html[data-theme] .app.app .admin-stat { font-size:14px;line-height:1.5; }
+html[data-theme] .app.app .admin-stat>strong { font-size:30px;font-weight:650;line-height:1.2;font-variant-numeric:tabular-nums; }
+html[data-theme] .app.app .admin-stat small { font-size:12px;line-height:1.6; }
+html[data-theme] .app.app .admin-list-heading h2 { font-size:20px;font-weight:600;letter-spacing:-.015em; }
+html[data-theme] .app.app .admin-project-identity h3 { font-size:19px;font-weight:600;line-height:1.4; }
+html[data-theme] .app.app .admin-project-identity h3 button { font:inherit; }
+html[data-theme] .app.app .admin-project-identity p { font-size:15px;line-height:1.7; }
+html[data-theme] .app.app .admin-project :is(.status,.admin-project-tags span,.actions button) { font-size:13px;line-height:1.45; }
+html[data-theme] .app.app .admin-project-state small { font-size:13px;line-height:1.65; }
+html[data-theme] .app.app .table-toolbar :is(button,input) { font-size:14px;line-height:1.5; }
+html[data-theme] .app.app .admin-side-bottom p { font-size:13px;line-height:1.7; }
+@media(max-width:700px) { html[data-theme] .app.app .admin-head h1 { font-size:30px; }html[data-theme] .app.app .admin-stat { font-size:13px; } }
+
+/* Long translated captions remain within their controls. */
+.app .button-row{flex-wrap:wrap}.app .button-row>button{max-width:100%;white-space:normal;text-align:center}.app .about-belief-top>span:last-child{max-width:150px;text-align:right;overflow-wrap:normal}.app .admin-side button{white-space:normal;overflow-wrap:anywhere}.app .status{white-space:normal}.app .admin-project-identity,.app .project-card-content{min-width:0}.app .admin-project-identity h3,.app .student-identity strong{overflow-wrap:anywhere}
+@media(max-width:600px){.app .hero .button-row{gap:12px}.app .hero .button-row>button{width:100%;justify-content:center}.app .project-filter-row .project-stage-filter{min-width:0;max-width:100%}.app .project-stage-filter>span{flex-shrink:0}.app .admin-page .table-toolbar{gap:12px;flex-wrap:wrap}.app .admin-page .table-toolbar>div{flex-wrap:wrap}.app .admin-page .table-toolbar input{min-width:0;max-width:100%}}

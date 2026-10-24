@@ -5,5 +5,6 @@ import path from 'node:path'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {alias: {'@': path.resolve(import.meta.dirname, './src')}},
+  build: { rollupOptions: { input: {main:path.resolve(import.meta.dirname,'index.html'),archive:path.resolve(import.meta.dirname,'archive.html')} } },
   server: {host: '127.0.0.1', port: 8443},
 })

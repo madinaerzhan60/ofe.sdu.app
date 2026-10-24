@@ -4,7 +4,7 @@ import type { EventData, Submission } from './model'
 
 const url = import.meta.env.VITE_SUPABASE_URL?.trim()
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
-export const liveMode = Boolean(url && key)
+export const liveMode = Boolean(url && key) && import.meta.env.VITE_DEMO_MODE !== 'true'
 export const backend = liveMode ? createClient(url!, key!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null
 
 type State = { submissions: Submission[]; events: EventData[]; userId: string | null; userEmail: string; isAdmin: boolean }

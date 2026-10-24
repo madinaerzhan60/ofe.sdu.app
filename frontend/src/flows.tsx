@@ -77,7 +77,7 @@ export function PolicyLink({ name }: { name: string }) {
 
 export function Application({go}: {go:Go}) {
   const t = useT()
-  const { submissions, setSubmissions, account, setAccount,workspaceTab:tab,setWorkspaceTab:setTab,draft,setDraft,resubmitId,setResubmitId, userId, userEmail, liveMode, authLoading } = useModel()
+  const { submissions, setSubmissions, account, setAccount,workspaceTab:tab,setWorkspaceTab:setTab,draft,setDraft,resubmitId,setResubmitId, userId, userEmail, liveMode, authLoading, isAdmin } = useModel()
   const [preparing,setPreparing] = useState({logo:false,cover:false})
   const [submitting,setSubmitting] = useState(false)
   const [formOpen,setFormOpen] = useState(false)
@@ -158,7 +158,7 @@ export function Application({go}: {go:Go}) {
       {!liveMode && account === "student" && <p className="prototype-note">{t('Demo workspace · Changes are not saved to the server.')}</p>}
       {authLoading && <p role="status">{t('Please wait…')}</p>}
       <div className={account === 'student' ? 'application-panel' : 'application-panel auth-layout'}>
-        {account !== 'student' && <aside className="auth-welcome"><div className="auth-welcome-top"><span className="auth-brand-mark">S</span><span>SDU · FOUNDERS COMMUNITY</span></div><div className="auth-welcome-copy"><span className="auth-welcome-label">{t('A GOOD PLACE TO BEGIN')}</span><h2>{t('Your people. Your ideas. Your next chapter.')}</h2><p>{t('A place to build, share and find support — whatever your field.')}</p><ul>{['Keep your projects in one place','Meet people who share your curiosity','Be part of SDU FOUNDERS CUP'].map(text => <li key={text}><span aria-hidden="true">✓</span>{t(text)}</li>)}</ul></div><div className="auth-cup-card"><div><span>26 NOV · 2026</span><strong>SDU<br />FOUNDERS CUP</strong></div><span className="auth-cup-spark" aria-hidden="true">✳</span></div></aside>}
+
         {account !== 'student' && <div className="auth-content">{liveMode ? <AuthPanel /> : <><AuthPanel /><details className="demo-auth-options"><summary>{t("Try the demo workspace")}</summary><div className="signin-block">
 
           <h2>{t('Start your application')}</h2><p>{t('Preview the approved and restricted account states.')}</p>
@@ -185,7 +185,8 @@ export function Application({go}: {go:Go}) {
           )}
         </div></details></>}</div>}
         {account === "student" && (
-          <div className="student-layout"><aside className="student-sidebar"><div className="student-identity"><span className="student-avatar">S</span><div><strong>{liveMode ? userEmail : t('Student account')}</strong><small>{t(liveMode ? 'Your personal workspace' : 'Demo account · Student role')}</small></div></div><nav aria-label={t('Student navigation')}>{['My applications','My startup','My teams','Account'].map(item=><button key={item} className={tab===item?'active':''} onClick={()=>{setTab(item);setFormOpen(false);}}>{t(item)}<span aria-hidden="true">›</span></button>)}</nav><button className="inline-link" onClick={()=>{setAccount('signed-out');go('home');}}>{t('Sign out')}</button></aside><div className="student-content"><div className="workspace-overview" aria-label={t('Project overview')}>{[['My applications',mine.length],['Pending',mine.filter(p=>p.status==='Pending').length],['Published',mine.filter(p=>p.status==='Approved'&&p.publication&&p.visible!==false).length]].map(([label,count])=><div key={label}><strong>{count}</strong><span>{t(String(label))}</span></div>)}</div>
+          <div className="student-layout"><aside className="student-sidebar"><div className="student-identity"><span className="student-avatar">S</span><div><strong>{liveMode ? userEmail : t('Student account')}</strong><small>{t(liveMode ? 'Your personal workspace' : 'Demo account · Student role')}</small></div></div><nav aria-label={t('Student navigation')}>{(isAdmin ? ['My workspace','Account'] : ['My applications','My startup','My teams','Account']).map(item=><button key={item} className={tab===item?'active':''} onClick={()=>{if(item==='My workspace' && isAdmin){go('admin');return}setTab(item);setFormOpen(false);}}>{t(item)}<span aria-hidden="true">›</span></button>)}</nav><button className="inline-link" onClick={()=>{setAccount('signed-out');go('home');}}>{t('Sign out')}</button></aside><div className="student-content"><div className="workspace-overview" aria-label={t('Project overview')}>{[['My applications',mine.length],['Pending',mine.filter(p=>p.status==='Pending').length],['Published',mine.filter(p=>p.status==='Approved'&&p.publication&&p.visible!==false).length]].map(([label,count])=><div key={label}><strong>{count}</strong><span>{t(String(label))}</span></div>)}</div>
+            {tab==='My workspace' && <section className="workspace-section"><div className="workspace-head"><h2>{t('My workspace')}</h2></div><div className="button-row">{['My applications','My startup','My teams'].map(item => <button key={item} className="secondary" onClick={() => {setTab(item);setFormOpen(false)}}>{t(item)} ↗</button>)}</div></section>}
             {tab==='My applications' && <><section className="my-applications">
               {confirmation && <div className="success-banner" role="status"><strong>{t('Application submitted')}</strong><p>{t('Your application is pending review. You can follow its status below.')}</p></div>}
               <div className="workspace-head"><h2>{t("My applications")}</h2><button className="primary" onClick={()=>{setFormOpen(true);setConfirmation(false);setSaved(false);requestAnimationFrame(()=>document.getElementById("application-form")?.scrollIntoView({block:"start"}));}}>{t(hasDraft ? 'Continue draft' : 'New application')}</button></div>
@@ -420,15 +421,18 @@ export function AdminModal({ title, onClose, children, eyebrow = "Project detail
     const rect = e.currentTarget.getBoundingClientRect()
     if(e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom)onClose()
   }}>
-    <header className="admin-modal-header"><div><p>{t(eyebrow)}</p><h2 id="admin-modal-title">{title}</h2></div><button type="button" autoFocus aria-label={t('Close')} onClick={onClose}>×</button></header>
+    <header className="admin-modal-header"><div><p>{t(eyebrow)}</p><h2 id="admin-modal-title">{title}</h2></div><button type="button" autoFocus aria-label={t('Close')} onClick={onClose}><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></header>
     {children}
   </dialog>
 }
 
 export function AdminDashboard({ go }: { go: Go }) {
   const t = useT()
-  const { submissions, setSubmissions, events, setEvents, liveMode, isAdmin, authLoading } = useModel()
+  const { submissions, setSubmissions, events, setEvents, liveMode, isAdmin, authLoading, setAccount } = useModel()
   const [access, setAccess] = useState(false)
+  const [adminEmail, setAdminEmail] = useState('')
+  const [adminPassword, setAdminPassword] = useState('')
+  const [adminError, setAdminError] = useState('')
   const [section, setSection] = useState("Submissions")
   const [filter, setFilter] = useState("All")
   const [search, setSearch] = useState("")
@@ -459,9 +463,12 @@ export function AdminDashboard({ go }: { go: Go }) {
           )}
         </p>
         <div className="button-row">
-          <button className="primary" onClick={() => setAccess(true)}>
-            {t("Enter demo admin")}
-          </button>
+          <form className="auth-panel" onSubmit={e => { e.preventDefault(); if (adminEmail.trim().toLowerCase() === '250103081@sdu.edu.kz' && adminPassword === 'OfeDemo2026!') { setAccess(true); setAdminError('') } else { setAdminError('Email or password is incorrect.') } }}>
+            <label>{t('Email')}<input type="email" required autoComplete="username" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} /></label>
+            <label>{t('Password')}<input type="password" required autoComplete="current-password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} /></label>
+            {adminError && <p role="alert" className="form-error">{t(adminError)}</p>}
+            <button className="primary">{t('Sign in')}</button>
+          </form>
           <button className="secondary" onClick={() => go("home")}>
             {t("Back to website")}
           </button>
@@ -478,7 +485,7 @@ export function AdminDashboard({ go }: { go: Go }) {
     <main className="admin-page">
       <aside className="admin-side">
         <div className="admin-brand"><span>O</span><div><strong>OFE</strong><small>{t("Workspace management")}</small></div></div><p className="admin-nav-label">{t("WORKSPACE")}</p>
-        {["Submissions", "Startups", "Events", "Demo Day archive"].map((x) => (
+        {["Submissions", "Startups"].map((x) => (
           <button
             className={section === x ? "active" : ""}
             key={x}
@@ -490,15 +497,16 @@ export function AdminDashboard({ go }: { go: Go }) {
             <i className="admin-nav-icon" aria-hidden="true">{({Submissions: "▤", Startups: "◇", Events: "▦", "Demo Day archive": "◷"} as Record<string,string>)[x]}</i>{t(x)}{x === "Submissions" && <b className="admin-nav-count">{submissions.filter(r => r.status === "Pending").length}</b>}
           </button>
         ))}
-        <div className="admin-side-bottom"><p>{t("Changes are saved for this preview session.")}</p><button onClick={() => go("home")}>↗ {t("Back to website")}</button></div>
-        <button onClick={() => setAccess(false)}>{t("Sign out")}</button>
+        <div className="admin-side-bottom"><p>{t(liveMode ? 'Changes are saved to the platform.' : 'Changes are saved for this preview session.')}</p><button onClick={() => go("home")}>↗ {t("Back to website")}</button></div>
+        <button onClick={() => { if(liveMode){setAccount('signed-out');go('home')}else setAccess(false) }}>{t("Sign out")}</button>
       </aside>
       <section className="admin-main">
-        <div className="admin-breadcrumb">OFE <span>/</span> {t('Workspace management')}<span className="admin-demo-badge">{t(liveMode ? 'Connected' : 'Preview mode')}</span></div>
+        <div className="admin-breadcrumb">OFE <span>/</span> {t('Workspace management')}{!liveMode && <span className="admin-demo-badge">{t('Preview mode')}</span>}</div>
         <div className="admin-head"><div><p className="eyebrow">{t('A PLACE FOR NEW IDEAS')}</p><h1>{t(section)}</h1><p className="admin-description">{t(section === 'Submissions' ? 'Review new projects, leave helpful feedback and decide what appears on the website.' : section === 'Startups' ? 'Keep project pages up to date and manage which ones visitors can see.' : section === 'Events' ? 'Bring people together. Add event details, a cover image and publish when ready.' : 'Keep the stories and materials from past events in one place.')}</p></div></div>
         {notice && <div className="admin-notice" role="status"><span>✓ {t(notice)}</span><button aria-label={t('Close')} onClick={() => setNotice('')}>×</button></div>}
         {section === "Events" || section === "Demo Day archive" ? (
           <div className="event-editors">
+            {section === 'Demo Day archive' && !events.some(e => e.id === 'archive') && <button className="secondary" onClick={() => setEvents(rows => [...rows, {id:'archive',title:'Our first Demo Day',date:'',place:'SDU University',published:false,finalists:[]}])}>{t('Create archive')}</button>}
             {section === 'Events' && <button className="secondary" onClick={() => setEvents(rows => [...rows, {id: `event-${Date.now()}`, title: '', date: '', place: '', published: false}])}>{t('Add event')}</button>}
             {events
               .filter((e) =>

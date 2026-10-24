@@ -22,7 +22,11 @@ export type Submission = {
   consentAt: string
   feedback: string
 }
+export type Finalist = { id:string; name:string; members:string; description:string; image?:string; website?:string }
 export type EventData = {
+  finalists?: Finalist[]
+  registrationUrl?: string
+  externalUrl?: string
   image?: string
   id: string
   title: string
@@ -77,7 +81,7 @@ const plainEnglish: Record<string,string> = {
   'Current stage': 'How far along is your project?',
   EdTech: 'Education', HealthTech: 'Health & medicine', FinTech: 'Finance', SaaS: 'Online services', Climate: 'Environment', FoodTech: 'Food & nutrition', 'HR Tech': 'Work & careers', AgriTech: 'Agriculture',
   Idea: 'Just an idea', Prototype: 'Building a first sample', MVP: 'First working version', Seed: 'Finding funding', Growth: 'Growing the project',
-  'Demo Day': 'Project showcase', Rejected: 'Changes requested',
+  'Demo Day': 'Demo Day', Rejected: 'Changes requested',
   'Reject application': 'Request project changes', 'Rejection feedback': 'What needs improving?', 'Confirm rejection': 'Send feedback',
 }
 export function useT() {

@@ -19,3 +19,31 @@ html[data-theme="dark"] .app.app .projects-page .topic-filter-options button { c
 html[data-theme="dark"] .app.app .projects-page .topic-filter-options button:hover { background:#3a254a; }
 html[data-theme="dark"] .app.app .projects-page .topic-filter-options button[aria-pressed="true"] { background:#583080;color:#fff; }
 html[data-theme="dark"] .app.app .projects-page .topic-filter-options small { color:#d6bce8; }
+
+.app .project-filter-row { display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:20px 0 24px; }
+.app .project-filter-row .topic-filter { margin:0; }
+.app .project-filter-row .project-stage-filter { display:flex;flex-direction:row;align-items:center;gap:10px;margin:0;font-size:13px; }
+.app .project-filter-row .project-stage-filter select { min-height:44px;margin:0;padding:10px 32px 10px 12px;font-size:13px;border-radius:11px;max-width:240px; }
+@media(max-width:600px) { .app .project-filter-row { gap:12px;align-items:center; }.app .project-filter-row .project-stage-filter { flex:1;min-width:160px;flex-wrap:nowrap; }.app .project-filter-row .project-stage-filter select { flex:1;min-width:0;width:100%;max-width:none; } }
+
+.app.app .projects-page .project-sort-control { position:relative;flex:0 0 auto;color:#65477b;background:#f3edf8;border:1px solid #e5d8ee;border-radius:10px; }
+html[data-theme] .app.app .projects-page .community-search .project-sort-control select { appearance:none;-webkit-appearance:none;display:block;min-height:40px;width:100%;max-width:none;margin:0;padding:10px 36px 10px 14px;border:0;border-radius:10px;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:1.4;cursor:pointer;box-shadow:none; }
+.app.app .projects-page .project-sort-control>svg { position:absolute;right:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;pointer-events:none; }
+.app.app .projects-page .project-sort-control:focus-within { outline:2px solid #ae83d2;outline-offset:2px; }
+html[data-theme="dark"] .app.app .projects-page .project-sort-control { background:#352443;border-color:#604573;color:#ead9f6; }
+@media(max-width:700px) { .app.app .projects-page .project-sort-control { flex:1 0 100%;width:100%; } }
+
+/* Clear purple frames for the current filter and keyboard selection. */
+.app.app .projects-page .project-sort-control { border:1px solid #c7aedb;transition:border-color .18s,box-shadow .18s; }
+.app.app .projects-page .project-sort-control:is(:focus-within,.is-selected) { outline:none;border-color:#8b4bc0;box-shadow:0 0 0 2px #a877d32e; }
+.app.app .projects-page .project-stage-filter select { border:1px solid #c7aedb;transition:border-color .18s,box-shadow .18s; }
+.app.app .projects-page .project-stage-filter:is(:focus-within,.is-selected) select { outline:none;border-color:#8b4bc0;box-shadow:0 0 0 2px #a877d32e; }
+.app.app .projects-page .topic-filter[open] summary { border-color:#8b4bc0;box-shadow:0 0 0 2px #a877d32e; }
+html[data-theme="dark"] .app.app .projects-page .project-sort-control:is(:focus-within,.is-selected),html[data-theme="dark"] .app.app .projects-page .project-stage-filter:is(:focus-within,.is-selected) select,html[data-theme="dark"] .app.app .projects-page .topic-filter[open] summary { border-color:#c299ec;box-shadow:0 0 0 2px #be8de433; }
+
+/* Native option menus need explicit colors as well as the closed select. */
+html[data-theme="dark"] .app.app select { color-scheme:dark; }
+html[data-theme="dark"] .app.app select option,html[data-theme="dark"] .app.app select optgroup { background-color:#291c35;color:#f5effa; }
+html[data-theme="dark"] .app.app select option:checked { background-color:#684090;color:#fff; }
+html[data-theme="light"] .app.app select option,html[data-theme="light"] .app.app select optgroup { background-color:#fff;color:#30233b; }
+html[data-theme="light"] .app.app select option:checked { background-color:#ede2f7;color:#41205b; }

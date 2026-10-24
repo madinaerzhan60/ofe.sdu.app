@@ -5,7 +5,7 @@ import ts from 'typescript'
 
 const source = await readFile(new URL('../src/media-storage.ts', import.meta.url), 'utf8')
 const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
-const { mediaPath, mediaObjectPath, uploadProjectImage } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`)
+const { mediaPath, mediaObjectPath, uploadProjectImage, downloadProjectImage } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`)
 const target = { ownerId: 'owner-123', projectId: 'project-456', kind: 'logo' }
 function client(userId = target.ownerId, denied = false) {
   const calls = []
@@ -36,3 +36,22 @@ test('does not upload without a session or as another owner and reports Storage 
   await assert.rejects(uploadProjectImage(null, 'startup-media', new Blob(), target), /Configure Supabase/)
   await assert.rejects(uploadProjectImage(client(target.ownerId, true), 'startup-media', new Blob(), target), /Storage permissions/)
 })
+
+test('guest and signed-in downloads use the SDK and defer access to Storage RLS', async () => {
+  for (const session of [null, {user:{id:'reader'}}]) {
+    const calls=[]; const image=new Blob(['image'],{type:'image/webp'});
+    const api={auth:{getSession:async()=>({data:{session},error:null})},storage:{from(bucket){return {download:async path=>{calls.push({bucket,path});return {data:image,error:null}}}}}};
+    assert.equal(await downloadProjectImage(api,'startup-media','storage://owner/project/cover.webp#revision'),image);
+    assert.deepEqual(calls,[{bucket:'startup-media',path:'owner/project/cover.webp'}]);
+  }
+});
+test('download does not bypass denied, missing, or invalid-session responses', async()=>{
+  for(const result of [{data:null,error:new Error('Access denied')},{data:null,error:null}]) {
+    const api={auth:{getSession:async()=>({error:null})},storage:{from(){return {download:async()=>result}}}};
+    await assert.rejects(downloadProjectImage(api,'startup-media','storage://owner/project/cover.webp'));
+  }
+  let requested=false;
+  const api={auth:{getSession:async()=>({error:new Error('Session failed')})},storage:{from(){requested=true}}};
+  await assert.rejects(downloadProjectImage(api,'startup-media','storage://owner/project/cover.webp'));
+  assert.equal(requested,false);
+});

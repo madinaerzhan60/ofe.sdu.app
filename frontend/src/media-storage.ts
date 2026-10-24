@@ -20,3 +20,14 @@ export async function uploadProjectImage(client: SupabaseClient | null, bucket: 
   // Version the reference so replacing a fixed object path refreshes its preview.
   return `storage://${path}#${crypto.randomUUID()}`
 }
+
+// The SDK supplies the current access token, or the publishable key for guests.
+// Storage RLS decides whether this project image is public or private.
+export async function downloadProjectImage(client: SupabaseClient | null, bucket: string, reference: string): Promise<Blob> {
+  if (!client) throw new Error('Configure Supabase to download images.')
+  const { error: sessionError } = await client.auth.getSession()
+  if (sessionError) throw sessionError
+  const { data, error } = await client.storage.from(bucket).download(mediaObjectPath(reference))
+  if (error || !data) throw error ?? new Error('Image unavailable.')
+  return data
+}
