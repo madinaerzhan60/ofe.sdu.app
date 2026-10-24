@@ -70,10 +70,10 @@ jobs:
           cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Pull Vercel environment
-        run: npx vercel@latest pull --yes --environment=production --token=$VERCEL_TOKEN
+        run: npx vercel@65.2.0 pull --yes --environment=production --token=$VERCEL_TOKEN
 
       - name: Build
-        run: npx vercel@latest build --prod --token=$VERCEL_TOKEN
+        run: npx vercel@65.2.0 build --prod --token=$VERCEL_TOKEN
 
       - name: Deploy to production
-        run: npx vercel@latest deploy --prebuilt --prod --token=$VERCEL_TOKEN
+        run: npx vercel@65.2.0 deploy --prebuilt --prod --token=$VERCEL_TOKEN
