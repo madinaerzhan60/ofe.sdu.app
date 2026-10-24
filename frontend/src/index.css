@@ -1573,7 +1573,7 @@ form input, form select, form textarea { min-width: 0; max-width: 100%; }
 .community-field { color:#b49dc4;font-size:10px;margin-bottom:9px; }.team-card h2 { font-size:23px;letter-spacing:-.04em;line-height:1.3;margin:0 0 12px;overflow-wrap:anywhere; }.team-card > p { font-size:13px;line-height:1.8;color:#a18bac;margin:0 0 24px;overflow-wrap:anywhere; }
 .team-roles { margin-top:auto;margin-bottom:24px; }.team-roles > small { color:#b29bc1;font-size:10px;display:block;margin-bottom:10px; }.team-roles > div { display:flex;flex-wrap:wrap;gap:6px; }.team-roles > div > span { border:1px solid #e9e0f0;border-radius:6px;padding:5px 8px;color:#ab90bd;font-size:10px; }
 .team-card-bottom { display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:18px;border-top:1px solid #f0eaf6; }.team-card-bottom > span { color:#b39ac3;font-size:10px; }.team-card-bottom .secondary { min-height:38px;font-size:11px;border-radius:9px;padding:8px 12px;gap:10px; }
-.community-empty { text-align:center;background:white;border:1px dashed #e6daee;border-radius:20px;padding:50px 24px;margin-top:16px; }.community-empty > span { font-size:32px;color:#b69bca;display:block;margin-bottom:16px; }.community-empty h2 { font-size:26px;letter-spacing:-.035em;margin-bottom:15px; }.community-empty p { max-width:540px;color:#a48ab6;line-height:1.8;font-size:14px;margin:0 auto 24px; }.community-empty .button-row { justify-content:center; }
+.community-empty { text-align:center;background:var(--surface-solid);color:var(--ink);border:1px dashed var(--line);border-radius:20px;padding:50px 24px;margin-top:16px; }.community-empty > span { font-size:32px;color:#b69bca;display:block;margin-bottom:16px; }.community-empty h2 { font-size:26px;letter-spacing:-.035em;margin-bottom:15px; }.community-empty p { max-width:540px;color:#a48ab6;line-height:1.8;font-size:14px;margin:0 auto 24px; }.community-empty .button-row { justify-content:center; }
 .role-choices { border:0;padding:0;margin-top:24px;display:flex;gap:8px;flex-wrap:wrap; }.role-choices legend { font-size:13px;line-height:1.5;margin-bottom:14px; }.role-choices label { display:flex;flex-direction:row;align-items:center;gap:8px;background:#f7f1fb;border:1px solid #ebe0f2;border-radius:8px;padding:8px 10px;font-size:11px;margin:0; }.role-choices input { width:15px;height:15px;min-height:0;accent-color:#9d74bd; }
 .team-manage-setting { display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px;background:#f6f0fa;border:1px solid #eae0f2;border-radius:13px;margin-bottom:26px; }.team-manage-setting strong { font-size:13px; }.team-manage-setting p { font-size:11px;color:#aa8ebc;line-height:1.6;margin:7px 0 0; }.team-switch input { width:20px;height:20px;min-height:0;accent-color:#a178c1; }.team-switch { margin:0; }
 .team-member-list { margin:18px 0 30px; }.team-member-list > div { display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid #f0e8f5; }.team-member-list > div > div { flex:1;min-width:0; }.team-member-list strong { font-size:13px;overflow-wrap:anywhere; }.team-member-list small { display:block;font-size:10px;color:#b19ac0;line-height:1.7;overflow-wrap:anywhere; }.team-member-list .inline-link { font-size:11px; }.team-member-avatar { display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;background:#f2e9fa;color:#b393c9;border-radius:50%;font-size:12px; }.team-modal-notice { font-size:12px;line-height:1.7;border-radius:10px;padding:12px 14px;background:#f2edf8;color:#9c7bb3; }
@@ -1589,3 +1589,26 @@ form input, form select, form textarea { min-width: 0; max-width: 100%; }
 .projects-page .projects-collection-intro { padding-block:23px; }
 .profile .project-sample-note { display:inline-block;font-size:11px;color:#a489b6;background:#f3ebf9;border:1px solid #e9ddf2;border-radius:8px;padding:9px 12px;margin:8px 0 24px; }
 .profile-collaborate { background:#f2ebf8;border:1px solid #e7ddef;border-radius:18px;padding:28px; }.profile-collaborate h2 { font-size:27px;line-height:1.2;letter-spacing:-.04em; }.profile-collaborate > p:not(.eyebrow) { color:#9176a3;font-size:14px;line-height:1.8; }.profile-collaborate .secondary { border-radius:11px;font-size:12px; }.profile-side > section { border:1px solid #eae0f2;border-radius:17px;padding:24px;background:white; }.profile-main > section { margin-bottom:28px; }
+
+/* Project form and preview */
+.application-fields { border:0; padding:0; margin:0; min-width:0; }
+.account-menu summary::-webkit-details-marker { display:none; }
+.account-menu summary { list-style:none; }
+.image-upload input::file-selector-button { border:0; border-radius:9px; background:#f1e9fb; color:#6025b4; padding:10px 15px; margin-right:14px; font:inherit; font-weight:600; cursor:pointer; }
+.image-upload input:disabled::file-selector-button { cursor:not-allowed; opacity:.5; }
+.startup-live-preview { background:var(--surface, #fff); box-shadow:0 12px 36px #44216a0a; }
+.startup-live-preview .preview-cover { position:relative; height:180px; padding:0; background:linear-gradient(120deg,#291143,#7040a0 60%,#c0a0df); overflow:hidden; }
+.preview-cover > img { width:100%; height:100%; object-fit:cover; }
+.preview-cover > span:first-child:not(.preview-label) { position:absolute; right:30px; bottom:-35px; color:#ffffff20; font-size:220px; font-weight:800; line-height:1; }
+.preview-label { position:absolute; left:20px; top:18px; padding:7px 11px; border-radius:20px; background:#ffffffeb; color:#52277b; font-size:11px; letter-spacing:.07em; text-transform:uppercase; }
+.startup-live-preview .preview-body { padding:26px; }
+.preview-identity { display:flex; gap:16px; align-items:center; }
+.preview-logo { width:64px; height:64px; flex:0 0 64px; display:grid; place-items:center; border:1px solid var(--line); border-radius:16px; background:#f3ecfa; color:#7338af; font-size:22px; font-weight:700; overflow:hidden; }
+.preview-logo img { width:100%; height:100%; object-fit:contain; }
+.preview-category { font-size:11px; color:var(--muted); letter-spacing:.03em; }
+.startup-live-preview .preview-identity h2 { margin:5px 0 0; font-size:25px; line-height:1.2; overflow-wrap:anywhere; }
+.startup-live-preview .preview-description { margin:20px 0; font-size:16px; color:var(--muted); }
+.preview-team { border-top:1px solid var(--line); padding-top:18px; margin-top:22px; }
+.preview-team > span { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
+.preview-team p { margin:7px 0 0; font-size:13px; white-space:pre-wrap; }
+@media(max-width:600px) { .startup-live-preview .preview-cover { height:140px; } .startup-live-preview .preview-body { padding:18px; } .preview-logo { width:50px; height:50px; flex-basis:50px; } }

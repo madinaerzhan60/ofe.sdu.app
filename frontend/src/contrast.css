@@ -282,3 +282,31 @@ html[data-theme="dark"] .app.app .admin-side > button.active { background:#68409
 html[data-theme="dark"] .app.app :is(.table-toolbar button,.admin-project .actions button:not(.approve),.admin-demo-badge) { background:#39224e;border-color:#795d8c;color:#ecdafa; }
 html[data-theme="dark"] .app.app .table-toolbar button.active { background:#7c3aed;color:#fff; }
 html[data-theme="dark"] .app.app .admin-modal-header > button { background:#39224e;border-color:#795d8c;color:#ecdafa; }
+
+/* Keep the empty catalog state readable in dark mode. */
+html[data-theme="dark"] .app.app .community-empty { background:var(--surface-solid); color:var(--ink); border-color:var(--line); }
+html[data-theme="dark"] .app.app .community-empty h2 { color:var(--ink); }
+
+/* Language selector: one rounded selected segment, without overlapping layers. */
+.app.app .header .language { display:grid; grid-template-columns:repeat(3,34px); gap:3px; padding:4px; border-radius:14px; border:1px solid #e4dcec; background:#f4f0f8; flex-shrink:0; }
+.app.app .header .language::before { content:none; }
+.app.app .header .language button { display:grid; place-items:center; min-height:30px; padding:0; border:0; border-radius:10px; background:transparent; color:#71637d; font-size:10px; font-weight:600; line-height:1; transition:background 160ms ease,color 160ms ease; }
+.app.app .header .language button:hover { background:#e9dff3; color:#542780; }
+.app.app .header .language button.active { background:#fff; color:#6d28d9; box-shadow:0 1px 4px #37204716; }
+.app.app .header .language button:focus-visible { outline:2px solid #a675ef; outline-offset:1px; }
+html[data-theme="dark"] .app.app .header .language { background:#251a31; border-color:#493553; }
+html[data-theme="dark"] .app.app .header .language button { background:transparent; color:#c5b3d3; }
+html[data-theme="dark"] .app.app .header .language button:hover { background:#3b294a; color:#fff; }
+html[data-theme="dark"] .app.app .header .language button.active { background:#725096; color:#fff; box-shadow:0 1px 4px #0002; }
+@media(max-width:600px) { .app.app .header .language { grid-template-columns:repeat(3,28px); gap:2px; padding:3px; } }
+
+.app .publication-consent { margin-top:24px; padding:22px; border:1px solid var(--line); border-radius:16px; background:var(--surface-solid); color:var(--ink); }
+.publication-consent-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+.app .publication-consent-heading h3 { margin:0; font-size:18px; }
+.publication-consent-heading > span { color:var(--muted); font-size:12px; }
+.app .publication-consent > p { color:var(--muted); font-size:13px; line-height:1.7; margin:12px 0; max-width:65ch; }
+.app .publication-consent .publication-consent-switch { display:flex; align-items:center; gap:12px; margin:20px 0 12px; cursor:pointer; }
+.app .publication-consent-switch input { flex:0 0 20px; width:20px; height:20px; margin:0; accent-color:var(--purple); }
+.app .publication-consent > .secondary { margin-top:12px; }
+.app .publication-consent button:disabled { cursor:not-allowed; opacity:.6; }
+.app .publication-consent .success-banner { margin:16px 0 0; }

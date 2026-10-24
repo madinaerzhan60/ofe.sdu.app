@@ -1,3 +1,5 @@
+import { PublicationConsent } from './publication-consent'
+import { StorageImage, uploadImage } from './storage'
 import { Teams } from "./teams"
 import { AuthPanel } from "./auth"
 import { ImageUpload, StartupEditor, EventEditor, demoOwnerId, ownsStartup } from "./media"
@@ -76,6 +78,8 @@ export function PolicyLink({ name }: { name: string }) {
 export function Application({go}: {go:Go}) {
   const t = useT()
   const { submissions, setSubmissions, account, setAccount,workspaceTab:tab,setWorkspaceTab:setTab,draft,setDraft,resubmitId,setResubmitId, userId, userEmail, liveMode, authLoading } = useModel()
+  const [preparing,setPreparing] = useState({logo:false,cover:false})
+  const [submitting,setSubmitting] = useState(false)
   const [formOpen,setFormOpen] = useState(false)
   const [confirmation,setConfirmation] = useState(false)
   const [saved,setSaved] = useState(false)
@@ -88,6 +92,7 @@ export function Application({go}: {go:Go}) {
   const mine = submissions.filter((row) => ownsStartup(row, userId, liveMode))
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (submitting || preparing.logo || preparing.cover) return
     if (!draft.name.trim() || !draft.description.trim() || !draft.team.trim()) {
       setError("Complete all required fields.")
       return
@@ -109,12 +114,31 @@ export function Application({go}: {go:Go}) {
       consentVersion: liveMode ? "2026-10-22" : "draft-2026-10-18",
       feedback: "",
     }
+    setSubmitting(true)
     const stored = await setSubmissions((rows) =>
       resubmitId
         ? rows.map((r) => (r.id === resubmitId ? row : r))
         : [...rows, row],
     )
-    if(!stored)return
+    if(!stored){setSubmitting(false);return}
+    // RLS needs the project to exist before its objects can be uploaded.
+    setResubmitId(row.id)
+    let mediaRow = {...row}
+    try {
+      for (const [kind, file] of [['logo', draft.imageFile], ['cover', draft.coverFile]] as const) {
+        if (!file) continue
+        const reference = await uploadImage(file, {projectId:row.id, ownerId:row.ownerId!, kind})
+        const snapshot = {...mediaRow, [kind === 'logo' ? 'image' : 'cover']:reference}
+        mediaRow = snapshot
+        const attached = await setSubmissions(rows => rows.map(current => current.id === row.id ? snapshot : current))
+        if (!attached) throw new Error('The application was saved, but its images could not be attached. Try submitting again.')
+      }
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : 'Image upload failed.')
+      setSubmitting(false)
+      return
+    }
+    setSubmitting(false)
     setResubmitId(null)
     setError("")
     setDraft(emptyDraft)
@@ -205,7 +229,7 @@ export function Application({go}: {go:Go}) {
                 </article>
               ))}
             </section>
-            {formOpen && <form id="application-form" onSubmit={submit}>
+            {formOpen && <form id="application-form" onSubmit={submit}><fieldset className="application-fields" disabled={submitting}>
               <h2>{t(resubmitId ? "Edit and resubmit" : "New application")}</h2>
               <label>
                 {t("Startup name")}
@@ -298,8 +322,8 @@ export function Application({go}: {go:Go}) {
                   placeholder="https://"
                 />
               </label>
-              <ImageUpload label="Startup logo (optional)" value={draft.image} onChange={image => setDraft({ ...draft, image })} square />
-              <ImageUpload label="Startup cover" value={draft.cover} onChange={cover => setDraft({ ...draft, cover })} />
+              <ImageUpload label="Startup logo (optional)" value={draft.image} onBusyChange={busy => setPreparing(previous => previous.logo === busy ? previous : {...previous,logo:busy})} pendingFile={draft.imageFile} onPrepared={imageFile => setDraft({...draft,imageFile})} onChange={image => setDraft({...draft,image})} square />
+              <ImageUpload label="Startup cover" value={draft.cover} onBusyChange={busy => setPreparing(previous => previous.cover === busy ? previous : {...previous,cover:busy})} pendingFile={draft.coverFile} onPrepared={coverFile => setDraft({...draft,coverFile})} onChange={cover => setDraft({...draft,cover})} />
               <div className="consent-box">
                 <label>
                   <input
@@ -346,24 +370,25 @@ export function Application({go}: {go:Go}) {
               <p className="draft-notice">{t(liveMode ? 'Save and submit your application when you are ready.' : 'Draft stays available when you navigate within this preview. Reloading clears session data.')}</p>
               <div className="draft-actions"><button type="button" className="secondary" onClick={()=>{setSaved(true);setFormOpen(false);}}>{t('Save draft')}</button><button type="button" className="inline-link" onClick={()=>setDiscard(true)}>{t('Discard draft')}</button></div>
               {discard && <div className="discard-confirm"><p>{t('Discard this draft? This cannot be undone.')}</p><button type="button" className="secondary" onClick={()=>{setDraft(emptyDraft);setResubmitId(null);setFormOpen(false);setDiscard(false);}}>{t('Discard')}</button><button type="button" className="inline-link" onClick={()=>setDiscard(false)}>{t('Keep editing')}</button></div>}
-              <button className="primary submit" type="submit">
-                {t("Submit application")}
+              <button className="primary submit" type="submit" disabled={submitting || preparing.logo || preparing.cover}>
+                {t(submitting ? "Please wait…" : "Submit application")}
               </button>
               <p className="form-foot">
                 {t(
                   "Demo consent version and timestamp are recorded with your submission.",
                 )}
               </p>
-            </form>}</>}
+            </fieldset></form>}</>}
             {tab==='My startup' && <section className="workspace-section"><h2>{t('My startup')}</h2>
               {startupSaved && <p className="success-banner" role="status">{t('Changes saved')}</p>}
               {mine.length ? mine.map(row => <article key={row.id} className="owned-startup">
                 {editingStartup === row.id ? <StartupEditor row={row} onClose={() => setEditingStartup(null)} onSaved={() => setStartupSaved(true)} /> : <>
-                  {row.cover && <img className="startup-cover" src={row.cover} alt="" />}
-                  <div className="owned-startup-heading">{row.image && <img className="startup-preview-logo" src={row.image} alt="" />}<div><h3>{row.name}</h3><span className={`status ${row.status.toLowerCase()}`}>{t(row.status)}</span></div></div>
+                  {row.cover && <StorageImage className="startup-cover" src={row.cover} alt="" />}
+                  <div className="owned-startup-heading">{row.image && <StorageImage className="startup-preview-logo" src={row.image} alt="" />}<div><h3>{row.name}</h3><span className={`status ${row.status.toLowerCase()}`}>{t(row.status)}</span></div></div>
                   <p>{t(row.description)}</p><p>{t(row.status==='Approved'&&row.publication&&row.visible!==false?'Published':'Hidden')}</p>
                   <button className="secondary" onClick={() => {setEditingStartup(row.id);setStartupSaved(false)}}>{t('Edit startup page')}</button>
                 </>}
+                <PublicationConsent row={row} />
               </article>) : <div className="workspace-empty"><h3>{t('Your startup starts here')}</h3><p>{t('Once your application is approved, your startup will appear here.')}</p><button className="primary" onClick={()=>{setTab('My applications');setFormOpen(true);}}>{t('New application')}</button></div>}
             </section>}
             {tab==='My teams' && <Teams go={go} embedded />}
@@ -512,7 +537,7 @@ export function AdminDashboard({ go }: { go: Go }) {
             </div>
             <div className="admin-project-list">
               {visible.map(row => <article className="admin-project" key={row.id}>
-                <div className="admin-project-identity"><span className="admin-project-logo">{row.image ? <img src={row.image} alt="" /> : row.name.slice(0,2).toUpperCase()}</span><div><h3><button className="admin-project-title" onClick={() => {setEditing({...row});setRejecting(null)}}>{row.name}</button></h3><p>{t(row.description)}</p><div className="admin-project-tags"><span>{t(row.industry)}</span><span>{t(row.stage)}</span></div></div></div>
+                <div className="admin-project-identity"><span className="admin-project-logo">{row.image ? <StorageImage src={row.image} alt="" /> : row.name.slice(0,2).toUpperCase()}</span><div><h3><button className="admin-project-title" onClick={() => {setEditing({...row});setRejecting(null)}}>{row.name}</button></h3><p>{t(row.description)}</p><div className="admin-project-tags"><span>{t(row.industry)}</span><span>{t(row.stage)}</span></div></div></div>
                 <div className="admin-project-state"><span className={`status ${row.status.toLowerCase()}`}>{t(row.status)}</span><small>{t(row.status === 'Approved' && row.publication && row.visible !== false ? 'Visible on the website' : 'Not shown on the website')}</small>{!row.publication && <small className="consent-hint">{t('Author has not allowed publication')}</small>}</div>
                 <div className="actions"><button onClick={() => {setEditing({...row});setRejecting(null)}}>{t('View details')}</button>
                   {row.status === 'Pending' ? <><button className="approve" onClick={() => update(row.id,'Approved')}>{t('Approve')}</button><button className="reject" onClick={() => {setRejecting(row);setEditing(null);setFeedback('')}}>{t('Request changes')}</button></> : row.status === 'Approved' ? <button disabled={!row.publication} title={!row.publication ? t('Author has not allowed publication') : undefined} onClick={async () => {if(!await setSubmissions(rows => rows.map(r => r.id === row.id ? {...r,visible:r.visible===false} : r)))return;setNotice(row.visible === false ? 'Project published on the website.' : 'Project hidden from the website.')}}>{t(row.visible === false ? 'Publish' : 'Unpublish')}</button> : <button onClick={() => update(row.id,'Pending')}>{t('Return to review')}</button>}
@@ -566,8 +591,8 @@ export function AdminDashboard({ go }: { go: Go }) {
                 />
               </label>
               <div className="admin-review-summary"><span className={`status ${editing.status.toLowerCase()}`}>{t(editing.status)}</span><p>{t('Review the project details before making a decision.')}</p></div>
-              <ImageUpload label="Startup logo (optional)" value={editing.image} onChange={image => setEditing(d => d ? {...d,image} : d)} square />
-              <ImageUpload label="Startup cover" value={editing.cover} onChange={cover => setEditing(d => d ? {...d,cover} : d)} />
+              <ImageUpload label="Startup logo (optional)" value={editing.image} disabledReason="Only the project owner can upload its images." onChange={image => setEditing(d => d ? {...d,image} : d)} square />
+              <ImageUpload label="Startup cover" value={editing.cover} disabledReason="Only the project owner can upload its images." onChange={cover => setEditing(d => d ? {...d,cover} : d)} />
               <p>
                 {t("Publication consent")}:{" "}
                 {t(editing.publication ? "Given" : "Not given")} ·{" "}

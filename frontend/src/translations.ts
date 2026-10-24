@@ -893,3 +893,34 @@ Object.assign(translations, { 'Description':['Описание','Сипатта�
 Object.assign(translations, { 'Program':['Программа','Бағдарлама'] })
 
 Object.assign(translations, { 'Topics':['Темы','Тақырыптар'], 'All topics':['Все темы','Барлық тақырыптар'], 'Search topics':['Найти тему','Тақырып іздеу'], 'No topics found':['Темы не найдены','Тақырыптар табылмады'] })
+
+Object.assign(translations, {
+  'Submit your application first, then add images from My project.': ['Сначала отправьте заявку, затем добавьте изображения в разделе «Мой проект».', 'Алдымен өтінімді жіберіңіз, содан кейін «Менің жобам» бөлімінде суреттерді қосыңыз.'],
+  'Published project images are locked. Contact the reviewer to request changes.': ['Изображения опубликованного проекта заблокированы. Для изменений обратитесь к модератору.', 'Жарияланған жобаның суреттері бұғатталған. Өзгерту үшін модераторға хабарласыңыз.'],
+  'Only the project owner can upload its images.': ['Загружать изображения может только владелец проекта.', 'Суреттерді тек жоба иесі жүктей алады.'],
+  'Event image uploads require a separate Storage policy from the backend team.': ['Для загрузки изображений мероприятий нужна отдельная политика Storage от backend-команды.', 'Іс-шара суреттерін жүктеу үшін backend тобынан бөлек Storage саясаты қажет.'],
+  'Image upload failed. Check your connection and Storage permissions.': ['Не удалось загрузить изображение. Проверьте соединение и права Storage.', 'Суретті жүктеу мүмкін болмады. Байланысты және Storage рұқсаттарын тексеріңіз.'],
+  'Sign in to upload images.': ['Войдите, чтобы загружать изображения.', 'Суреттерді жүктеу үшін жүйеге кіріңіз.'],
+  'Configure Supabase to upload images.': ['Настройте Supabase для загрузки изображений.', 'Суреттерді жүктеу үшін Supabase баптаңыз.'],
+})
+
+Object.assign(translations, {
+'Project preview':['Предпросмотр проекта','Жобаны алдын ала қарау'],
+'Registration opens soon':['Регистрация скоро откроется','Тіркелу жақында ашылады'],
+'Follow this page for registration updates.':['Следите за открытием регистрации на этой странице.','Тіркелу туралы жаңалықтарды осы беттен қараңыз.'],
+'The application was saved, but its images could not be attached. Try submitting again.':['Заявка сохранена, но изображения прикрепить не удалось. Повторите отправку.','Өтінім сақталды, бірақ суреттерді тіркеу мүмкін болмады. Қайта жіберіңіз.'],
+})
+
+Object.assign(translations, {
+'Publication permission':['Согласие на публикацию','Жариялауға келісім'],
+'Permission granted':['Согласие дано','Келісім берілген'],
+'Permission not granted':['Согласие не дано','Келісім берілмеген'],
+'You control whether your project may appear in the public directory. Approval by a reviewer is also required.':['Вы решаете, можно ли показывать проект в публичном каталоге. Также необходимо одобрение модератора.','Жобаңыздың ашық каталогта көрсетілуіне өзіңіз рұқсат бересіз. Модератордың мақұлдауы да қажет.'],
+'Read publication consent':['Прочитать согласие на публикацию','Жариялауға келісімді оқу'],
+'I allow my project to be published.':['Разрешаю публикацию моего проекта.','Жобамды жариялауға рұқсат беремін.'],
+'Saving without permission removes your project from the public directory. Your application stays in your workspace.':['После сохранения без согласия проект исчезнет из публичного каталога. Заявка останется в вашем кабинете.','Келісімсіз сақтағаннан кейін жоба ашық каталогтан алынады. Өтінім жеке кабинетіңізде қалады.'],
+'Save consent':['Сохранить согласие','Келісімді сақтау'],
+'Publication consent saved.':['Согласие на публикацию сохранено.','Жариялауға келісім сақталды.'],
+'Consent updated for this demo session only.':['Согласие изменено только для текущей демосессии.','Келісім тек осы демосессия үшін өзгертілді.'],
+'Could not save your publication consent. Check your connection and try again.':['Не удалось сохранить согласие. Проверьте соединение и попробуйте снова.','Келісімді сақтау мүмкін болмады. Байланысты тексеріп, қайталап көріңіз.'],
+})
