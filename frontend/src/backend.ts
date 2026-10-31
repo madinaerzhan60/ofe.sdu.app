@@ -5,6 +5,29 @@ import type { EventData, Submission } from './model'
 const url = import.meta.env.VITE_SUPABASE_URL?.trim()
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
 export const liveMode = Boolean(url && key) && import.meta.env.VITE_DEMO_MODE !== 'true'
+// Capture failures before the auth client processes the callback URL. Never show
+// provider descriptions (or tokens) from the URL in the application's error UI.
+const redirectHref = window.location.href
+const redirectUrl = new URL(redirectHref)
+const redirectHash = new URLSearchParams(redirectUrl.hash.slice(1))
+const authErrorParams = ['error', 'error_code', 'error_description']
+const hasHashError = authErrorParams.some(key => redirectHash.has(key))
+const authRedirectError = liveMode && (hasHashError || authErrorParams.some(key => redirectUrl.searchParams.has(key)))
+  ? 'Could not sign in. Use your @sdu.edu.kz account and try again. If you cancelled, you can restart sign-in.'
+  : ''
+function clearAuthRedirectParams() {
+  if (!authRedirectError || window.location.href !== redirectHref) return
+  // Let Supabase reject the original failed callback first. Remove any attached
+  // credentials too, so reloading cannot turn that failure into a sign-in.
+  const callbackParams = [...authErrorParams, 'access_token', 'refresh_token', 'expires_in', 'expires_at', 'token_type', 'provider_token', 'provider_refresh_token', 'type', 'code', 'state']
+  const hasCallbackHash = callbackParams.some(key => redirectHash.has(key))
+  for (const key of callbackParams) {
+    redirectUrl.searchParams.delete(key)
+    redirectHash.delete(key)
+  }
+  if (hasCallbackHash) redirectUrl.hash = redirectHash.toString()
+  window.history.replaceState(window.history.state, '', redirectUrl.pathname + redirectUrl.search + redirectUrl.hash)
+}
 export const backend = liveMode ? createClient(url!, key!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null
 
 type State = { submissions: Submission[]; events: EventData[]; userId: string | null; userEmail: string; isAdmin: boolean }
@@ -14,6 +37,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[]) {
   current.current = state
   const [authLoading, setLoading] = useState(liveMode)
   const [error, setError] = useState('')
+  const [authError, setAuthError] = useState(authRedirectError)
   const [recovery, setRecovery] = useState(false)
   const generation = useRef(0)
   const pending = useRef(Promise.resolve())
@@ -25,6 +49,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[]) {
       setLoading(true)
       try {
         const session = await backend!.auth.getSession()
+        clearAuthRedirectParams()
         if (session.error) throw session.error
         const user = session.data.session?.user
         // Clear private records before changing account, even if the network fails.
@@ -49,6 +74,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[]) {
     void refresh()
     const { data } = backend.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setRecovery(true)
+      if (event === 'SIGNED_IN') setAuthError('')
       // Do not await Supabase queries inside its auth callback.
       setTimeout(() => { if(active) void refresh() }, 0)
     })
@@ -81,7 +107,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[]) {
     })
     return result
   }
-  return {...state, liveMode, authLoading, recovery, finishRecovery:() => setRecovery(false), error, clearError:() => setError(''),
+  return {...state, liveMode, authLoading, recovery, finishRecovery:() => setRecovery(false), error:authError || error, clearError:() => {setAuthError('');setError('')},
     setSubmissions:(update:(rows:Submission[])=>Submission[]) => change('submissions', update),
     setEvents:(update:(rows:EventData[])=>EventData[]) => change('events', update),
   }
