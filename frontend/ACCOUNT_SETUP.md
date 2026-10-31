@@ -13,6 +13,57 @@ The app uses Supabase Auth for email/password accounts and Postgres row-level se
 
 Without both environment values, the existing preview remains in **demo mode**. This is not real registration.
 
+## SDU Google sign-in
+
+The existing Google button uses the same Supabase client as email authentication.
+It is enabled when that client is configured and demo mode is off; the obsolete
+`VITE_GOOGLE_AUTH_ENABLED` flag is no longer used. The redirect remains the current
+origin plus pathname. Google client secrets stay in Supabase, never in Vite.
+
+`hd=sdu.edu.kz` is an account-selection hint. Server-side enforcement is prepared
+in [`supabase/migrations/20261031_sdu_auth_token_hook.sql`](supabase/migrations/20261031_sdu_auth_token_hook.sql).
+For Google/OAuth sign-ins and refreshes of those sessions, the hook requires:
+
+- A canonical account email ending exactly in `@sdu.edu.kz`.
+- A confirmed account and a matching Google identity in `auth.identities`.
+- Google's server-stored `identity_data.email_verified` value to be true.
+
+The hook uses Auth's method/AMR to identify OAuth sessions; Google is the only
+OAuth provider enabled in this project. It does not trust user-editable metadata.
+Password/email authentication and its refreshes pass through unchanged, including
+existing administrators and the existing non-SDU email account. The Auth service
+already has read access to the two Auth tables; no new table grants are needed.
+Only `supabase_auth_admin` can execute the hook.
+
+Read-only production inspection on 2026-10-31 confirmed:
+
+- Google and email providers enabled; Confirm email on; manual linking off.
+- Skip nonce checks off and Allow users without an email off.
+- Site URL and the sole allowed redirect: `https://ofe-frontend-nine.vercel.app/`.
+- Google callback: `https://tnbomcaxdsqtarsfjarh.supabase.co/auth/v1/callback`.
+- Access-token lifetime: 3,600 seconds. No Auth Hooks configured.
+- Four existing accounts use email identities; both administrators have confirmed
+  SDU emails. No Google identities exist yet. No accounts or data were changed.
+
+Before use on the existing website, explicit approval is required to apply the
+prepared migration and enable `public.sdu_access_token_hook` as the Custom Access
+Token hook in the existing Supabase project. The migration refuses to overwrite
+an existing function. No new project, deployment or redirect is part of this fix.
+The reviewed frontend changes must later reach the existing website through the
+team's existing release process, with separate approval; nothing has been deployed.
+
+After approved activation, use the existing Google OAuth configuration to test a
+verified SDU test account and a controlled non-SDU Google account. Verify the return
+session, reload persistence, logout, and server rejection of the non-SDU account.
+Check email sign-in, recovery and administrator access as regressions. Successful
+live consent and non-SDU rejection have not yet been tested. Existing OAuth JWTs,
+if any are issued before activation, remain usable until their expiry.
+
+Local checks: `node --test tests/*.test.mjs`, `pnpm exec tsc --noEmit`, `pnpm build`.
+Sources: [Auth Hooks](https://supabase.com/docs/guides/auth/auth-hooks),
+[AMR claims](https://supabase.com/docs/guides/auth/jwt-fields),
+[provider identities](https://supabase.com/docs/guides/auth/identities).
+
 ## Appoint the first administrator
 
 Create and confirm your account first. In the Supabase SQL Editor, replace the placeholder UUID with its ID from Authentication → Users:
