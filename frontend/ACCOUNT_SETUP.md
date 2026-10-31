@@ -21,7 +21,7 @@ It is enabled when that client is configured and demo mode is off; the obsolete
 origin plus pathname. Google client secrets stay in Supabase, never in Vite.
 
 `hd=sdu.edu.kz` is an account-selection hint. Server-side enforcement is prepared
-in [`supabase/migrations/20261031_sdu_auth_token_hook.sql`](supabase/migrations/20261031_sdu_auth_token_hook.sql).
+in [`supabase/migrations/20261031150000_sdu_auth_token_hook.sql`](supabase/migrations/20261031150000_sdu_auth_token_hook.sql).
 For Google/OAuth sign-ins and refreshes of those sessions, the hook requires:
 
 - A canonical account email ending exactly in `@sdu.edu.kz`.

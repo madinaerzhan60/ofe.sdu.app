@@ -287,7 +287,7 @@ test('server-side hook requires verified SDU Google identity for OAuth and refre
       grant select on auth.users,auth.identities to supabase_auth_admin;`)
     await db.query('insert into auth.users values ($1,$2,now())',[userId,'student@sdu.edu.kz'])
     await db.query('insert into auth.identities values ($1,$2,$3)',[userId,'google',{email:'student@sdu.edu.kz',email_verified:true}])
-    const migration = await readFile(new URL('../supabase/migrations/20261031_sdu_auth_token_hook.sql', import.meta.url), 'utf8')
+    const migration = await readFile(new URL('../supabase/migrations/20261031150000_sdu_auth_token_hook.sql', import.meta.url), 'utf8')
     await db.exec(migration)
     await assert.rejects(db.exec(migration), /already exists/, 'never replace an existing hook')
     const invoke = async (method, overrides = {}) => (await db.query('select public.sdu_access_token_hook($1::jsonb) as result', [JSON.stringify({
