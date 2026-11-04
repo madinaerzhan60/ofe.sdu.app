@@ -132,7 +132,7 @@ const copy = {
     directions: "What we’re planning",
     featured: "Projects from our community",
     events: "Upcoming events",
-    demoPill: "Demo Day · 26 Nov",
+    demoPill: "Demo Day · 25 Nov",
     caption: "From first idea to first customer. Built at SDU.",
   },
   RU: {
@@ -146,7 +146,7 @@ const copy = {
     directions: "Что мы планируем",
     featured: "Проекты сообщества",
     events: "Ближайшие события",
-    demoPill: "Демо-день · 26 ноября",
+    demoPill: "Демо-день · 25 ноября",
     caption: "От первой идеи до первого клиента. Создано в SDU.",
   },
   KK: {
@@ -160,7 +160,7 @@ const copy = {
     directions: "Біздің жоспарларымыз",
     featured: "Қауымдастық жобалары",
     events: "Алдағы іс-шаралар",
-    demoPill: "Демо күн · 26 қараша",
+    demoPill: "Демо күн · 25 қараша",
     caption: "Алғашқы идеядан алғашқы клиентке дейін. SDU-да жасалған.",
   },
 }
@@ -368,7 +368,7 @@ function Footer({ go, page }: { go: (p: Page) => void; page: Page }) {
   )
 }
 
-function Countdown({ date = "2026-11-26" }: { date?: string }) {
+function Countdown({ date = "2026-11-25" }: { date?: string }) {
   const t = useT()
   const calculate = () => {
     const diff = Math.max(
@@ -777,7 +777,7 @@ function DemoDay({ go }: { go: (p: Page) => void }) {
   const t = useT()
   const { events, submissions, lang } = useModel()
   const publishedEvent = events.find((e) => e.id === "current" && e.published) ?? events.find(e => e.id !== "archive" && e.published && e.date)
-  const current: EventData = publishedEvent ?? {id:'announced-founders-cup',title:'SDU FOUNDERS CUP',date:'2026-11-26',place:'Venue to be confirmed',published:false}
+  const current: EventData = publishedEvent ?? {id:'announced-founders-cup',title:'SDU FOUNDERS CUP',date:'2026-11-25',place:'Venue to be confirmed',published:false}
   const past = events.find((e) => e.id === "archive" && e.published)
   const registrationUrl = externalUrl(current.registrationUrl || import.meta.env.VITE_EVENT_REGISTRATION_URL)
   const archiveUrl = '/archive.html'
@@ -870,7 +870,7 @@ return (
         </div>
         <a className="archive-feature" href={archiveUrl}>
           <span className="archive-feature-mark" aria-hidden="true">01<span>OFE<br/>DEMO DAY</span></span>
-          <span className="archive-feature-copy"><span className="eyebrow">{t('THE FIRST CHAPTER')}</span><strong>{t('The finalists. The ideas. The beginning.')}</strong><span>{t('Discover last year’s finalists and the startups they built.')}</span><span className="archive-feature-link">{t('Explore the first Demo Day')} →</span></span>
+          <span className="archive-feature-copy"><strong>Demo Day 2026</strong><span className="archive-feature-link">{t('Open archive')} →</span></span>
         </a>
 
       </section>
@@ -911,7 +911,7 @@ export default function App() {
     {
       id: "current",
       title: "SDU FOUNDERS CUP",
-      date: "2026-11-26",
+      date: "2026-11-25",
       place: "Venue to be confirmed",
       published: true,
     },

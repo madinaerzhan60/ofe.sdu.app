@@ -1,4 +1,5 @@
 import { translations } from "./model"
+Object.assign(translations,{'Open archive':['Открыть архив','Мұрағатты ашу']})
 const rows: [string, string, string][] = [
   [
     "Prototype · Sample content for review",
@@ -933,7 +934,7 @@ Object.assign(translations, {
 
 Object.assign(translations, {'Demo only. Accounts are not saved.':['Демоверсия. Аккаунты не сохраняются.','Демо. Аккаунттар сақталмайды.'],'Demo only. No email was sent.':['Демоверсия. Письмо не отправлено.','Демо. Хат жіберілген жоқ.']});
 
-Object.assign(translations, {'Add team member':['Добавить участника','Қатысушы қосу'],'Add member':['Добавить участника','Қатысушы қосу'],'Team member added.':['Участник добавлен.','Қатысушы қосылды.'],'Teams stay in this browser session.':['Команды сохраняются в текущей сессии браузера.','Командалар браузердің осы сессиясында сақталады.'],'THE FIRST CHAPTER':['ПЕРВАЯ ГЛАВА','АЛҒАШҚЫ ТАРАУ'],'The finalists. The ideas. The beginning.':['Финалисты. Идеи. Начало.','Финалистер. Идеялар. Бастау.'],'Discover last year’s finalists and the startups they built.':['Познакомьтесь с финалистами прошлого года и их стартапами.','Өткен жылғы финалистермен және олардың стартаптарымен танысыңыз.'],'Explore the first Demo Day':['Открыть первый Demo Day','Алғашқы Demo Day сайтын ашу'],'Create archive':['Создать архив','Мұрағат жасау'],'Last year’s finalists':['Финалисты прошлого года','Өткен жылғы финалистер'],'Add finalist':['Добавить финалиста','Финалист қосу'],'Finalist':['Финалист','Финалист'],'Image URL':['Ссылка на изображение','Сурет сілтемесі'],'Website':['Сайт','Сайт']});
+Object.assign(translations, {'Add team member':['Добавить участника','Қатысушы қосу'],'Add member':['Добавить участника','Қатысушы қосу'],'Team member added.':['Участник добавлен.','Қатысушы қосылды.'],'Teams stay in this browser session.':['Команды сохраняются в текущей сессии браузера.','Командалар браузердің осы сессиясында сақталады.'],'THE FIRST CHAPTER':['ПЕРВАЯ ГЛАВА','АЛҒАШҚЫ ТАРАУ'],'The winners. The ideas. The beginning.':['Финалисты. Идеи. Начало.','Финалистер. Идеялар. Бастау.'],'Relive Demo Day 2026: the photos, the teams and the winning projects.':['Познакомьтесь с финалистами прошлого года и их стартапами.','Өткен жылғы финалистермен және олардың стартаптарымен танысыңыз.'],'Explore the first Demo Day':['Открыть первый Demo Day','Алғашқы Demo Day сайтын ашу'],'Create archive':['Создать архив','Мұрағат жасау'],'Last year’s finalists':['Финалисты прошлого года','Өткен жылғы финалистер'],'Add finalist':['Добавить финалиста','Финалист қосу'],'Finalist':['Финалист','Финалист'],'Image URL':['Ссылка на изображение','Сурет сілтемесі'],'Website':['Сайт','Сайт']});
 
 Object.assign(translations, {'IDEAS BECOME REAL':['ИДЕИ СТАНОВЯТСЯ РЕАЛЬНОСТЬЮ','ИДЕЯЛАР ШЫНДЫҚҚА АЙНАЛАДЫ'],'MEET THE NEXT GENERATION':['ЗНАКОМЬТЕСЬ С НОВЫМ ПОКОЛЕНИЕМ','ЖАҢА БУЫНМЕН ТАНЫСЫҢЫЗ']});
 
@@ -977,9 +978,9 @@ Object.assign(translations, {
     "© 2026 Офис предпринимательства SDU",
     "© 2026 SDU кәсіпкерлік кеңсесі"
   ],
-  "26 November · 2026": [
-    "26 ноября · 2026",
-    "26 қараша · 2026"
+  "25 November · 2026": [
+    "25 ноября · 2026",
+    "25 қараша · 2026"
   ],
   "SDU · Entrepreneurship": [
     "SDU · Предпринимательство",
@@ -1089,3 +1090,136 @@ Object.assign(translations, {
     "Өзгерістер платформада сақталады."
   ]
 });
+
+Object.assign(translations, {
+  "Student founders. Bold ideas. One unforgettable stage. Relive Demo Day 2026 and meet the teams behind it.": [
+    "Студенты-основатели. Смелые идеи. Одна незабываемая сцена. Вспоминаем Demo Day 2026 и знакомимся с командами.",
+    "Студент кәсіпкерлер. Батыл идеялар. Ұмытылмас сахна. Demo Day 2026 сәттерін еске алып, командалармен танысыңыз."
+  ],
+  "Meet the teams": [
+    "Познакомиться с командами",
+    "Командалармен танысу"
+  ],
+  "Demo Day photo gallery": [
+    "Фотогалерея Demo Day",
+    "Demo Day фотогалереясы"
+  ],
+  "Carousel": [
+    "Карусель",
+    "Карусель"
+  ],
+  "THE DAY IN PICTURES": [
+    "ЭТОТ ДЕНЬ В КАДРАХ",
+    "ОСЫ КҮННІҢ КАДРЛАРЫ"
+  ],
+  "A moment. A beginning.": [
+    "Момент, с которого всё началось.",
+    "Бәрі басталған сәт."
+  ],
+  "View all photos": [
+    "Все фотографии",
+    "Барлық фотосуреттер"
+  ],
+  "Use arrow keys to browse photos": [
+    "Используйте стрелки для просмотра фотографий",
+    "Фотосуреттерді көру үшін бағыттауыш пернелерді пайдаланыңыз"
+  ],
+  "Previous photo": [
+    "Предыдущее фото",
+    "Алдыңғы фотосурет"
+  ],
+  "Next photo": [
+    "Следующее фото",
+    "Келесі фотосурет"
+  ],
+  "Choose a photo": [
+    "Выбрать фотографию",
+    "Фотосуретті таңдау"
+  ],
+  "All together on the Demo Day stage": [
+    "Все вместе на сцене Demo Day",
+    "Demo Day сахнасында бірге"
+  ],
+  "Celebrating the teams": [
+    "Поздравляем команды",
+    "Командаларды құттықтаймыз"
+  ],
+  "The award ceremony": [
+    "Церемония награждения",
+    "Марапаттау рәсімі"
+  ],
+  "Student founders at Demo Day": [
+    "Студенты-основатели на Demo Day",
+    "Demo Day-дегі студент кәсіпкерлер"
+  ],
+  "A moment from the ceremony": [
+    "Момент церемонии",
+    "Рәсімнен бір сәт"
+  ],
+  "Ideas worth celebrating": [
+    "Идеи, достойные признания",
+    "Марапатқа лайық идеялар"
+  ],
+  "THE WINNERS": [
+    "ПОБЕДИТЕЛИ",
+    "ЖЕҢІМПАЗДАР"
+  ],
+  "Ideas that stood out.": [
+    "Идеи, которые запомнились.",
+    "Есте қалған идеялар."
+  ],
+  "Grand Prix": [
+    "Гран-при",
+    "Гран-при"
+  ],
+  "Investor support": [
+    "Поддержка инвесторов",
+    "Инвесторлар қолдауы"
+  ],
+  "1st place": [
+    "1-е место",
+    "1-орын"
+  ],
+  "2nd place": [
+    "2-е место",
+    "2-орын"
+  ],
+  "3rd place": [
+    "3-е место",
+    "3-орын"
+  ],
+  "The teams and awards that marked Demo Day 2026.": [
+    "Команды и награды Demo Day 2026.",
+    "Demo Day 2026 командалары мен марапаттары."
+  ],
+  "Event highlights": [
+    "Как прошёл Demo Day",
+    "Demo Day сәттері"
+  ],
+  "The projects & teams": [
+    "Проекты и команды",
+    "Жобалар мен командалар"
+  ],
+  "FROM THE DEMO DAY STAGE": [
+    "СО СЦЕНЫ DEMO DAY",
+    "DEMO DAY САХНАСЫНАН"
+  ],
+  "The winners. The ideas. The beginning.": [
+    "Победители. Идеи. Начало.",
+    "Жеңімпаздар. Идеялар. Бастау."
+  ],
+  "Relive Demo Day 2026: the photos, the teams and the winning projects.": [
+    "Вспоминаем Demo Day 2026: фотографии, команды и проекты победителей.",
+    "Demo Day 2026: фотосуреттер, командалар және жеңімпаз жобалар."
+  ]
+});
+Object.assign(translations,{"Play slideshow":["Продолжить показ","Көрсетуді жалғастыру"],"Pause slideshow":["Приостановить показ","Көрсетуді кідірту"]});
+
+Object.assign(translations,{
+ "About the project":["О проекте","Жоба туралы"],
+ "The team":["Команда","Команда"],
+ "The project story will be added soon.":["Описание проекта скоро появится.","Жоба сипаттамасы жақында қосылады."],
+ "Team members will be announced soon.":["Состав команды скоро появится.","Команда құрамы жақында жарияланады."]
+});
+
+Object.assign(translations,{'View photo':['Смотреть фото','Фотосуретті көру']});

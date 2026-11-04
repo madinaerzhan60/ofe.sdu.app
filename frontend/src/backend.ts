@@ -1,3 +1,4 @@
+import {correctEventDate} from './event-corrections'
 import { createClient } from '@supabase/supabase-js'
 import { useEffect, useRef, useState } from 'react'
 import type { EventData, Submission } from './model'
@@ -66,7 +67,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[]) {
         if (!active || generation.current !== request) return
         const next: State = {userId:user?.id ?? null, userEmail:user?.email ?? '', isAdmin:role.data === true,
           submissions:(projects.data ?? []).map(r => ({...r.data,id:r.id,ownerId:r.owner_id})),
-          events:(events.data ?? []).map(r => ({...r.data,id:r.id})),}
+          events:(events.data ?? []).map(r => correctEventDate({...r.data,id:r.id})),}
         current.current = next; setState(next); setError('')
       } catch { if (active && generation.current === request) setError('Could not load your data. Check your connection and try again.') }
       finally { if (active && generation.current === request) setLoading(false) }
