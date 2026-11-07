@@ -4,7 +4,7 @@ The app uses Supabase Auth for email/password accounts and Postgres row-level se
 
 ## Connect
 
-1. Create a Supabase project and apply these migrations once, in order: `supabase/migrations/20261022_accounts.sql`, `supabase/migrations/20261023071333_database_foundation.sql`, `supabase/migrations/20261023074400_event_registration_user_index.sql`, `supabase/migrations/20261023115503_storage_security_hardening.sql`, `supabase/migrations/20261023120625_storage_token_guards.sql`, then `supabase/migrations/20261023123211_storage_update_operation.sql`.
+1. Create a Supabase project and apply these migrations once, in order: `supabase/migrations/20261022_accounts.sql`, `supabase/migrations/20261023071333_database_foundation.sql`, `supabase/migrations/20261023074400_event_registration_user_index.sql`, `supabase/migrations/20261023115503_storage_security_hardening.sql`, `supabase/migrations/20261023120625_storage_token_guards.sql`, `supabase/migrations/20261023123211_storage_update_operation.sql`, `supabase/migrations/20261031150000_sdu_auth_token_hook.sql`, then `supabase/migrations/20261104150000_correct_founders_cup_date.sql`.
 2. Copy `.env.example` to `.env.local`. Fill in the project URL and **publishable** key from the project Connect dialog. Never use a secret or service-role key.
 3. In Authentication → URL Configuration, add the final website address as Site URL and add the exact allowed redirect URLs. Add `http://localhost:8443/` only for local development.
 4. Enable email/password sign-up and email confirmation. Set a minimum password length of at least 10 characters.

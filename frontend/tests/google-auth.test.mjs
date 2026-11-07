@@ -144,7 +144,7 @@ function platform(url, session = null, testEnv = env) {
     from:() => ({select:async () => ({data:[],error:null})}),rpc:async () => ({data:false,error:null}),
   }
   const module = load(backendSource, {
-    react:state.react,'@supabase/supabase-js':{createClient:(_url, _key, config) => {options = config; return client}},
+    react:state.react,'./event-corrections':{correctEventDate:e => e},'@supabase/supabase-js':{createClient:(_url, _key, config) => {options = config; return client}},
   }, {window,__env:testEnv})
   const render = () => state.render(() => module.usePlatform([], []))
   render()

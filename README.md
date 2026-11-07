@@ -6,11 +6,11 @@ The platform frontend is in `frontend/` (React, Vite, TypeScript).
 
 ```sh
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-For a production build: `npm run build`. For database permission tests: `npm run test:security`.
+For a production build: `pnpm build`. To run all tests: `pnpm test` (database permission tests only: `pnpm test:security`).
 
 Account and database connection steps: [frontend/ACCOUNT_SETUP.md](frontend/ACCOUNT_SETUP.md).
 
