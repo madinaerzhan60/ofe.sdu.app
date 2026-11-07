@@ -1,5 +1,5 @@
 {
-  "name": "figma-make-app",
+  "name": "ofe-frontend",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "format": "oxfmt",
-    "test:security": "node --test tests/account-security.test.mjs"
+    "test:security": "node --test tests/account-security.test.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
