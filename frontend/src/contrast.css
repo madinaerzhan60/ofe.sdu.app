@@ -358,3 +358,47 @@ html[data-theme="dark"] .app.app .header .language button.active { background:#8
 html[data-theme="dark"] .archive-feature-link { color:#d8b4fe; }
 .finalist-editor fieldset { border:1px solid var(--line);padding:20px;border-radius:12px;margin:20px 0; }
 @media(max-width:800px) { .app.app .events-page .event-hero-layout { grid-template-columns:1fr;gap:32px; }.app .archive-feature { grid-template-columns:1fr;gap:24px;padding:28px; }.archive-feature-mark { font-size:90px; } }
+
+/* Use the shared palette for dialogs and editor panels in dark mode. */
+html[data-theme="dark"] .detail-dialog,
+html[data-theme="dark"] .app.app :is(.admin-editor, .event-editors form) {
+  background: var(--ofe-surface);
+  color: var(--ofe-ink);
+  border-color: var(--ofe-line);
+}
+
+html[data-theme="dark"] .app.app .detail-dialog .policy-page {
+  background: transparent;
+}
+
+html[data-theme="dark"] :is(.detail-dialog .dialog-close, .app.app .admin-nav-count) {
+  background: var(--ofe-soft);
+  color: var(--ofe-accent-text);
+}
+
+html[data-theme="dark"] .detail-dialog .dialog-close:hover {
+  background: var(--ofe-line);
+  color: var(--ofe-ink);
+}
+
+@media (max-width: 760px) {
+  .events-page :is(.event-date-display, .event-location) {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+  }
+
+  .events-page .event-location-icon {
+    justify-self: center;
+  }
+
+  .events-page :is(.event-register > span, .event-calendar > span, .event-ticker i) {
+    display: grid;
+    place-items: center;
+    flex: 0 0 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    line-height: 1;
+  }
+}
