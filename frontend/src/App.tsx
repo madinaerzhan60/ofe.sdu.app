@@ -775,18 +775,11 @@ function externalUrl(value?: string): string | undefined {
 
 function DemoDay({ go }: { go: (p: Page) => void }) {
   const t = useT()
-  const { events, submissions, lang } = useModel()
+  const { events, lang } = useModel()
   const publishedEvent = events.find((e) => e.id === "current" && e.published) ?? events.find(e => e.id !== "archive" && e.published && e.date)
   const current: EventData = publishedEvent ?? {id:'announced-founders-cup',title:'SDU FOUNDERS CUP',date:'2026-11-25',place:'Venue to be confirmed',published:false}
   const past = events.find((e) => e.id === "archive" && e.published)
   const registrationUrl = externalUrl(current.registrationUrl || import.meta.env.VITE_EVENT_REGISTRATION_URL)
-  const sampleProjects = submissions.filter(
-    (s) =>
-      s.status === "Approved" &&
-      s.visible !== false &&
-      s.publication &&
-      Boolean(startups.find((startup) => startup.name === s.name)?.demo),
-  )
   const archiveUrl = '/archive.html'
 return (
     <main className="events-page">
@@ -846,25 +839,6 @@ return (
           ))}
         </div>
       </section>
-      {sampleProjects.length > 0 && (
-        <section className="section shell">
-          <div className="section-head row">
-            <div>
-              <p className="eyebrow">{t("SAMPLE PROJECTS")}</p>
-              <h2>{t("Meet the startups")}</h2>
-            </div>
-            <span className="count-large">{String(sampleProjects.length).padStart(2,"0")}</span>
-          </div>
-          <div className="startup-grid">
-            {sampleProjects
-              .map((s) => ({ ...s, initials: s.name.slice(0, 2).toUpperCase() }))
-              .slice(0, 6)
-              .map((s) => (
-                <StartupCard key={s.name} startup={s} go={go} />
-              ))}
-          </div>
-        </section>
-      )}
 </>}
       <section className="section shell archive">
         <div className="section-head">

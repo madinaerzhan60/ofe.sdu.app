@@ -10,14 +10,21 @@ const photos = [
 export function ArchiveGallery({t}:{t:(text:string)=>string}) {
  const [active,setActive]=useState(0)
  const [paused,setPaused]=useState(false)
+ const hasAdvanced=useRef(false)
  useEffect(()=>{
   if(paused)return
-  const timer=window.setInterval(()=>setActive(index=>(index+1)%photos.length),4000)
-  return ()=>window.clearInterval(timer)
- },[paused])
+  const timer=window.setTimeout(()=>{
+   hasAdvanced.current=true
+   setActive(index=>(index+1)%photos.length)
+  },hasAdvanced.current?4000:2500)
+  return ()=>window.clearTimeout(timer)
+ },[active,paused])
  const touchStart=useRef<number|null>(null)
  const lightbox=useRef<HTMLDialogElement>(null)
- const move=(step:number)=>setActive(index=>(index+step+photos.length)%photos.length)
+ const move=(step:number)=>{
+  hasAdvanced.current=true
+  setActive(index=>(index+step+photos.length)%photos.length)
+ }
  return <section className="memory-gallery" aria-label={t('Demo Day photo gallery')} aria-roledescription={t('Carousel')}>
   <div className="memory-heading"><span className="gallery-index">01 — 05</span><h2>{t('THE DAY IN PICTURES')}</h2></div>
   <div className="memory-stage" tabIndex={0} aria-label={t('Use arrow keys to browse photos')} onKeyDown={event=>{if(event.key==='ArrowLeft'){event.preventDefault();move(-1)}if(event.key==='ArrowRight'){event.preventDefault();move(1)}}} onTouchStart={event=>{touchStart.current=event.touches[0].clientX}} onTouchEnd={event=>{if(touchStart.current===null)return;const distance=touchStart.current-event.changedTouches[0].clientX;if(Math.abs(distance)>45)move(distance>0?1:-1);touchStart.current=null}} onTouchCancel={()=>{touchStart.current=null}}>
