@@ -6,39 +6,15 @@ import { ImageUpload, StartupEditor, EventEditor, demoOwnerId, ownsStartup } fro
 import { emptyDraft } from "./model"
 import { FormEvent, useEffect, useState, useRef, type ReactNode } from "react"
 import { policies, Submission, useModel, useT } from "./model"
+import { policyDocs, policyDraftDate, policyDraftNote } from "./policies"
 
 type Go = (
   page: "home" | "startups" | "profile" | "demo" | "apply" | "admin" | "policy",
 ) => void
 export function PolicyPage({ go }: { go: Go }) {
-  const { policy } = useModel()
+  const { policy, lang } = useModel()
   const t = useT()
-  const sections: Record<string, string[]> = {
-    "Privacy Policy": [
-      "Information collected: account details, application content and publication preferences.",
-      "The final policy must define purposes, retention periods, user rights and the responsible contact.",
-    ],
-    "Terms of Use": [
-      "Submit accurate information and only materials you have permission to share.",
-      "The final terms must explain acceptable use, moderation and account restrictions.",
-    ],
-    "Personal Data Processing Consent": [
-      "This consent covers reviewing the personal information included in your application.",
-      "The approved text must explain withdrawal, retention and how to contact OFE.",
-    ],
-    "Startup Publication Consent": [
-      "Publication permission is separate from application review.",
-      "Only approved startup information and materials with publication permission appear publicly.",
-    ],
-    "Copyright & IP Policy": [
-      "Startup materials and website assets need separate ownership and permission records.",
-      "The approved policy must explain permitted use and how to report a rights concern.",
-    ],
-    "Cookie Notice": [
-      "This mockup keeps workflow data in memory for the current session.",
-      "The release notice must list the cookies and tracking actually used by the deployed service.",
-    ],
-  }
+  const sections = policyDocs[policy]?.[lang] ?? []
   return (
     <main className="shell page policy-page">
       <button className="back" onClick={() => go("apply")}>
@@ -46,13 +22,19 @@ export function PolicyPage({ go }: { go: Go }) {
       </button>
       <p className="eyebrow">{t("DRAFT · FOR REVIEW")}</p>
       <h1>{t(policy)}</h1>
-      <p className="prototype-note">
-        {t(
-          "Placeholder policy content. OFE and SDU approval is required before release.",
-        )}
-      </p>
-      {sections[policy]?.map((text) => <p key={text}>{t(text)}</p>)}
-      <p>{t("Draft version: 18 October 2026")}</p>
+      <p className="prototype-note">{policyDraftNote[lang]}</p>
+      {sections.map((section) => (
+        <section key={section.h} className="policy-section">
+          <h2>{section.h}</h2>
+          {section.p?.map((text) => <p key={text}>{text}</p>)}
+          {section.ul && (
+            <ul>
+              {section.ul.map((text) => <li key={text}>{text}</li>)}
+            </ul>
+          )}
+        </section>
+      ))}
+      <p className="policy-version">{policyDraftDate[lang]}</p>
       <div className="policy-nav">
         {policies.map((name) => (
           <PolicyLink key={name} name={name} />
