@@ -1,3 +1,5 @@
+import { forEvent, publicProjects } from '../catalog'
+import { ProjectCard } from '../cards'
 import { useEffect, useState } from 'react'
 import { eventDate } from '../event-date'
 import { StorageImage } from '../storage'
@@ -43,9 +45,10 @@ function externalUrl(value?: string): string | undefined {
 
 export function FoundersCup() {
   const t = useT()
-  const { events, lang } = useModel()
+  const { events, lang, submissions, eventProjects } = useModel()
   const publishedEvent = events.find((e) => e.id === "current" && e.published) ?? events.find(e => e.id !== "archive" && e.published && e.date)
   const current: EventData = publishedEvent ?? {id:'announced-founders-cup',title:'SDU FOUNDERS CUP',date:'2026-11-21',place:'Venue to be confirmed',published:false}
+  const projects = forEvent(publicProjects(submissions, eventProjects), current.id)
   const past = events.find((e) => e.id === "archive" && e.published)
   const registrationUrl = externalUrl(current.registrationUrl || import.meta.env.VITE_EVENT_REGISTRATION_URL)
   const archiveUrl = '/archive.html'
@@ -90,6 +93,7 @@ return (
         </div>
         <div className="event-ticker" aria-hidden="true"><div><span><b>SDU FOUNDERS CUP</b><i>✳</i>{t('MEET THE NEXT GENERATION')}<i>✳</i><b>{t('IDEAS BECOME REAL')}</b><i>✳</i></span><span><b>SDU FOUNDERS CUP</b><i>✳</i>{t('MEET THE NEXT GENERATION')}<i>✳</i><b>{t('IDEAS BECOME REAL')}</b><i>✳</i></span></div></div>
       </section>
+      <section className="pg-section"><div className="shell"><div className="section-head"><h2>{t('Projects and teams')}</h2></div>{projects.length ? <div className="pcard-grid">{projects.map((project,i) => <ProjectCard key={project.id} project={project} index={i}/>)}</div> : <p>{t('Confirmed projects will appear here.')}</p>}</div></section>
       <section className="section shell program">
         <div className="section-head">
           <p className="eyebrow">{t("PROPOSED PROGRAM")}</p>

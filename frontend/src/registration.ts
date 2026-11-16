@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
-import { backend, liveMode } from './backend'
+import { backend, liveMode, notifyCatalogChanged } from './backend'
 
 export const PRESENTATION_BUCKET = 'event-presentations'
 export const MAX_PRESENTATION_BYTES = 25 * 1024 * 1024
@@ -155,6 +155,7 @@ export async function updateTeam(team: EventTeam, input: TeamInput) {
   const { error } = await backend.from('event_teams').update(toColumns(input)).eq('id', team.id)
   if (error) throw error
   await syncMembers(team.id, team.members, input.members)
+  notifyCatalogChanged()
   emit({ teams: await fetchTeams(team.eventId) })
 }
 
@@ -175,6 +176,7 @@ export async function uploadPresentation(team: EventTeam, file: File, onProgress
   if (error) { await backend.storage.from(PRESENTATION_BUCKET).remove([path]); throw error }
   if (team.presentationPath) await backend.storage.from(PRESENTATION_BUCKET).remove([team.presentationPath])
   onProgress?.(1)
+  notifyCatalogChanged()
   emit({ teams: await fetchTeams(team.eventId) })
 }
 
@@ -183,6 +185,7 @@ export async function removePresentation(team: EventTeam) {
   const { error } = await backend.from('event_teams').update({ presentation_path: null, presentation_name: null }).eq('id', team.id)
   if (error) throw error
   if (team.presentationPath) await backend.storage.from(PRESENTATION_BUCKET).remove([team.presentationPath])
+  notifyCatalogChanged()
   emit({ teams: await fetchTeams(team.eventId) })
 }
 
@@ -210,6 +213,7 @@ export async function withdrawTeam(team: EventTeam) {
   if (team.presentationPath) await backend.storage.from(PRESENTATION_BUCKET).remove([team.presentationPath])
   const { error } = await backend.from('event_teams').delete().eq('id', team.id)
   if (error) throw error
+  notifyCatalogChanged()
   emit({ teams: state.teams.filter(row => row.id !== team.id) })
 }
 
@@ -217,6 +221,7 @@ export async function setTeamStatus(team: EventTeam, status: TeamStatus, adminNo
   if (!backend) { emit({ teams: state.teams.map(row => row.id === team.id ? { ...row, status, adminNote } : row) }); return }
   const { error } = await backend.from('event_teams').update({ status, admin_note: adminNote.trim().slice(0, 1000) }).eq('id', team.id)
   if (error) throw error
+  notifyCatalogChanged()
   emit({ teams: await fetchTeams(team.eventId) })
 }
 

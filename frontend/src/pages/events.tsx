@@ -1,5 +1,6 @@
+import { forEvent, publicProjects } from '../catalog'
 import { useState } from 'react'
-import { NewsCard, categoryMeta, safeCover } from '../cards'
+import { ProjectCard, NewsCard, categoryMeta, safeCover } from '../cards'
 import { eventDate } from '../event-date'
 import { newsCategories, useModel, useT, type NewsCategory } from '../model'
 import { Link, useRouter } from '../router'
@@ -10,13 +11,20 @@ const isCategory = (value?: string): value is NewsCategory => Boolean(value && (
 export function Events() {
   const t = useT()
   const { route, go } = useRouter()
-  const { news, events, lang, isMediaEditor } = useModel()
+  const { news, events, lang, isMediaEditor, submissions, eventProjects } = useModel()
   const [shown, setShown] = useState(9)
   const category = isCategory(route.id) ? route.id : 'all'
   const published = news.filter(post => post.published).sort((a, b) => b.date.localeCompare(a.date))
   const visible = category === 'all' ? published : published.filter(post => post.category === category)
   const upcoming = events.filter(event => event.id !== 'archive' && event.published && event.date).sort((a, b) => a.date.localeCompare(b.date))
   useReveal([category, shown, visible.length])
+  const selectedEvent = events.find(event => event.id === route.id && event.published)
+  if (selectedEvent) {
+    const projects = forEvent(publicProjects(submissions, eventProjects), selectedEvent.id)
+    return <main id="main"><PageHero eyebrow={t('Event')} crumbs={[{label:'Events',to:'events'},{label:selectedEvent.title}]} title={t(selectedEvent.title)} lead={`${selectedEvent.date} · ${t(selectedEvent.place)}`}>
+      {selectedEvent.id === 'current' && <Link to="demo" className="btn btn-accent">{t('Event details')}<Icon name="arrow" size={18}/></Link>}
+    </PageHero><section className="pg-section"><div className="wrap"><SectionHead title={t('Projects and teams')}/>{projects.length ? <div className="pcard-grid">{projects.map((project,i) => <ProjectCard key={project.id} project={project} index={i}/>)}</div> : <p>{t('Confirmed projects will appear here.')}</p>}</div></section></main>
+  }
   return <main id="main" className="events-hub">
     <PageHero eyebrow={t('Events & news')} crumbs={category === 'all' ? [{ label: 'Events' }] : [{ label: 'Events', to: 'events' }, { label: categoryMeta[category].label }]}
       title={category === 'all' ? t('Events and news') : t(categoryMeta[category].label)} image="/demo-day/IMG_7414.webp"
@@ -27,7 +35,7 @@ export function Events() {
     {upcoming.length > 0 && <section className="pg-section pg-section-tight">
       <div className="wrap">
         <SectionHead eyebrow={t('Upcoming')} title={t('Events')} action={<a className="link-arrow" href="/archive.html">{t('Demo Day archive')}<Icon name="arrowUpRight" size={16} /></a>} />
-        <div className="event-strip">{upcoming.map((event, i) => <Link key={event.id} to="demo" className="event-item reveal-up" style={{ '--i': i } as React.CSSProperties}>
+        <div className="event-strip">{upcoming.map((event, i) => <Link key={event.id} to="events" id={event.id} className="event-item reveal-up" style={{ '--i': i } as React.CSSProperties}>
           <span className="event-item-date"><strong>{event.date.slice(8)}</strong><span>{eventDate(event.date, lang).month}</span><small>{event.date.slice(0, 4)}</small></span>
           <span className="event-item-copy"><span className="chip">{t('Demo Day')}</span><strong>{event.title === 'SDU FOUNDERS CUP' ? 'SDU Founders Cup' : t(event.title)}</strong><span><Icon name="pin" size={16} />{t(event.place)} · {eventDate(event.date, lang).weekday}</span></span>
           <span className="event-item-cta">{t('Details')}<Icon name="arrow" size={18} /></span>

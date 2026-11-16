@@ -347,3 +347,15 @@ Object.assign(translations, {
   'or with SDU email': ['или по почте SDU', 'немесе SDU поштасы арқылы'],
   'Only @sdu.edu.kz accounts. Other emails are not accepted.': ['Только аккаунты @sdu.edu.kz. Другие почты не принимаются.', 'Тек @sdu.edu.kz аккаунттары. Басқа пошталар қабылданбайды.'],
 })
+
+Object.assign(translations, {
+  'Connected events': ['Связанные мероприятия', 'Байланысты іс-шаралар'],
+  'Event': ['Мероприятие', 'Іс-шара'],
+  'Projects and teams': ['Проекты и команды', 'Жобалар мен командалар'],
+  'Confirmed projects will appear here.': ['Здесь появятся подтверждённые проекты.', 'Мұнда расталған жобалар көрсетіледі.'],
+  'Student startups and projects from every field at SDU. Published projects and confirmed event participants.': ['Студенческие стартапы и проекты SDU. Опубликованные проекты и подтверждённые участники мероприятий.', 'SDU студенттерінің стартаптары мен жобалары. Жарияланған жобалар және іс-шаралардың расталған қатысушылары.'],
+})
+
+Object.assign(translations, {
+ 'Confirmed product information appears in the project catalog with this event’s tag. Contacts and presentations remain private.': ['После подтверждения информация о проекте появится в каталоге с тегом этого мероприятия. Контакты и презентации останутся закрытыми.', 'Расталғаннан кейін жоба туралы ақпарат каталогта осы іс-шараның тегімен көрсетіледі. Байланыс деректері мен презентациялар жабық қалады.'],
+})
