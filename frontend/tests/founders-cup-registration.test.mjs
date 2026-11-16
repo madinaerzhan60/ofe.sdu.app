@@ -246,7 +246,7 @@ test('optional event covers stay private until confirmation and cannot be overwr
     await as('captain')
     const teamId = (await db.query(team())).rows[0].id
     const image = `current/${teamId}/${imageId}.webp`
-    const replacement = `current/${teamId}/91c2831b-10f5-43f1-9199-f421a368aa13.webp`
+    const replacement = `current/${teamId}/91c2831b-10f5-43f1-9199-f421a368aa13.png`
     const staged = `current/${teamId}/91c2831b-10f5-43f1-9199-f421a368aa14.webp`
     await operation('storage.object.upload')
     await db.query("insert into storage.objects(bucket_id,name) values ('event-covers',$1),('event-covers',$2),('event-covers',$3)",[image,replacement,staged])

@@ -17,6 +17,7 @@ const migrations = [
   '20261116151731_fix_founders_cup_product_url.sql',
   '20261116155726_event_project_catalog.sql',
   '20261116162556_founders_cup_cover.sql',
+  '20261116164537_event_cover_png.sql',
 ]
 const migration = name => readFile(new URL(`../../supabase/migrations/${name}`, import.meta.url), 'utf8')
 

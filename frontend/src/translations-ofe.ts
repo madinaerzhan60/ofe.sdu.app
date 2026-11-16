@@ -369,3 +369,8 @@ Object.assign(translations, {
  'The registration, cover and presentation will be deleted. This cannot be undone.': ['Регистрация, обложка и презентация будут удалены. Отменить это действие нельзя.', 'Тіркелу, мұқаба және презентация жойылады. Бұл әрекетті қайтару мүмкін емес.'],
  'Contacts, member emails and presentations stay private. Confirmed product information and an optional cover appear in the project catalog.': ['Контакты, email участников и презентации остаются закрытыми. Информация о подтверждённом проекте и необязательная обложка появляются в каталоге проектов.', 'Байланыс деректері, қатысушылардың email мекенжайлары мен презентациялар жабық қалады. Расталған жоба туралы ақпарат пен міндетті емес мұқаба жобалар каталогында көрсетіледі.'],
 })
+
+Object.assign(translations, {
+ 'Choose an image smaller than 5 MB.': ['Выберите изображение размером меньше 5 МБ.', 'Көлемі 5 МБ-тан аз суретті таңдаңыз.'],
+ 'Image · up to 5 MB': ['Изображение · до 5 МБ', 'Сурет · 5 МБ-қа дейін'],
+})
