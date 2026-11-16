@@ -1,6 +1,10 @@
 import { createContext, useContext } from "react"
 export type Lang = "EN" | "RU" | "KK"
+export type Member = { email: string; role: string }
+export type ProjectContact = { telegram: string; phone: string }
 export type Submission = {
+  members?: Member[]
+  contact?: ProjectContact
   ownerId?: string
   image?: string
   cover?: string
@@ -26,6 +30,8 @@ export type Finalist = { id:string; name:string; members:string; description:str
 export type EventData = {
   finalists?: Finalist[]
   registrationUrl?: string
+  registrationDeadline?: string
+  registration?: 'open' | 'closed'
   externalUrl?: string
   image?: string
   id: string
@@ -34,8 +40,11 @@ export type EventData = {
   place: string
   published: boolean
 }
-export type Draft = { imageFile?: Blob; coverFile?: Blob; image?: string; cover?: string; about?: string; name: string; description: string; industry: string; stage: string; team: string; product: string; processing: boolean; publication: boolean }
-export const emptyDraft: Draft = {name:'',description:'',industry:'',stage:'',team:'',product:'',processing:false,publication:false};
+export const newsCategories = ['business','it','hackathons','championships','champions','university'] as const
+export type NewsCategory = typeof newsCategories[number]
+export type NewsPost = { id: string; title: string; excerpt: string; body: string; category: NewsCategory; cover?: string; date: string; published: boolean; link?: string; author?: string; sample?: boolean; pinned?: boolean }
+export type Draft = { members: Member[]; telegram: string; phone: string; imageFile?: Blob; coverFile?: Blob; image?: string; cover?: string; about?: string; name: string; description: string; industry: string; stage: string; team: string; product: string; processing: boolean; publication: boolean }
+export const emptyDraft: Draft = {members:[],telegram:'',phone:'',name:'',description:'',industry:'',stage:'',team:'',product:'',processing:false,publication:false};
 export const policies = [
   "Privacy Policy",
   "Terms of Use",
@@ -71,6 +80,10 @@ export const AppContext = createContext({
   setEvents: async (_update: (rows: EventData[]) => EventData[]): Promise<boolean> => true,
   policy: "",
   openPolicy: (_name: string) => {},
+  news: [] as NewsPost[],
+  setNews: async (_update: (rows: NewsPost[]) => NewsPost[]): Promise<boolean> => true,
+  isMediaEditor: false,
+  setDemoMedia: (_value: boolean) => {},
 })
 export const useModel = () => useContext(AppContext)
 export const translations: Record<string, [string, string]> = {}

@@ -7,6 +7,7 @@ import {useLanguage} from './use-language'
 import './translations'
 import {ArchiveGallery} from './archive-gallery'
 import {ArchiveWinners} from './archive-winners'
+import './styles/fonts.css'
 import './archive.css'
 import './brand-theme.css'
 function safeLink(value?:string){try{const url=new URL(value||'');return ['http:','https:'].includes(url.protocol)?url.href:undefined}catch{return undefined}}

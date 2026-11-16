@@ -1,0 +1,9 @@
+/* SDU brand typefaces from the official SDU brand kit (subset to Latin, Cyrillic and Kazakh). */
+@font-face { font-family: 'SDU Unique'; src: url('../assets/fonts/sdu-unique-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'SDU Unique'; src: url('../assets/fonts/sdu-unique-500.woff2') format('woff2'); font-weight: 500 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'SDU Unique'; src: url('../assets/fonts/sdu-unique-700.woff2') format('woff2'); font-weight: 700 900; font-style: normal; font-display: swap; }
+@font-face { font-family: 'SDU Life'; src: url('../assets/fonts/sdu-life-400.woff2') format('woff2'); font-weight: 400 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Gilroy'; src: url('../assets/fonts/gilroy-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Gilroy'; src: url('../assets/fonts/gilroy-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Gilroy'; src: url('../assets/fonts/gilroy-600.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Gilroy'; src: url('../assets/fonts/gilroy-700.woff2') format('woff2'); font-weight: 700 900; font-style: normal; font-display: swap; }

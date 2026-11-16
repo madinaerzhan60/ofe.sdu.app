@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { StorageImage, uploadImage, type MediaTarget } from './storage'
 import { EventData, Submission, useModel, useT } from './model'
+import { ContactFields, MemberEmailsField, cleanContact, contactIsValid } from './team-fields'
+import { formatPhone, teamSummary } from './validation'
 
 export const demoOwnerId = 'demo-student'
 export const ownsStartup = (row: Submission, userId: string | null = null, liveMode = false) => liveMode ? Boolean(userId && row.ownerId === userId) : row.ownerId === demoOwnerId || (!row.ownerId && row.id.startsWith('student-'))
@@ -50,16 +52,19 @@ export function ImageUpload({ label, value, onChange, square = false, target, di
 }
 
 export function StartupEditor({ row, onClose, onSaved }: { row: Submission; onClose: () => void; onSaved?: () => void }) {
-  const { account, setSubmissions, select, userId, liveMode } = useModel()
+  const { account, setSubmissions, select, userId, liveMode, userEmail } = useModel()
   const t = useT()
   const [draft, setDraft] = useState(row)
+  const [members, setMembers] = useState(row.members ?? [])
+  const [contact, setContact] = useState({ telegram: row.contact?.telegram ?? '', phone: row.contact?.phone ? formatPhone(row.contact.phone) : '' })
+  const contactOk = contactIsValid(contact.telegram, contact.phone)
   const [preview, setPreview] = useState(false)
   if (account !== 'student' || !ownsStartup(row, userId, liveMode)) return null
   return <form className="startup-editor" onSubmit={async e => {
     e.preventDefault()
-    const saved = await setSubmissions(rows => rows.map(current => current.id === row.id && ownsStartup(current, userId, liveMode) ? { ...current, name: draft.name.trim(), description: draft.description.trim(), about: draft.about?.trim(), image: draft.image, cover: draft.cover, team: draft.team.trim(), product: draft.product.trim() } : current))
+    const saved = await setSubmissions(rows => rows.map(current => current.id === row.id && ownsStartup(current, userId, liveMode) ? { ...current, name: draft.name.trim(), description: draft.description.trim(), about: draft.about?.trim(), image: draft.image, cover: draft.cover, team: members.length || !row.team?.trim() ? teamSummary(members) : row.team, members, contact: cleanContact(contact.telegram, contact.phone), product: draft.product.trim() } : current))
     if (!saved)return
-    select(draft.name.trim()); onSaved?.(); onClose()
+    select(row.id); onSaved?.(); onClose()
   }}>
     <div className="workspace-head"><h3>{t('Edit startup page')}</h3><button type="button" className="inline-link" onClick={onClose}>{t('Cancel')}</button></div>
     <ImageUpload label="Startup logo (optional)" value={draft.image} target={row.ownerId ? {projectId:row.id,ownerId:row.ownerId,kind:'logo'} : undefined} disabledReason={row.status === 'Approved' && row.visible === true && row.publication ? 'Published project images are locked. Contact the reviewer to request changes.' : ''} onChange={image => setDraft(d => ({ ...d, image }))} square />
@@ -67,11 +72,12 @@ export function StartupEditor({ row, onClose, onSaved }: { row: Submission; onCl
     <label>{t('Startup name')}<input required maxLength={100} value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} /></label>
     <label>{t('One-line description')}<textarea required maxLength={300} value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })} /></label>
     <label>{t('About your startup')}<textarea rows={5} maxLength={5000} value={draft.about ?? ''} onChange={e => setDraft({ ...draft, about: e.target.value })} /></label>
-    <label>{t('Team members')}<textarea required value={draft.team} onChange={e => setDraft({ ...draft, team: e.target.value })} /></label>
+    <MemberEmailsField members={members} ownEmail={userEmail} onChange={setMembers} />
+    <ContactFields telegram={contact.telegram} phone={contact.phone} onChange={setContact} />
     <label>{t('Product link (optional)')}<input type="url" pattern="https?://.+" value={draft.product} onChange={e => setDraft({ ...draft, product: e.target.value })} /></label>
     <button type="button" className="secondary" aria-expanded={preview} onClick={() => setPreview(!preview)}>{t(preview ? 'Hide preview' : 'Preview startup page')}</button>
-    {preview && <article className="startup-live-preview"><div className="preview-cover">{draft.cover ? <StorageImage src={draft.cover} alt="" /> : <span aria-hidden="true">{draft.name.slice(0, 1).toUpperCase()}</span>}<span className="preview-label">{t('Project preview')}</span></div><div className="preview-body"><div className="preview-identity"><span className="preview-logo">{draft.image ? <StorageImage src={draft.image} alt="" /> : draft.name.slice(0,2).toUpperCase()}</span><div><span className="preview-category">{t(draft.industry)} · {t(draft.stage)}</span><h2>{draft.name || t('Startup name')}</h2></div></div><p className="preview-description">{draft.description}</p>{draft.about && <p className="startup-about">{draft.about}</p>}<div className="preview-team"><span>{t('Team members')}</span><p>{draft.team}</p></div></div></article>}
-    <div className="button-row editor-actions"><button className="primary" disabled={!draft.name.trim() || !draft.description.trim() || !draft.team.trim()}>{t('Save changes')}</button><button type="button" className="secondary" onClick={onClose}>{t('Cancel')}</button></div>
+    {preview && <article className="startup-live-preview"><div className="preview-cover">{draft.cover ? <StorageImage src={draft.cover} alt="" /> : <span aria-hidden="true">{draft.name.slice(0, 1).toUpperCase()}</span>}<span className="preview-label">{t('Project preview')}</span></div><div className="preview-body"><div className="preview-identity"><span className="preview-logo">{draft.image ? <StorageImage src={draft.image} alt="" /> : draft.name.slice(0,2).toUpperCase()}</span><div><span className="preview-category">{t(draft.industry)} · {t(draft.stage)}</span><h2>{draft.name || t('Startup name')}</h2></div></div><p className="preview-description">{draft.description}</p>{draft.about && <p className="startup-about">{draft.about}</p>}<div className="preview-team"><span>{t('Team members')}</span><p>{members.length ? teamSummary(members) : draft.team}</p></div></div></article>}
+    <div className="button-row editor-actions"><button className="primary" disabled={!draft.name.trim() || !draft.description.trim() || !contactOk}>{t('Save changes')}</button><button type="button" className="secondary" onClick={onClose}>{t('Cancel')}</button></div>
   </form>
 }
 

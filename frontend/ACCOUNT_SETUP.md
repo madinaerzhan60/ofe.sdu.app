@@ -4,7 +4,7 @@ The app uses Supabase Auth for email/password accounts and Postgres row-level se
 
 ## Connect
 
-1. Create a Supabase project and apply these migrations once, in order: `supabase/migrations/20261022_accounts.sql`, `supabase/migrations/20261023071333_database_foundation.sql`, `supabase/migrations/20261023074400_event_registration_user_index.sql`, `supabase/migrations/20261023115503_storage_security_hardening.sql`, `supabase/migrations/20261023120625_storage_token_guards.sql`, `supabase/migrations/20261023123211_storage_update_operation.sql`, `supabase/migrations/20261031150000_sdu_auth_token_hook.sql`, then `supabase/migrations/20261104150000_correct_founders_cup_date.sql`.
+1. Create a Supabase project and apply these migrations once, in order: `supabase/migrations/20261022_accounts.sql`, `supabase/migrations/20261023071333_database_foundation.sql`, `supabase/migrations/20261023074400_event_registration_user_index.sql`, `supabase/migrations/20261023115503_storage_security_hardening.sql`, `supabase/migrations/20261023120625_storage_token_guards.sql`, `supabase/migrations/20261023123211_storage_update_operation.sql`, `supabase/migrations/20261031150000_sdu_auth_token_hook.sql`, then `supabase/migrations/20261104150000_correct_founders_cup_date.sql`, `supabase/migrations/20261113120000_media_news_members_contacts.sql` and `supabase/migrations/20261114120000_founders_cup_registration.sql`.
 2. Copy `.env.example` to `.env.local`. Fill in the project URL and **publishable** key from the project Connect dialog. Never use a secret or service-role key.
 3. In Authentication → URL Configuration, add the final website address as Site URL and add the exact allowed redirect URLs. Add `http://localhost:8443/` only for local development.
 4. Enable email/password sign-up and email confirmation. Set a minimum password length of at least 10 characters.
@@ -12,6 +12,30 @@ The app uses Supabase Auth for email/password accounts and Postgres row-level se
 6. Restart Vite after changing the environment file. For hosting, set both VITE variables before the production build.
 
 Without both environment values, the existing preview remains in **demo mode**. This is not real registration.
+
+## SDU-only accounts and Founders Cup registration
+
+`20261114120000_founders_cup_registration.sql` makes `@sdu.edu.kz` the only accepted
+account domain and adds team registration for SDU Founders Cup (21 November 2026).
+
+- A trigger on `auth.users` rejects any other email on sign-up and on email change,
+  whatever provider is used. In Authentication → Hooks also enable
+  **Before User Created** → `public.sdu_before_user_created_hook` so the user gets a
+  clear 403 message, and **Custom Access Token** → `public.sdu_access_token_hook`.
+- `event_teams` / `event_team_members` are protected by RLS. A team, its contacts and
+  its deck are visible only to its members and administrators. Server-owned fields
+  (captain, status, admin note, timestamps) are set by triggers, not by the browser.
+  One team per captain and one team per person per event, at most 6 members.
+- Registration closes at `registrationDeadline` (ISO time in the event JSON) or, if
+  not set, at 00:00 Asia/Almaty on the event day. Set `"registration": "closed"` in
+  the event JSON to close it earlier.
+- Decks go to the private bucket `event-presentations` (PDF/PPTX, 25 MB). Only the
+  captain can upload or delete while registration is open; members and admins can
+  download with their own session. No public or signed URLs are created.
+
+Hosting security headers (CSP, HSTS, frame and referrer policies) are in
+`vercel.json`. If the Supabase project changes, update its host in the CSP
+`connect-src` and `media-src`.
 
 ## SDU Google sign-in
 

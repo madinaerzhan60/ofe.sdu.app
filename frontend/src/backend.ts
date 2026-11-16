@@ -1,7 +1,7 @@
 import {correctEventDate} from './event-corrections'
 import { createClient } from '@supabase/supabase-js'
 import { useEffect, useRef, useState } from 'react'
-import type { EventData, Submission } from './model'
+import type { EventData, Member, NewsPost, ProjectContact, Submission } from './model'
 
 const url = import.meta.env.VITE_SUPABASE_URL?.trim()
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
@@ -29,11 +29,38 @@ function clearAuthRedirectParams() {
   if (hasCallbackHash) redirectUrl.hash = redirectHash.toString()
   window.history.replaceState(window.history.state, '', redirectUrl.pathname + redirectUrl.search + redirectUrl.hash)
 }
-export const backend = liveMode ? createClient(url!, key!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null
+export const backend = liveMode ? createClient(url!, key!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } }) : null
 
-type State = { submissions: Submission[]; events: EventData[]; userId: string | null; userEmail: string; isAdmin: boolean }
-export function usePlatform(samples: Submission[], sampleEvents: EventData[]) {
-  const [state, setState] = useState<State>({submissions: liveMode ? [] : samples, events: liveMode ? [] : sampleEvents, userId:null, userEmail:'', isAdmin:false})
+type State = { submissions: Submission[]; events: EventData[]; news: NewsPost[]; userId: string | null; userEmail: string; isAdmin: boolean; isMediaEditor: boolean }
+type Kind = 'submissions' | 'events' | 'news'
+// Tables added by 20261113120000_media_news_members_contacts.sql. Until that migration
+// is applied, reads fall back to empty data instead of breaking the whole site.
+const missing = (error: {code?: string} | null) => Boolean(error && ['42P01', 'PGRST205', 'PGRST202', '42883'].includes(error.code ?? ''))
+const privateKeys = ['members', 'contact'] as const
+const publicData = (row: Submission) => { const copy: Record<string, unknown> = {...row}; for (const key of privateKeys) delete copy[key]; return copy }
+const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+
+export const newsMediaBucket = 'news-media'
+export async function uploadNewsCover(file: Blob, newsId: string) {
+  if (!backend) throw new Error('Uploads need the platform connection.')
+  const path = `${newsId}/${Date.now()}.webp`
+  const result = await backend.storage.from(newsMediaBucket).upload(path, file, {contentType: 'image/webp', upsert: false})
+  if (result.error) throw new Error('Image upload failed.')
+  return backend.storage.from(newsMediaBucket).getPublicUrl(path).data.publicUrl
+}
+export async function listMediaEditors(): Promise<{email: string; added_at: string}[]> {
+  if (!backend) return []
+  const result = await backend.rpc('list_media_editors')
+  if (result.error) throw result.error
+  return result.data ?? []
+}
+export async function setMediaEditor(email: string, enabled: boolean) {
+  if (!backend) return
+  const result = await backend.rpc('set_media_editor', {target_email: email, enabled})
+  if (result.error) throw new Error(/No confirmed account/.test(result.error.message) ? 'No confirmed account uses this email.' : /sdu\.edu\.kz/.test(result.error.message) ? 'Use an @sdu.edu.kz email.' : 'Could not update the media team.')
+}
+export function usePlatform(samples: Submission[], sampleEvents: EventData[], sampleNews: NewsPost[] = []) {
+  const [state, setState] = useState<State>({submissions: liveMode ? [] : samples, events: liveMode ? [] : sampleEvents, news: liveMode ? [] : sampleNews, userId:null, userEmail:'', isAdmin:false, isMediaEditor:false})
   const current = useRef(state)
   current.current = state
   const [authLoading, setLoading] = useState(liveMode)
@@ -55,19 +82,33 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[]) {
         const user = session.data.session?.user
         // Clear private records before changing account, even if the network fails.
         if (active && generation.current === request && current.current.userId !== (user?.id ?? null)) {
-          const cleared: State = {submissions:[], events:[], userId:user?.id ?? null, userEmail:user?.email ?? '', isAdmin:false}
+          const cleared: State = {submissions:[], events:[], news:[], userId:user?.id ?? null, userEmail:user?.email ?? '', isAdmin:false, isMediaEditor:false}
           current.current = cleared; setState(cleared)
         }
-        const [projects, events, role] = await Promise.all([
+        const none = Promise.resolve({data:null,error:null})
+        const [projects, events, role, news, media, contacts, members] = await Promise.all([
           backend!.from('projects').select('id,owner_id,data'),
           backend!.from('events').select('id,data'),
           user ? backend!.rpc('is_admin') : Promise.resolve({data:false,error:null}),
+          backend!.from('news').select('id,data'),
+          user ? backend!.rpc('is_media_editor') : Promise.resolve({data:false,error:null}),
+          user ? backend!.from('project_contacts').select('project_id,telegram,phone') : none,
+          user ? backend!.from('project_members').select('project_id,email,role') : none,
         ])
         if (projects.error || events.error || role.error) throw projects.error || events.error || role.error
+        for (const optional of [news, media, contacts, members]) if (optional.error && !missing(optional.error)) throw optional.error
         if (!active || generation.current !== request) return
-        const next: State = {userId:user?.id ?? null, userEmail:user?.email ?? '', isAdmin:role.data === true,
-          submissions:(projects.data ?? []).map(r => ({...r.data,id:r.id,ownerId:r.owner_id})),
-          events:(events.data ?? []).map(r => correctEventDate({...r.data,id:r.id})),}
+        const contactRows = (contacts.data ?? []) as {project_id:string; telegram:string; phone:string}[]
+        const memberRows = (members.data ?? []) as {project_id:string; email:string; role:string}[]
+        const next: State = {userId:user?.id ?? null, userEmail:user?.email ?? '', isAdmin:role.data === true, isMediaEditor:media.data === true,
+          submissions:(projects.data ?? []).map(r => {
+            const contact = contactRows.find(c => c.project_id === r.id)
+            return {...r.data,id:r.id,ownerId:r.owner_id,
+              contact: contact ? {telegram:contact.telegram, phone:contact.phone} : undefined,
+              members: memberRows.filter(m => m.project_id === r.id).map(m => ({email:m.email, role:m.role}))}
+          }),
+          events:(events.data ?? []).map(r => correctEventDate({...r.data,id:r.id})),
+          news:((news.data ?? []) as {id:string; data:NewsPost}[]).map(r => ({...r.data,id:r.id})).sort((a,b) => (b.date ?? '').localeCompare(a.date ?? '')),}
         current.current = next; setState(next); setError('')
       } catch { if (active && generation.current === request) setError('Could not load your data. Check your connection and try again.') }
       finally { if (active && generation.current === request) setLoading(false) }
@@ -82,7 +123,29 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[]) {
     return () => {active=false; generation.current++; data.subscription.unsubscribe()}
   }, [])
 
-  function change<K extends 'submissions' | 'events'>(kind: K, update: (rows: State[K]) => State[K]): Promise<boolean> {
+  async function syncPrivate(row: Submission, old: Submission | undefined) {
+    if (!backend) return
+    if (row.contact && !same(row.contact, old?.contact)) {
+      const contact: ProjectContact = row.contact
+      const result = await backend.from('project_contacts').upsert({project_id:row.id, telegram:contact.telegram, phone:contact.phone})
+      if (result.error) throw result.error
+    }
+    if (row.members && !same(row.members, old?.members)) {
+      const previous: Member[] = old?.members ?? []
+      const removed = previous.filter(m => !row.members!.some(n => n.email === m.email && n.role === m.role))
+      const added = row.members.filter(m => !previous.some(n => n.email === m.email && n.role === m.role))
+      if (removed.length) {
+        const result = await backend.from('project_members').delete().eq('project_id', row.id).in('email', removed.map(m => m.email))
+        if (result.error) throw result.error
+      }
+      if (added.length) {
+        const result = await backend.from('project_members').insert(added.map(m => ({project_id:row.id, email:m.email, role:m.role})))
+        if (result.error) throw result.error
+      }
+    }
+  }
+
+  function change<K extends Kind>(kind: K, update: (rows: State[K]) => State[K]): Promise<boolean> {
     let resolve!: (value: boolean) => void
     const result = new Promise<boolean>(r => {resolve=r})
     pending.current = pending.current.then(async () => {
@@ -90,14 +153,24 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[]) {
       const version = generation.current
       try {
         const rows = update(before[kind])
-        const changed = rows.filter(row => JSON.stringify(row) !== JSON.stringify(before[kind].find(old => old.id === row.id)))
-        if (backend && changed.length) {
+        const previous = before[kind] as {id:string}[]
+        const changed = (rows as {id:string}[]).filter(row => JSON.stringify(row) !== JSON.stringify(previous.find(old => old.id === row.id)))
+        const removed = previous.filter(old => !(rows as {id:string}[]).some(row => row.id === old.id))
+        if (backend && (changed.length || removed.length)) {
           if (!before.userId) throw new Error('Sign in required')
-          const table = kind === 'submissions' ? 'projects' : 'events'
+          const table = kind === 'submissions' ? 'projects' : kind
           for (const row of changed) {
-            const payload: Record<string, unknown> = kind === 'submissions' ? {id:row.id,owner_id:(row as Submission).ownerId,data:row} : {id:row.id,data:row}
-            const exists = before[kind].some(old => old.id === row.id)
-            const response = exists ? await backend.from(table).update(payload).eq('id',row.id).select('id') : await backend.from(table).insert(payload).select('id')
+            const old = previous.find(item => item.id === row.id)
+            const data = kind === 'submissions' ? publicData(row as Submission) : row
+            const oldData = kind === 'submissions' && old ? publicData(old as Submission) : old
+            if (old && same(data, oldData)) { await syncPrivate(row as Submission, old as Submission); continue }
+            const payload: Record<string, unknown> = kind === 'submissions' ? {id:row.id,owner_id:(row as Submission).ownerId,data} : {id:row.id,data}
+            const response = old ? await backend.from(table).update(kind === 'news' ? {data} : payload).eq('id',row.id).select('id') : await backend.from(table).insert(payload).select('id')
+            if (response.error || response.data?.length !== 1) throw response.error ?? new Error('Write denied')
+            if (kind === 'submissions') await syncPrivate(row as Submission, old as Submission | undefined)
+          }
+          if (kind === 'news') for (const row of removed) {
+            const response = await backend.from('news').delete().eq('id', row.id).select('id')
             if (response.error || response.data?.length !== 1) throw response.error ?? new Error('Write denied')
           }
           if (version !== generation.current) { resolve(false); return }
@@ -111,5 +184,6 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[]) {
   return {...state, liveMode, authLoading, recovery, finishRecovery:() => setRecovery(false), error:authError || error, clearError:() => {setAuthError('');setError('')},
     setSubmissions:(update:(rows:Submission[])=>Submission[]) => change('submissions', update),
     setEvents:(update:(rows:EventData[])=>EventData[]) => change('events', update),
+    setNews:(update:(rows:NewsPost[])=>NewsPost[]) => change('news', update),
   }
 }

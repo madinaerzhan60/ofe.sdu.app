@@ -4,10 +4,12 @@ import {readFile,readdir} from 'node:fs/promises'
 import vm from 'node:vm'
 import ts from 'typescript'
 const translations={}
-const source=await readFile(new URL('../src/translations.ts',import.meta.url),'utf8')
-vm.runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{require:()=>({translations}),exports:{}})
+for(const name of ['translations.ts','translations-ofe.ts']){
+ const source=await readFile(new URL('../src/'+name,import.meta.url),'utf8')
+ vm.runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{require:()=>({translations}),exports:{}})
+}
 test('every literal UI translation has nonempty Russian and Kazakh text',async()=>{
- for(const file of (await readdir(new URL('../src/',import.meta.url))).filter(name=>name.endsWith('.tsx'))){
+ for(const file of (await readdir(new URL('../src/',import.meta.url),{recursive:true})).filter(name=>name.endsWith('.tsx'))){
   const text=await readFile(new URL('../src/'+file,import.meta.url),'utf8')
   const ast=ts.createSourceFile(file,text,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX)
   function visit(node){if(ts.isCallExpression(node)&&node.expression.getText(ast)==='t'&&node.arguments[0]&&ts.isStringLiteralLike(node.arguments[0])){const key=node.arguments[0].text;assert.ok(translations[key]?.[0]?.trim(),file+': missing Russian '+key);assert.ok(translations[key]?.[1]?.trim(),file+': missing Kazakh '+key)}ts.forEachChild(node,visit)}visit(ast)
