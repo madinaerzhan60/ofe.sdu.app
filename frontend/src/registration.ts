@@ -1,6 +1,6 @@
 import { eventCoverBucket, uploadEventCover } from './event-cover-storage'
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
-import { backend, liveMode, notifyCatalogChanged } from './backend'
+import { backend, liveMode, notifyCatalogChanged, setWorkspaceProjectRemoved } from './backend'
 
 export const PRESENTATION_BUCKET = 'event-presentations'
 export const MAX_PRESENTATION_BYTES = 25 * 1024 * 1024
@@ -21,6 +21,7 @@ export type EventTeam = {
   productUrl?: string
   telegram: string
   phone: string
+  removed?: boolean
   coverPath?: string
   presentationPath?: string
   presentationName?: string
@@ -91,14 +92,14 @@ const subscribe = (fn: () => void) => { listeners.add(fn); return () => listener
 
 async function fetchTeams(eventId: string) {
   if (!backend) return state.teams
-  const { data, error } = await backend.from('event_teams')
+  const [{data,error},removals] = await Promise.all([backend.from('event_teams')
     .select('id,event_id,captain_email,team_name,product_name,tagline,description,industry,stage,product_url,telegram,phone,presentation_path,presentation_name,cover_path,status,admin_note,created_at,updated_at,event_team_members(email,role,is_captain)')
-    .eq('event_id', eventId).order('created_at', { ascending: true })
-  if (error) throw error
-  return (data as Row[]).map(fromRow)
+    .eq('event_id', eventId).order('created_at', { ascending: true }), backend.rpc('list_removed_workspace_projects')])
+  if (error || removals.error) throw error || removals.error
+  return (data as Row[]).map(row => ({...fromRow(row),removed:(removals.data ?? []).some((item: {kind:string;target_id:string}) => item.kind === 'event-team' && item.target_id === row.id)}))
 }
 
-export function useEventTeams(eventId: string, identity: string) {
+export function useEventTeams(eventId: string, identity: string, includeRemoved = false) {
   const snapshot = useSyncExternalStore(subscribe, () => state)
   const key = `${eventId}|${identity}`
   const reload = useCallback(async () => {
@@ -108,7 +109,7 @@ export function useEventTeams(eventId: string, identity: string) {
     catch (error) { emit({ loading: false, error: describeError(error), loadedFor: key }) }
   }, [eventId, key])
   useEffect(() => { if (state.loadedFor !== key) void reload() }, [key, reload])
-  return { ...snapshot, teams: snapshot.teams.filter(team => team.eventId === eventId), reload }
+  return { ...snapshot, teams: snapshot.teams.filter(team => team.eventId === eventId && (includeRemoved || !team.removed)), reload }
 }
 
 export async function registrationOpen(eventId: string, fallback: boolean) {
@@ -260,4 +261,10 @@ export function teamsToCsv(teams: EventTeam[]) {
   const rows = teams.map(team => [team.teamName, team.productName, team.tagline, team.industry, team.stage, team.captainEmail, team.telegram, team.phone,
     team.members.filter(m => !m.isCaptain).map(m => `${m.email} (${m.role})`).join('; '), team.presentationPath ? 'yes' : 'no', team.status, team.createdAt.slice(0, 16).replace('T', ' ')])
   return '﻿' + [header, ...rows].map(row => row.map(value => cell(String(value))).join(',')).join('\r\n')
+}
+
+export async function setTeamRemoved(team: EventTeam, removed: boolean) {
+  await setWorkspaceProjectRemoved(team.id,'event-team',removed)
+  emit({teams:backend ? await fetchTeams(team.eventId) : state.teams.map(row => row.id === team.id ? {...row,removed} : row)})
+  notifyCatalogChanged()
 }

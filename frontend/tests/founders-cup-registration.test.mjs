@@ -297,3 +297,80 @@ test('optional event covers stay private until confirmation and cannot be overwr
     assert.equal((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows.length,0)
   } finally {await db.close()}
 })
+
+test('only administrators remove and restore ordinary projects; public data and media disappear together', async () => {
+  const {db,as,login,operation} = await setup()
+  const projectId='removal-project'
+  const image=`${people.captain[0]}/${projectId}/cover.webp`
+  try {
+    await as('captain')
+    const payload={id:projectId,ownerId:people.captain[0],name:'Project to remove',description:'A project with consent and a cover',team:'Team',industry:'EdTech',stage:'Idea',product:'',status:'Pending',visible:false,publication:true,consentVersion:'2026-10-22',consentAt:new Date().toISOString(),feedback:''}
+    await db.query('insert into public.projects(id,owner_id,data) values ($1,$2,$3)',[projectId,people.captain[0],payload])
+    await operation('storage.object.upload')
+    await db.query("insert into storage.objects(bucket_id,name) values ('startup-media',$1)",[image])
+    await as('admin')
+    await db.query("update public.projects set data=data||'{\"status\":\"Approved\",\"visible\":true}' where id=$1",[projectId])
+    await login(null)
+    assert.equal((await db.query('select id from public.projects')).rows.length,1)
+    await assert.rejects(db.query("select public.set_workspace_project_removed($1,'project',true)",[projectId]),/permission/)
+    await as('captain')
+    await assert.rejects(db.query("select public.set_workspace_project_removed($1,'project',true)",[projectId]),/administrators/)
+    await assert.rejects(db.query('insert into private.removed_projects(project_id) values ($1)',[projectId]),/permission/)
+    await as('admin')
+    await db.query("select public.set_workspace_project_removed($1,'project',true)",[projectId])
+    await db.query("select public.set_workspace_project_removed($1,'project',true)",[projectId])
+    assert.deepEqual((await db.query('select * from public.list_removed_workspace_projects()')).rows,[{kind:'project',target_id:projectId}])
+    assert.equal((await db.query('select id from public.publication_consents')).rows.length,1)
+    await login(null)
+    await operation('storage.object.get_authenticated')
+    assert.equal((await db.query('select id from public.projects')).rows.length,0)
+    assert.equal((await db.query("select name from storage.objects where bucket_id='startup-media'")).rows.length,0)
+    await as('captain')
+    assert.equal((await db.query('select id from public.projects')).rows.length,0)
+    assert.equal((await db.query('select * from public.list_removed_workspace_projects()')).rows.length,0)
+    assert.equal((await db.query("update public.projects set data=jsonb_set(data,'{name}','\"Bypass\"') where id=$1 returning id",[projectId])).rows.length,0)
+    await assert.rejects(db.query("select public.set_workspace_project_removed($1,'project',false)",[projectId]),/administrators/)
+    await as('admin')
+    await db.query("select public.set_workspace_project_removed($1,'project',false)",[projectId])
+    await assert.rejects(db.query("select public.set_workspace_project_removed('missing','project',true)"),/not found/)
+    await login(null)
+    assert.equal((await db.query('select id from public.projects')).rows.length,1)
+    assert.deepEqual((await db.query("select name from storage.objects where bucket_id='startup-media'")).rows,[{name:image}])
+  } finally {await db.close()}
+})
+
+test('removed Founders Cup projects, member data, covers and presentations stay hidden until admin restoration', async()=>{
+  const {db,as,login,operation}=await setup()
+  try{
+    await as('captain')
+    const teamId=(await db.query(team())).rows[0].id
+    const cover=`current/${teamId}/91c2831b-10f5-43f1-9199-f421a368aa12.png`
+    const deck=`current/${teamId}/91c2831b-10f5-43f1-9199-f421a368aa13.pdf`
+    await operation('storage.object.upload')
+    await db.query("insert into storage.objects(bucket_id,name) values ('event-covers',$1),('event-presentations',$2)",[cover,deck])
+    await db.query('update public.event_teams set cover_path=$1,presentation_path=$2 where id=$3',[cover,deck,teamId])
+    await db.query("insert into public.event_team_members(team_id,email,role) values ($1,$2,'Design')",[teamId,people.member[1]])
+    await assert.rejects(db.query("select public.set_workspace_project_removed($1,'event-team',true)",[teamId]),/administrators/)
+    await as('admin')
+    await db.query("update public.event_teams set status='confirmed' where id=$1",[teamId])
+    await db.query("select public.set_workspace_project_removed($1,'event-team',true)",[teamId])
+    assert.equal((await db.query('select * from public.list_removed_workspace_projects()')).rows[0].target_id,teamId)
+    await login(null)
+    await operation('storage.object.get_authenticated')
+    assert.equal((await db.query('select * from public.list_confirmed_event_projects()')).rows.length,0)
+    assert.equal((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows.length,0)
+    for(const actor of ['captain','member']){
+      await as(actor)
+      assert.equal((await db.query('select id from public.event_teams')).rows.length,0)
+      assert.equal((await db.query('select email from public.event_team_members')).rows.length,0)
+      assert.equal((await db.query("select name from storage.objects where bucket_id in ('event-covers','event-presentations')")).rows.length,0)
+      await assert.rejects(db.query("select public.set_workspace_project_removed($1,'event-team',false)",[teamId]),/administrators/)
+    }
+    await as('admin')
+    assert.equal((await db.query("select name from storage.objects where bucket_id in ('event-covers','event-presentations')")).rows.length,2)
+    await db.query("select public.set_workspace_project_removed($1,'event-team',false)",[teamId])
+    await login(null)
+    assert.equal((await db.query('select * from public.list_confirmed_event_projects()')).rows.length,1)
+    assert.deepEqual((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows,[{name:cover}])
+  }finally{await db.close()}
+})

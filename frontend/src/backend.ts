@@ -40,7 +40,7 @@ type Kind = 'submissions' | 'events' | 'news'
 // Tables added by 20261113120000_media_news_members_contacts.sql. Until that migration
 // is applied, reads fall back to empty data instead of breaking the whole site.
 const missing = (error: {code?: string} | null) => Boolean(error && ['42P01', 'PGRST205', 'PGRST202', '42883'].includes(error.code ?? ''))
-const privateKeys = ['members', 'contact', 'eventIds'] as const
+const privateKeys = ['members', 'contact', 'eventIds', 'removed'] as const
 const publicData = (row: Submission) => { const copy: Record<string, unknown> = {...row}; for (const key of privateKeys) delete copy[key]; return copy }
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
 
@@ -62,6 +62,11 @@ export async function setMediaEditor(email: string, enabled: boolean) {
   if (!backend) return
   const result = await backend.rpc('set_media_editor', {target_email: email, enabled})
   if (result.error) throw new Error(/No confirmed account/.test(result.error.message) ? 'No confirmed account uses this email.' : /sdu\.edu\.kz/.test(result.error.message) ? 'Use an @sdu.edu.kz email.' : 'Could not update the media team.')
+}
+export async function setWorkspaceProjectRemoved(targetId: string, kind: 'project' | 'event-team', removed: boolean) {
+  if (!backend) return
+  const result = await backend.rpc('set_workspace_project_removed',{target_id:targetId,kind,removed})
+  if (result.error) throw result.error
 }
 export function usePlatform(samples: Submission[], sampleEvents: EventData[], sampleNews: NewsPost[] = []) {
   const [state, setState] = useState<State>({submissions: liveMode ? [] : samples, eventProjects: [], events: liveMode ? [] : sampleEvents, news: liveMode ? [] : sampleNews, userId:null, userEmail:'', isAdmin:false, isMediaEditor:false})
@@ -90,7 +95,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
           current.current = cleared; setState(cleared)
         }
         const none = Promise.resolve({data:null,error:null})
-        const [projects, events, role, news, media, contacts, members, eventProducts, assignments] = await Promise.all([
+        const [projects, events, role, news, media, contacts, members, eventProducts, assignments, removals] = await Promise.all([
           backend!.from('projects').select('id,owner_id,data'),
           backend!.from('events').select('id,data'),
           user ? backend!.rpc('is_admin') : Promise.resolve({data:false,error:null}),
@@ -100,8 +105,9 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
           user ? backend!.from('project_members').select('project_id,email,role') : none,
           backend!.rpc('list_confirmed_event_projects'),
           backend!.from('project_events').select('project_id,event_id'),
+          user ? backend!.rpc('list_removed_workspace_projects') : none,
         ])
-        if (projects.error || events.error || role.error || eventProducts.error || assignments.error) throw projects.error || events.error || role.error || eventProducts.error || assignments.error
+        if (projects.error || events.error || role.error || eventProducts.error || assignments.error || removals.error) throw projects.error || events.error || role.error || eventProducts.error || assignments.error || removals.error
         for (const optional of [news, media, contacts, members]) if (optional.error && !missing(optional.error)) throw optional.error
         if (!active || generation.current !== request) return
         const contactRows = (contacts.data ?? []) as {project_id:string; telegram:string; phone:string}[]
@@ -110,6 +116,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
           submissions:(projects.data ?? []).map(r => {
             const contact = contactRows.find(c => c.project_id === r.id)
             return {...r.data,id:r.id,ownerId:r.owner_id,
+              removed: (removals.data ?? []).some((item: {kind:string;target_id:string}) => item.kind === 'project' && item.target_id === r.id),
               eventIds: (assignments.data ?? []).filter(a => a.project_id === r.id).map(a => a.event_id),
               contact: contact ? {telegram:contact.telegram, phone:contact.phone} : undefined,
               members: memberRows.filter(m => m.project_id === r.id).map(m => ({email:m.email, role:m.role}))}
@@ -192,6 +199,15 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
     })
     return result
   }
+  async function setProjectRemoved(projectId: string, removed: boolean) {
+    const version = generation.current
+    try {
+      await setWorkspaceProjectRemoved(projectId,'project',removed)
+      if (version !== generation.current) return false
+      const next = {...current.current,submissions:current.current.submissions.map(row => row.id === projectId ? {...row,removed} : row)}
+      current.current=next;setState(next);notifyCatalogChanged();return true
+    } catch {setError('Could not remove or restore the project. Please try again.');return false}
+  }
   async function setProjectEvents(projectId: string, eventIds: string[]) {
     const version = generation.current
     try {
@@ -205,7 +221,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
     } catch { setError('Could not save the project’s events. Please try again.'); return false }
   }
   return {...state, liveMode, authLoading, recovery, finishRecovery:() => setRecovery(false), error:authError || error, clearError:() => {setAuthError('');setError('')},
-    setProjectEvents,
+    setProjectEvents, setProjectRemoved,
     setSubmissions:(update:(rows:Submission[])=>Submission[]) => change('submissions', update),
     setEvents:(update:(rows:EventData[])=>EventData[]) => change('events', update),
     setNews:(update:(rows:NewsPost[])=>NewsPost[]) => change('news', update),
