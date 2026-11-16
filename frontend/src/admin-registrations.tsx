@@ -1,3 +1,5 @@
+import { StorageImage } from './storage'
+import { coverReference } from './event-cover-storage'
 import { useMemo, useState } from 'react'
 import { useModel, useT } from './model'
 import { describeError, downloadPresentation, setTeamStatus, teamsToCsv, useEventTeams, type EventTeam, type TeamStatus } from './registration'
@@ -54,6 +56,7 @@ export function AdminRegistrations() {
         <div className="reg-columns">
           <div>
             <h4>{t('Product')}</h4>
+            {team.coverPath && <div className="image-upload-preview"><StorageImage src={coverReference(team.coverPath)} alt={team.productName}/></div>}
             <p><strong>{team.productName}</strong> — {team.tagline}</p>
             <p className="field-note">{t(team.industry)} · {t(team.stage)}</p>
             <div className="prose reg-description">{team.description.split('\n').filter(Boolean).map((line, i) => <p key={i}>{line}</p>)}</div>

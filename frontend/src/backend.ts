@@ -76,9 +76,9 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
   useEffect(() => {
     if (!backend) return
     let active = true
-    const refresh = async () => {
+    const refresh = async (background = false) => {
       const request = ++generation.current
-      setLoading(true)
+      if (!background) setLoading(true)
       try {
         const session = await backend!.auth.getSession()
         clearAuthRedirectParams()
@@ -121,7 +121,8 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
       } catch { if (active && generation.current === request) setError('Could not load your data. Check your connection and try again.') }
       finally { if (active && generation.current === request) setLoading(false) }
     }
-    catalogListeners.add(refresh)
+    const refreshCatalog = () => { void refresh(true) }
+    catalogListeners.add(refreshCatalog)
     void refresh()
     const { data } = backend.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setRecovery(true)
@@ -129,7 +130,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
       // Do not await Supabase queries inside its auth callback.
       setTimeout(() => { if(active) void refresh() }, 0)
     })
-    return () => {catalogListeners.delete(refresh);active=false; generation.current++; data.subscription.unsubscribe()}
+    return () => {catalogListeners.delete(refreshCatalog);active=false; generation.current++; data.subscription.unsubscribe()}
   }, [])
 
   async function syncPrivate(row: Submission, old: Submission | undefined) {

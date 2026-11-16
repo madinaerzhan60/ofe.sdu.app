@@ -351,6 +351,7 @@ test('platform loads event products separately and reads project associations by
     assert.deepEqual(Array.from(state.eventProjects[0].eventIds),['current'])
     assert.equal(state.eventProjects[0].publication,undefined)
     view.module.notifyCatalogChanged()
+    assert.equal(view.render().authLoading,false)
     await tick()
     assert.equal(view.render().error,'')
   } finally {view.close()}
