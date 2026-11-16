@@ -1,3 +1,4 @@
+import { eventCoverBucket, uploadEventCover } from './event-cover-storage'
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
 import { backend, liveMode, notifyCatalogChanged } from './backend'
 
@@ -20,6 +21,7 @@ export type EventTeam = {
   productUrl?: string
   telegram: string
   phone: string
+  coverPath?: string
   presentationPath?: string
   presentationName?: string
   status: TeamStatus
@@ -35,13 +37,13 @@ export type TeamInput = Pick<EventTeam, 'teamName' | 'productName' | 'tagline' |
 type Row = {
   id: string; event_id: string; captain_email: string; team_name: string; product_name: string; tagline: string; description: string
   industry: string; stage: string; product_url: string | null; telegram: string; phone: string; presentation_path: string | null
-  presentation_name: string | null; status: TeamStatus; admin_note: string; created_at: string; updated_at: string
+  presentation_name: string | null; cover_path: string | null; status: TeamStatus; admin_note: string; created_at: string; updated_at: string
   event_team_members?: { email: string; role: string; is_captain: boolean }[]
 }
 const fromRow = (row: Row): EventTeam => ({
   id: row.id, eventId: row.event_id, captainEmail: row.captain_email, teamName: row.team_name, productName: row.product_name,
   tagline: row.tagline, description: row.description, industry: row.industry, stage: row.stage, productUrl: row.product_url ?? undefined,
-  telegram: row.telegram, phone: row.phone, presentationPath: row.presentation_path ?? undefined, presentationName: row.presentation_name ?? undefined,
+  telegram: row.telegram, phone: row.phone, coverPath: row.cover_path ?? undefined, presentationPath: row.presentation_path ?? undefined, presentationName: row.presentation_name ?? undefined,
   status: row.status, adminNote: row.admin_note, createdAt: row.created_at, updatedAt: row.updated_at,
   members: (row.event_team_members ?? []).map(m => ({ email: m.email, role: m.role, isCaptain: m.is_captain }))
     .sort((a, b) => Number(Boolean(b.isCaptain)) - Number(Boolean(a.isCaptain))),
@@ -59,6 +61,7 @@ export function describeError(error: unknown): string {
   if (/event_team_members_event_id_email_key|duplicate key.*email|unique.*email/i.test(text)) return 'One of these people is already registered in another team.'
   if (/event_teams_event_id_captain_id_key|duplicate key/i.test(text)) return 'You have already registered a team for this event.'
   if (/sdu\.edu\.kz/i.test(text)) return 'Use a corporate @sdu.edu.kz email.'
+  if (/Cover upload failed|Choose a PNG/i.test(text)) return /Choose a PNG/i.test(text) ? 'Choose a PNG, JPG or WebP smaller than 5 MB.' : 'Cover upload failed. Please try again.'
   if (/presentation|mime|size|Payload too large/i.test(text)) return 'Upload a PDF or PPTX file up to 25 MB.'
   if (/JWT|not authenticated|permission|row-level security/i.test(text)) return 'Sign in with your SDU account and try again.'
   return 'Could not save the registration. Check your connection and try again.'
@@ -89,7 +92,7 @@ const subscribe = (fn: () => void) => { listeners.add(fn); return () => listener
 async function fetchTeams(eventId: string) {
   if (!backend) return state.teams
   const { data, error } = await backend.from('event_teams')
-    .select('id,event_id,captain_email,team_name,product_name,tagline,description,industry,stage,product_url,telegram,phone,presentation_path,presentation_name,status,admin_note,created_at,updated_at,event_team_members(email,role,is_captain)')
+    .select('id,event_id,captain_email,team_name,product_name,tagline,description,industry,stage,product_url,telegram,phone,presentation_path,presentation_name,cover_path,status,admin_note,created_at,updated_at,event_team_members(email,role,is_captain)')
     .eq('event_id', eventId).order('created_at', { ascending: true })
   if (error) throw error
   return (data as Row[]).map(fromRow)
@@ -159,6 +162,27 @@ export async function updateTeam(team: EventTeam, input: TeamInput) {
   emit({ teams: await fetchTeams(team.eventId) })
 }
 
+/** Save a new immutable file before changing the reviewed reference. */
+export async function saveTeamCover(team: EventTeam, file?: Blob) {
+  if (!backend) {
+    if (team.coverPath?.startsWith('blob:')) URL.revokeObjectURL(team.coverPath)
+    const updated: EventTeam = {...team,coverPath:file ? URL.createObjectURL(file) : undefined,status:team.status === 'confirmed' ? 'submitted' : team.status}
+    emit({teams:state.teams.map(row => row.id === team.id ? updated : row)})
+    return updated
+  }
+  const path = file ? await uploadEventCover(backend,team.eventId,team.id,file) : null
+  const result = await backend.from('event_teams').update({cover_path:path}).eq('id',team.id).select('id').single()
+  if (result.error) {
+    if (path) await backend.storage.from(eventCoverBucket).remove([path])
+    throw result.error
+  }
+  notifyCatalogChanged()
+  if (team.coverPath) await backend.storage.from(eventCoverBucket).remove([team.coverPath])
+  const teams = await fetchTeams(team.eventId)
+  emit({teams})
+  return teams.find(row => row.id === team.id)!
+}
+
 export async function uploadPresentation(team: EventTeam, file: File, onProgress?: (value: number) => void) {
   const kind = await checkPresentation(file)
   const name = safeFileName(file.name)
@@ -210,6 +234,7 @@ export async function downloadPresentation(team: EventTeam) {
 
 export async function withdrawTeam(team: EventTeam) {
   if (!backend) { emit({ teams: state.teams.filter(row => row.id !== team.id) }); return }
+  if (team.coverPath) await saveTeamCover(team)
   if (team.presentationPath) await backend.storage.from(PRESENTATION_BUCKET).remove([team.presentationPath])
   const { error } = await backend.from('event_teams').delete().eq('id', team.id)
   if (error) throw error

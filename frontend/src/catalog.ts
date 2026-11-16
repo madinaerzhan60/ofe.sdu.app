@@ -5,7 +5,7 @@ export type EventProject = Pick<Submission, 'id' | 'name' | 'description' | 'abo
   source: 'event'
   eventIds: string[]
   image?: undefined
-  cover?: undefined
+  cover?: string
 }
 export type CatalogProject = Submission | EventProject
 export const isPublic = (row: Submission) => row.status === 'Approved' && row.publication && row.visible !== false

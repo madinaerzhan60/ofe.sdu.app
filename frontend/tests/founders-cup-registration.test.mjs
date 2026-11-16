@@ -238,3 +238,62 @@ test('project event assignment is admin-only and rolls back invalid changes', as
     assert.equal((await db.query('select * from public.project_events')).rows.length,0)
   } finally {await db.close()}
 })
+
+test('optional event covers stay private until confirmation and cannot be overwritten or shared across teams', async () => {
+  const {db,as,login,operation} = await setup()
+  const imageId = '91c2831b-10f5-43f1-9199-f421a368aa12'
+  try {
+    await as('captain')
+    const teamId = (await db.query(team())).rows[0].id
+    const image = `current/${teamId}/${imageId}.webp`
+    const replacement = `current/${teamId}/91c2831b-10f5-43f1-9199-f421a368aa13.webp`
+    const staged = `current/${teamId}/91c2831b-10f5-43f1-9199-f421a368aa14.webp`
+    await operation('storage.object.upload')
+    await db.query("insert into storage.objects(bucket_id,name) values ('event-covers',$1),('event-covers',$2),('event-covers',$3)",[image,replacement,staged])
+    await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values ('event-covers',$1)",[`closed/${teamId}/${imageId}.webp`]))
+    await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values ('event-covers',$1)",[`current/${teamId}/${imageId}.svg`]))
+    await db.query('update public.event_teams set cover_path=$1 where id=$2',[image,teamId])
+    await db.query("insert into public.event_team_members(team_id,email,role) values ($1,$2,'Design')",[teamId,people.member[1]])
+    await assert.rejects(db.query('update public.event_teams set cover_path=$1 where id=$2',[`current/${teamId}/91c2831b-10f5-43f1-9199-f421a368aa15.webp`,teamId]),/Upload the cover/)
+    await as('member')
+    await operation('storage.object.get_authenticated')
+    assert.equal((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows.length,3)
+    await operation('storage.object.upload')
+    await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values ('event-covers',$1)",[`current/${teamId}/91c2831b-10f5-43f1-9199-f421a368aa16.webp`]))
+    await as('stranger')
+    await operation('storage.object.get_authenticated')
+    assert.equal((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows.length,0)
+    await login(null)
+    assert.equal((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows.length,0)
+    await as('admin')
+    await db.query("update public.event_teams set status='confirmed' where id=$1",[teamId])
+    await login(null)
+    assert.deepEqual((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows,[{name:image}])
+    assert.equal((await db.query('select data from public.list_confirmed_event_projects()')).rows[0].data.cover,`event-cover://${image}`)
+    await operation('storage.object.sign')
+    assert.equal((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows.length,0)
+    await as('captain')
+    await operation('storage.object.upload')
+    assert.equal((await db.query("update storage.objects set name=$1 where bucket_id='event-covers' and name=$1 returning name",[image])).rows.length,0)
+    await operation('storage.object.delete')
+    assert.equal((await db.query("delete from storage.objects where name=$1 returning name",[image])).rows.length,0)
+    await db.query('update public.event_teams set cover_path=$1 where id=$2',[replacement,teamId])
+    assert.equal((await db.query('select status from public.event_teams where id=$1',[teamId])).rows[0].status,'submitted')
+    assert.equal((await db.query("delete from storage.objects where name=$1 returning name",[image])).rows.length,1)
+    await login(null)
+    await operation('storage.object.get_authenticated')
+    assert.equal((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows.length,0)
+    await as('admin')
+    await db.query("update public.event_teams set status='confirmed' where id=$1",[teamId])
+    await login(null)
+    assert.deepEqual((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows,[{name:replacement}])
+    await as('captain')
+    await db.query('update public.event_teams set cover_path=null where id=$1',[teamId])
+    await as('admin')
+    await db.query("update public.event_teams set status='confirmed' where id=$1",[teamId])
+    await login(null)
+    const data = (await db.query('select data from public.list_confirmed_event_projects()')).rows[0].data
+    assert.equal(Object.hasOwn(data,'cover'),false)
+    assert.equal((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows.length,0)
+  } finally {await db.close()}
+})

@@ -1,9 +1,12 @@
+import { ImageUpload } from '../media'
+import { StorageImage } from '../storage'
+import { coverReference } from '../event-cover-storage'
 import { useEffect, useId, useRef, useState, type DragEvent, type FormEvent } from 'react'
 import { AuthPanel } from '../auth'
 import { eventDate } from '../event-date'
 import { AdminModal } from '../flows'
 import { useModel, useT, type EventData } from '../model'
-import { checkPresentation, createTeam, describeError, downloadPresentation, MAX_TEAM_SIZE, registrationOpen, removePresentation, updateTeam, uploadPresentation, useEventTeams, withdrawTeam, type EventTeam, type TeamInput } from '../registration'
+import { checkPresentation, createTeam, describeError, downloadPresentation, MAX_TEAM_SIZE, registrationOpen, removePresentation, saveTeamCover, updateTeam, uploadPresentation, useEventTeams, withdrawTeam, type EventTeam, type TeamInput } from '../registration'
 import { Link } from '../router'
 import { MemberEmailsField } from '../team-fields'
 import { Icon, PageHero } from '../ui'
@@ -67,7 +70,7 @@ function PresentationPicker({ file, onFile, existing, busy, compact }: { file?: 
   </div>
 }
 
-function Wizard({ event, captainEmail, team, onDone, onCancel }: { event: EventData; captainEmail: string; team?: EventTeam; onDone: (message: string) => void; onCancel?: () => void }) {
+function Wizard({ event, captainEmail, team, onDone, onCancel, onStart }: { onStart: () => void; event: EventData; captainEmail: string; team?: EventTeam; onDone: (message: string) => void; onCancel?: () => void }) {
   const t = useT()
   const { lang } = useModel()
   const formId = useId()
@@ -78,6 +81,10 @@ function Wizard({ event, captainEmail, team, onDone, onCancel }: { event: EventD
     return emptyDraft
   })
   const [file, setFile] = useState<File>()
+  const [coverFile, setCoverFile] = useState<Blob>()
+  const [cover, setCover] = useState(coverReference(team?.coverPath) ?? '')
+  const [imageBusy, setImageBusy] = useState(false)
+  const savedTeam = useRef(team)
   const [fileError, setFileError] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const update = (patch: Partial<Draft>) => {
@@ -128,13 +135,20 @@ function Wizard({ event, captainEmail, team, onDone, onCancel }: { event: EventD
     event_.preventDefault()
     if (step < steps.length - 1) { next(); return }
     for (let i = 0; i < steps.length; i++) if (i !== 2 && !validate(i)) { go(i); return }
-    setBusy(true); setFailure(''); setProgress(0)
+    if (imageBusy) return
+    setBusy(true); setFailure(''); setProgress(0); onStart()
     const input: TeamInput = { ...draft, telegram: normalizeTelegram(draft.telegram), phone: normalizePhone(draft.phone), productUrl: draft.productUrl?.trim() || undefined }
     try {
-      let saved = team
-      if (team) await updateTeam(team, input)
+      let saved = savedTeam.current ?? team
+      if (saved) await updateTeam(saved, input)
       else saved = await createTeam(event.id, captainEmail, input)
-      if (file && saved) await uploadPresentation(saved, file, setProgress)
+      savedTeam.current = saved
+      if (coverFile || (!cover && saved.coverPath)) {
+        saved = await saveTeamCover(saved, coverFile)
+        savedTeam.current = saved
+        setCover(coverReference(saved.coverPath) ?? ''); setCoverFile(undefined)
+      }
+      if (file) { await uploadPresentation(saved, file, setProgress); setFile(undefined) }
       try { sessionStorage.removeItem(draftKey(captainEmail)) } catch { /* ignore */ }
       onDone(team ? 'Registration updated.' : 'Your team is registered!')
     } catch (problem) { setFailure(describeError(problem)) }
@@ -171,6 +185,8 @@ function Wizard({ event, captainEmail, team, onDone, onCancel }: { event: EventD
         <Field label="Stage" error={errors.stage}><select value={draft.stage} aria-invalid={Boolean(errors.stage)} onChange={e => update({ stage: e.target.value })}><option value="">{t('Select stage')}</option>{stages.map(value => <option key={value} value={value}>{t(value)}</option>)}</select></Field>
       </div>
       <Field label="Product description" help="The problem, your solution, who your users are and what you have already done." error={errors.description} counter={`${draft.description.length}/3000`}><textarea rows={8} maxLength={3000} value={draft.description} aria-invalid={Boolean(errors.description)} onChange={e => update({ description: e.target.value })} /></Field>
+      <ImageUpload label="Project cover (optional)" value={cover} pendingFile={coverFile} onPrepared={setCoverFile} onChange={setCover} onBusyChange={setImageBusy} disabledReason={busy ? 'Please wait…' : ''} />
+      <p className="field-note">{t('Optional. The photo appears after OFE confirmation. Without a photo, the project is shown with its name.')}</p>
       <Field label="Product link (optional)" error={errors.productUrl}><input type="url" inputMode="url" placeholder="https://" value={draft.productUrl ?? ''} aria-invalid={Boolean(errors.productUrl)} onChange={e => update({ productUrl: e.target.value })} /></Field>
     </section>}
 
@@ -189,6 +205,7 @@ function Wizard({ event, captainEmail, team, onDone, onCancel }: { event: EventD
         <div><dt>{t('Team members')}</dt><dd>{[captainEmail + ' · ' + t('Captain'), ...draft.members.map(m => `${m.email} · ${t(m.role === 'Other' ? 'Other role' : m.role)}`)].map(line => <span key={line}>{line}</span>)}</dd><button type="button" className="link-arrow" onClick={() => go(0)}>{t('Edit')}</button></div>
         <div><dt>{t('Contacts')}</dt><dd>{normalizeTelegram(draft.telegram)} · {formatPhone(draft.phone)}</dd><button type="button" className="link-arrow" onClick={() => go(0)}>{t('Edit')}</button></div>
         <div><dt>{t('Product')}</dt><dd><strong>{draft.productName}</strong><span>{draft.tagline}</span><span>{t(draft.industry)} · {t(draft.stage)}</span></dd><button type="button" className="link-arrow" onClick={() => go(1)}>{t('Edit')}</button></div>
+        <div><dt>{t('Project cover (optional)')}</dt><dd>{t(coverFile || cover ? 'Photo added' : 'No photo')}</dd><button type="button" className="link-arrow" onClick={() => go(1)}>{t('Edit')}</button></div>
         <div><dt>{t('Presentation')}</dt><dd>{file?.name ?? team?.presentationName ?? t('Not uploaded yet')}</dd><button type="button" className="link-arrow" onClick={() => go(2)}>{t('Edit')}</button></div>
       </dl>
       <label className={`consent-check${errors.consent ? ' has-error' : ''}`}>
@@ -201,8 +218,8 @@ function Wizard({ event, captainEmail, team, onDone, onCancel }: { event: EventD
     {failure && <p className="form-failure" role="alert"><Icon name="close" size={18} />{t(failure)}</p>}
     {busy && progress > 0 && <div className="upload-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={t('Uploading presentation')}><span style={{ transform: `scaleX(${progress})` }} /></div>}
     <div className="wizard-actions">
-      {step > 0 ? <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => go(step - 1)}>{t('Back')}</button> : onCancel ? <button type="button" className="btn btn-ghost" onClick={onCancel}>{t('Cancel')}</button> : <span />}
-      <button type="submit" className="btn btn-accent btn-lg" disabled={busy}>{busy ? t('Please wait…') : step < steps.length - 1 ? t('Continue') : t(team ? 'Save changes' : 'Register the team')}{!busy && <Icon name="arrow" size={18} />}</button>
+      {step > 0 ? <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => go(step - 1)}>{t('Back')}</button> : onCancel ? <button type="button" className="btn btn-ghost" disabled={busy || imageBusy} onClick={onCancel}>{t('Cancel')}</button> : <span />}
+      <button type="submit" className="btn btn-accent btn-lg" disabled={busy || imageBusy}>{busy ? t('Please wait…') : step < steps.length - 1 ? t('Continue') : t(team ? 'Save changes' : 'Register the team')}{!busy && <Icon name="arrow" size={18} />}</button>
     </div>
   </form>
 }
@@ -257,12 +274,13 @@ function TeamDashboard({ team, captain, open, event, onEdit }: { team: EventTeam
         </>}
       </section>
     </div>
+    <section className="side-card reveal-up"><h3>{t('Project cover (optional)')}</h3>{team.coverPath ? <div className="image-upload-preview"><StorageImage src={coverReference(team.coverPath)} alt={team.productName}/></div> : <p className="field-note">{t('No photo')}</p>}</section>
     <section className="side-card reveal-up"><h3>{t('Product description')}</h3><div className="prose">{team.description.split('\n').filter(Boolean).map((line, i) => <p key={i}>{line}</p>)}</div>{team.productUrl && <a className="link-arrow" href={team.productUrl} target="_blank" rel="noopener noreferrer nofollow">{team.productUrl}<Icon name="arrowUpRight" size={16} /></a>}</section>
     {error && <p className="form-failure" role="alert">{t(error)}</p>}
     {captain && open && <button type="button" className="btn btn-ghost danger-text" onClick={() => setConfirmWithdraw(true)}>{t('Withdraw the team')}</button>}
     {!captain && <p className="field-note">{t('The captain manages the registration:')} {team.captainEmail}</p>}
     {confirmWithdraw && <AdminModal title={team.teamName} eyebrow="Withdraw the team" onClose={() => setConfirmWithdraw(false)}>
-      <div className="modal-form-body"><p>{t('The registration and the presentation will be deleted. This cannot be undone.')}</p></div>
+      <div className="modal-form-body"><p>{t('The registration, cover and presentation will be deleted. This cannot be undone.')}</p></div>
       <div className="modal-form-actions"><button type="button" className="secondary" onClick={() => setConfirmWithdraw(false)}>{t('Cancel')}</button><button type="button" className="primary danger-button" disabled={busy} onClick={() => run(async () => { await withdrawTeam(team); setConfirmWithdraw(false) })}>{t('Withdraw')}</button></div>
     </AdminModal>}
   </div>
@@ -299,14 +317,14 @@ export function Register() {
         : isAdmin && !mine ? <div className="empty-state"><Icon name="grid" size={32} /><h3>{t('Administrators manage registrations in the admin panel.')}</h3><Link to="admin" className="btn btn-primary">{t('Workspace management')}</Link></div>
         : mine && !editing ? <TeamDashboard team={mine} captain={captain} open={open} event={event} onEdit={() => { setEditing(true); setNotice('') }} />
         : !open ? <div className="empty-state"><Icon name="calendar" size={32} /><h3>{t('Registration is closed.')}</h3><Link to="demo" className="btn btn-outline">{t('About the event')}</Link></div>
-        : <Wizard event={event} captainEmail={email} team={editing ? mine : undefined} onCancel={editing ? () => setEditing(false) : undefined} onDone={message => { setEditing(false); setNotice(message); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />}
+        : <Wizard event={event} captainEmail={email} team={editing ? mine : undefined} onCancel={editing ? () => setEditing(false) : undefined} onStart={() => setEditing(true)} onDone={message => { setEditing(false); setNotice(message); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />}
       </div>
       <aside className="register-aside">
         <div className="side-card">
           <h3>{t('How it works')}</h3>
           <ol className="mini-steps"><li>{t('Sign in with your SDU account')}</li><li>{t('Add your teammates by their SDU emails')}</li><li>{t('Describe the product and upload the deck')}</li><li>{t('OFE confirms the team before the event')}</li></ol>
         </div>
-        <div className="side-card"><h3>{t('Your data is protected')}</h3><p className="field-note">{t('Registrations, contacts and presentations are visible only to your team and the OFE organisers. Files are stored privately and are never published.')}</p></div>
+        <div className="side-card"><h3>{t('Your data is protected')}</h3><p className="field-note">{t('Contacts, member emails and presentations stay private. Confirmed product information and an optional cover appear in the project catalog.')}</p></div>
       </aside>
     </div></section>
   </main>

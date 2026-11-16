@@ -359,3 +359,13 @@ Object.assign(translations, {
 Object.assign(translations, {
  'Confirmed product information appears in the project catalog with this event’s tag. Contacts and presentations remain private.': ['После подтверждения информация о проекте появится в каталоге с тегом этого мероприятия. Контакты и презентации останутся закрытыми.', 'Расталғаннан кейін жоба туралы ақпарат каталогта осы іс-шараның тегімен көрсетіледі. Байланыс деректері мен презентациялар жабық қалады.'],
 })
+
+Object.assign(translations, {
+ 'Project cover (optional)': ['Обложка проекта (необязательно)', 'Жоба мұқабасы (міндетті емес)'],
+ 'Optional. The photo appears after OFE confirmation. Without a photo, the project is shown with its name.': ['Необязательно. Фото появится после подтверждения OFE. Без фото проект отображается с названием.', 'Міндетті емес. Фото OFE растағаннан кейін көрсетіледі. Фотосыз жоба атауымен көрсетіледі.'],
+ 'Photo added': ['Фото добавлено', 'Фото қосылды'],
+ 'No photo': ['Без фото', 'Фотосыз'],
+ 'Cover upload failed. Please try again.': ['Не удалось загрузить обложку. Попробуйте ещё раз.', 'Мұқабаны жүктеу мүмкін болмады. Қайта көріңіз.'],
+ 'The registration, cover and presentation will be deleted. This cannot be undone.': ['Регистрация, обложка и презентация будут удалены. Отменить это действие нельзя.', 'Тіркелу, мұқаба және презентация жойылады. Бұл әрекетті қайтару мүмкін емес.'],
+ 'Contacts, member emails and presentations stay private. Confirmed product information and an optional cover appear in the project catalog.': ['Контакты, email участников и презентации остаются закрытыми. Информация о подтверждённом проекте и необязательная обложка появляются в каталоге проектов.', 'Байланыс деректері, қатысушылардың email мекенжайлары мен презентациялар жабық қалады. Расталған жоба туралы ақпарат пен міндетті емес мұқаба жобалар каталогында көрсетіледі.'],
+})
