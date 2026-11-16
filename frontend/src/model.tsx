@@ -15,6 +15,7 @@ export type Submission = {
   year?: string
   eventYears?: string[]
   eventIds?: string[]
+  removed?: boolean
   id: string
   name: string
   description: string
@@ -78,6 +79,7 @@ export const AppContext = createContext({
   select: (_name: string) => {},
   submissions: [] as Submission[],
   eventProjects: [] as EventProject[],
+  setProjectRemoved: async (_projectId: string, _removed: boolean): Promise<boolean> => true,
   setProjectEvents: async (_projectId: string, _eventIds: string[]): Promise<boolean> => true,
   setSubmissions: async (_update: (rows: Submission[]) => Submission[]): Promise<boolean> => true,
   events: [] as EventData[],

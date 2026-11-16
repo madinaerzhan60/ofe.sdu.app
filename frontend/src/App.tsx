@@ -130,7 +130,7 @@ export default function App() {
       workspaceTab, setWorkspaceTab, draft, setDraft, resubmitId, setResubmitId, registered, setRegistered,
       account, setAccount, lang, selected: selected.current, select: (id: string) => { selected.current = id },
       submissions, setSubmissions, events, setEvents, policy,
-      eventProjects: platform.eventProjects, setProjectEvents: platform.setProjectEvents,
+      eventProjects: platform.eventProjects, setProjectEvents: platform.setProjectEvents, setProjectRemoved: platform.setProjectRemoved,
       openPolicy: name => { setPolicy(name); setPolicyOpen(true) },
       news, setNews: platform.setNews, isMediaEditor, setDemoMedia,
     }}>

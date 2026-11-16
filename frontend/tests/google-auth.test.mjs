@@ -142,7 +142,7 @@ function platform(url, session = null, testEnv = env, fixtures = {}) {
       return {data:{subscription:{unsubscribe(){}}}}
     }},
     from:table => ({select:async () => ({data:fixtures[table] ?? [],error:null})}),
-    rpc:async name => ({data:name === 'list_confirmed_event_projects' ? (fixtures.eventProducts ?? []) : false,error:null}),
+    rpc:async name => ({data:name === 'list_confirmed_event_projects' ? (fixtures.eventProducts ?? []) : name === 'list_removed_workspace_projects' ? (fixtures.removals ?? []) : false,error:null}),
   }
   const module = load(backendSource, {
     react:state.react,'./event-corrections':{correctEventDate:e => e},'@supabase/supabase-js':{createClient:(_url, _key, config) => {options = config; return client}},

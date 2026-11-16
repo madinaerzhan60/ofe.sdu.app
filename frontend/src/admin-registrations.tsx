@@ -1,8 +1,9 @@
+import {ProjectRemovalDialog} from './project-removal-dialog'
 import { StorageImage } from './storage'
 import { coverReference } from './event-cover-storage'
 import { useMemo, useState } from 'react'
 import { useModel, useT } from './model'
-import { describeError, downloadPresentation, setTeamStatus, teamsToCsv, useEventTeams, type EventTeam, type TeamStatus } from './registration'
+import { describeError, downloadPresentation, setTeamStatus, setTeamRemoved, teamsToCsv, useEventTeams, type EventTeam, type TeamStatus } from './registration'
 import { Icon } from './ui'
 import { formatPhone } from './validation'
 
@@ -12,16 +13,17 @@ export function AdminRegistrations() {
   const t = useT()
   const { events, userEmail } = useModel()
   const event = events.find(e => e.id === 'current') ?? { id: 'current', title: 'SDU FOUNDERS CUP', date: '2026-11-21' }
-  const { teams, loading, error, reload } = useEventTeams(event.id, `admin:${userEmail}`)
+  const { teams, loading, error, reload } = useEventTeams(event.id, `admin:${userEmail}`, true)
   const [query, setQuery] = useState('')
-  const [filter, setFilter] = useState<'all' | TeamStatus>('all')
+  const [filter, setFilter] = useState<'all' | 'removed' | TeamStatus>('all')
+  const [removing,setRemoving] = useState<EventTeam|null>(null)
   const [open, setOpen] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState('')
   const [problem, setProblem] = useState('')
-  const counts = useMemo(() => ({ all: teams.length, submitted: teams.filter(x => x.status === 'submitted').length, confirmed: teams.filter(x => x.status === 'confirmed').length, rejected: teams.filter(x => x.status === 'rejected').length }), [teams])
+  const counts = useMemo(() => ({ all: teams.filter(x=>!x.removed).length, removed:teams.filter(x=>x.removed).length, submitted: teams.filter(x => !x.removed && x.status === 'submitted').length, confirmed: teams.filter(x => !x.removed && x.status === 'confirmed').length, rejected: teams.filter(x => !x.removed && x.status === 'rejected').length }), [teams])
   const q = query.trim().toLowerCase()
-  const visible = teams.filter(team => (filter === 'all' || team.status === filter)
+  const visible = teams.filter(team => (filter === 'removed' ? team.removed : !team.removed && (filter === 'all' || team.status === filter))
     && [team.teamName, team.productName, team.captainEmail, team.telegram, ...team.members.map(m => m.email)].join(' ').toLowerCase().includes(q))
   const act = async (team: EventTeam, action: () => Promise<void>) => { setBusy(team.id); setProblem(''); try { await action() } catch (error) { setProblem(describeError(error)) } finally { setBusy('') } }
   const exportCsv = () => {
@@ -32,8 +34,8 @@ export function AdminRegistrations() {
     document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000)
   }
   return <div className="admin-registrations">
-    <div className="reg-stats">{(['all', 'submitted', 'confirmed', 'rejected'] as const).map(key => <button key={key} type="button" className={`reg-stat${filter === key ? ' is-active' : ''}`} aria-pressed={filter === key} onClick={() => setFilter(key)}>
-      <strong>{counts[key]}</strong><span>{t(key === 'all' ? 'All teams' : labels[key])}</span>
+    <div className="reg-stats">{(['all', 'submitted', 'confirmed', 'rejected', 'removed'] as const).map(key => <button key={key} type="button" className={`reg-stat${filter === key ? ' is-active' : ''}`} aria-pressed={filter === key} onClick={() => setFilter(key)}>
+      <strong>{counts[key]}</strong><span>{t(key === 'all' ? 'All teams' : key === 'removed' ? 'Removed' : labels[key])}</span>
     </button>)}</div>
     <div className="reg-toolbar">
       <label className="reg-search"><Icon name="search" size={18} /><span className="sr-only">{t('Search teams')}</span><input placeholder={t('Search by team, product or email')} value={query} onChange={e => setQuery(e.target.value)} /></label>
@@ -48,7 +50,7 @@ export function AdminRegistrations() {
       <button type="button" className="reg-row-head" aria-expanded={open === team.id} onClick={() => setOpen(open === team.id ? null : team.id)}>
         <span className="reg-logo">{team.teamName.slice(0, 2).toUpperCase()}</span>
         <span className="reg-title"><strong>{team.teamName}</strong><small>{team.productName} · {team.members.length} {t('people')} · {team.captainEmail}</small></span>
-        <span className={`status-badge is-${team.status === 'submitted' ? 'review' : team.status}`}><span className="status-dot" />{t(labels[team.status])}</span>
+        <span className={`status-badge is-${team.status === 'submitted' ? 'review' : team.status}`}><span className="status-dot" />{t(team.removed ? 'Removed' : labels[team.status])}</span>
         <span className={`reg-file${team.presentationPath ? ' has-file' : ''}`} title={t(team.presentationPath ? 'Presentation uploaded' : 'Not uploaded yet')}><Icon name={team.presentationPath ? 'check' : 'image'} size={16} /></span>
         <Icon name="chevron" size={18} className="reg-chevron" />
       </button>
@@ -73,13 +75,15 @@ export function AdminRegistrations() {
         </div>
         <label className="reg-note">{t('Message to the team (optional)')}<textarea rows={2} maxLength={1000} value={notes[team.id] ?? team.adminNote} onChange={e => setNotes({ ...notes, [team.id]: e.target.value })} /></label>
         <p className="field-note">{t('Confirmed product information appears in the project catalog with this event’s tag. Contacts and presentations remain private.')}</p>
-        <div className="reg-actions">
+        <div className="reg-actions">{team.removed ? <button type="button" className="btn btn-outline btn-sm" disabled={Boolean(busy)} onClick={() => act(team,()=>setTeamRemoved(team,false))}>{t('Restore project')}</button> : <>
+          <button type="button" className="btn btn-ghost btn-sm danger-text" disabled={Boolean(busy)} onClick={() => setRemoving(team)}>{t('Remove project')}</button>
           {team.status !== 'confirmed' && <button type="button" className="btn btn-primary btn-sm" disabled={busy === team.id} onClick={() => act(team, () => setTeamStatus(team, 'confirmed', notes[team.id] ?? team.adminNote))}><Icon name="check" size={16} />{t('Confirm the team')}</button>}
           {team.status !== 'submitted' && <button type="button" className="btn btn-outline btn-sm" disabled={busy === team.id} onClick={() => act(team, () => setTeamStatus(team, 'submitted', notes[team.id] ?? team.adminNote))}>{t('Back to review')}</button>}
-          {team.status !== 'rejected' && <button type="button" className="btn btn-ghost btn-sm danger-text" disabled={busy === team.id} onClick={() => act(team, () => setTeamStatus(team, 'rejected', notes[team.id] ?? team.adminNote))}>{t('Decline')}</button>}
+          {team.status !== 'rejected' && <button type="button" className="btn btn-ghost btn-sm danger-text" disabled={busy === team.id} onClick={() => act(team, () => setTeamStatus(team, 'rejected', notes[team.id] ?? team.adminNote))}>{t('Decline')}</button>}</> }
         </div>
         <p className="field-note">{t('Registered')}: {team.createdAt.slice(0, 16).replace('T', ' ')} · {t('Updated')}: {team.updatedAt.slice(0, 16).replace('T', ' ')}</p>
       </div>}
     </li>)}</ul>
+    {removing && <ProjectRemovalDialog name={`${removing.productName} · ${removing.teamName}`} onClose={()=>setRemoving(null)} onConfirm={async()=>{await setTeamRemoved(removing,true);setOpen(null);return true}}/>}
   </div>
 }

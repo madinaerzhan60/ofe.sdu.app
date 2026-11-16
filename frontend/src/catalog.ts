@@ -8,7 +8,7 @@ export type EventProject = Pick<Submission, 'id' | 'name' | 'description' | 'abo
   cover?: string
 }
 export type CatalogProject = Submission | EventProject
-export const isPublic = (row: Submission) => row.status === 'Approved' && row.publication && row.visible !== false
+export const isPublic = (row: Submission) => !row.removed && row.status === 'Approved' && row.publication && row.visible !== false
 export const publicProjects = (submissions: Submission[], eventProjects: EventProject[]): CatalogProject[] => [
   ...submissions.filter(isPublic), ...eventProjects,
 ]

@@ -1,10 +1,13 @@
+import {AdminModal} from './admin-modal'
+import {ProjectRemovalDialog} from './project-removal-dialog'
+export {AdminModal} from './admin-modal'
 import { PublicationConsent } from './publication-consent'
 import { StorageImage, uploadImage } from './storage'
 import { Teams } from "./teams"
 import { AuthPanel } from "./auth"
 import { ImageUpload, StartupEditor, EventEditor, demoOwnerId, ownsStartup } from "./media"
 import { emptyDraft } from "./model"
-import { FormEvent, useEffect, useState, useRef, type ReactNode } from "react"
+import { FormEvent, useEffect, useState, useRef } from "react"
 import { policies, Submission, useModel, useT } from "./model"
 import type { Go } from "./router"
 import { ContactFields, MemberEmailsField, cleanContact, contactIsValid } from "./team-fields"
@@ -409,40 +412,17 @@ export function Application({go}: {go:Go}) {
   )
 }
 
-export function AdminModal({ title, onClose, children, eyebrow = "Project details" }: { title: string; onClose: () => void; children: ReactNode; eyebrow?: string }) {
-  const dialog = useRef<HTMLDialogElement>(null)
-  const t = useT()
-  useEffect(() => {
-    const node = dialog.current
-    const previousOverflow = document.body.style.overflow
-    const opener = document.activeElement as HTMLElement | null
-    node?.showModal()
-    document.body.style.overflow = 'hidden'
-    return () => {
-      node?.close()
-      document.body.style.overflow = previousOverflow
-      opener?.focus({preventScroll:true})
-    }
-  }, [])
-  return <dialog ref={dialog} className="admin-modal" aria-labelledby="admin-modal-title" onCancel={e => {e.preventDefault();onClose()}} onClick={e => {
-    if(e.target !== e.currentTarget)return
-    const rect = e.currentTarget.getBoundingClientRect()
-    if(e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom)onClose()
-  }}>
-    <header className="admin-modal-header"><div><p>{t(eyebrow)}</p><h2 id="admin-modal-title">{title}</h2></div><button type="button" autoFocus aria-label={t('Close')} onClick={onClose}><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></header>
-    {children}
-  </dialog>
-}
-
 export function AdminDashboard({ go }: { go: Go }) {
   const t = useT()
-  const { submissions, setSubmissions, events, setEvents, setProjectEvents, liveMode, isAdmin, authLoading, setAccount } = useModel()
+  const { submissions, setSubmissions, events, setEvents, setProjectEvents, setProjectRemoved, liveMode, isAdmin, authLoading, setAccount } = useModel()
   const [access, setAccess] = useState(false)
   const [section, setSection] = useState("Founders Cup")
   const [filter, setFilter] = useState("All")
   const [search, setSearch] = useState("")
   const [editing, setEditing] = useState<Submission | null>(null)
   const [feedback, setFeedback] = useState("")
+  const [removing,setRemoving] = useState<Submission|null>(null)
+  const [restoring,setRestoring] = useState('')
   const [rejecting,setRejecting] = useState<Submission|null>(null)
   const [notice, setNotice] = useState("")
   const update = async (id: string, status: Submission["status"]) => {
@@ -477,8 +457,8 @@ export function AdminDashboard({ go }: { go: Go }) {
     )
   const visible = submissions.filter(
     (r) =>
-      (section !== "Startups" || r.status === "Approved") &&
-      (filter === "All" || r.status === filter) &&
+      (filter === "Removed" ? r.removed : !r.removed && (section !== "Startups" || r.status === "Approved")) &&
+      (filter === "All" || filter === "Removed" || r.status === filter) &&
       [r.name, r.description, r.industry, t(r.industry)].join(" ").toLowerCase().includes(search.trim().toLowerCase()),
   )
   return (
@@ -520,13 +500,13 @@ export function AdminDashboard({ go }: { go: Go }) {
           <>
             <div className="admin-stats">
               {['Pending','Approved','Rejected'].map((status, i) => <button key={status} className={`admin-stat ${filter === status ? 'selected' : ''}`} onClick={() => {setFilter(status);setSearch('');if(section === 'Startups' && status !== 'Approved')setSection('Submissions')}} aria-pressed={filter === status}>
-                <span className={`stat-dot stat-${status.toLowerCase()}`} /><span>{t(status)}</span><strong>{submissions.filter(r => r.status === status).length}</strong><small>{t(['Waiting for your review','Ready for the next step','Feedback for the author'][i])}</small>
+                <span className={`stat-dot stat-${status.toLowerCase()}`} /><span>{t(status)}</span><strong>{submissions.filter(r => !r.removed && r.status === status).length}</strong><small>{t(['Waiting for your review','Ready for the next step','Feedback for the author'][i])}</small>
               </button>)}
             </div>
             <div className="admin-list-heading"><h2>{t(section === 'Startups' ? 'Project directory' : 'Project applications')}</h2><span>{visible.length} {t('results')}</span></div>
             <div className="table-toolbar">
               <div>
-                {(section === 'Startups' ? ['All', 'Approved'] : ['All', 'Pending', 'Approved', 'Rejected']).map((x) => (
+                {(section === 'Startups' ? ['All', 'Approved', 'Removed'] : ['All', 'Pending', 'Approved', 'Rejected', 'Removed']).map((x) => (
                   <button
                     className={filter === x ? "active" : ""}
                     key={x}
@@ -546,15 +526,21 @@ export function AdminDashboard({ go }: { go: Go }) {
             <div className="admin-project-list">
               {visible.map(row => <article className="admin-project" key={row.id}>
                 <div className="admin-project-identity"><span className="admin-project-logo">{row.image ? <StorageImage src={row.image} alt="" /> : row.name.slice(0,2).toUpperCase()}</span><div><h3><button className="admin-project-title" onClick={() => {setEditing({...row});setRejecting(null)}}>{row.name}</button></h3><p>{t(row.description)}</p><div className="admin-project-tags"><span>{t(row.industry)}</span><span>{t(row.stage)}</span></div></div></div>
-                <div className="admin-project-state"><span className={`status ${row.status.toLowerCase()}`}>{t(row.status)}</span><small>{t(row.status === 'Approved' && row.publication && row.visible !== false ? 'Visible on the website' : 'Not shown on the website')}</small>{!row.publication && <small className="consent-hint">{t('Author has not allowed publication')}</small>}</div>
-                <div className="actions"><button onClick={() => {setEditing({...row});setRejecting(null)}}>{t('View details')}</button>
+                <div className="admin-project-state"><span className={`status ${row.status.toLowerCase()}`}>{t(row.status)}</span><small>{t(!row.removed && row.status === 'Approved' && row.publication && row.visible !== false ? 'Visible on the website' : 'Not shown on the website')}</small>{!row.publication && <small className="consent-hint">{t('Author has not allowed publication')}</small>}</div>
+                <div className="actions">{row.removed ? <button disabled={Boolean(restoring)} onClick={async () => {setRestoring(row.id);try {if(await setProjectRemoved(row.id,false))setNotice('Project restored.')}finally{setRestoring('')}}}>{t('Restore project')}</button> : <><button onClick={() => {setEditing({...row});setRejecting(null)}}>{t('View details')}</button>
                   {row.status === 'Pending' ? <><button className="approve" onClick={() => update(row.id,'Approved')}>{t('Approve')}</button><button className="reject" onClick={() => {setRejecting(row);setEditing(null);setFeedback('')}}>{t('Request changes')}</button></> : row.status === 'Approved' ? <button disabled={!row.publication} title={!row.publication ? t('Author has not allowed publication') : undefined} onClick={async () => {if(!await setSubmissions(rows => rows.map(r => r.id === row.id ? {...r,visible:r.visible===false} : r)))return;setNotice(row.visible === false ? 'Project published on the website.' : 'Project hidden from the website.')}}>{t(row.visible === false ? 'Publish' : 'Unpublish')}</button> : <button onClick={() => update(row.id,'Pending')}>{t('Return to review')}</button>}
+                  <button className="danger-text" onClick={() => {setRemoving(row);setEditing(null);setRejecting(null)}}>{t('Remove project')}</button></>}
                 </div>
               </article>)}
               {!visible.length && <div className="admin-empty"><span aria-hidden="true">⌕</span><h3>{t('No projects found')}</h3><p>{t('Try a different name or clear the filters to see all projects.')}</p><button className="secondary" onClick={() => {setFilter('All');setSearch('')}}>{t('Clear filters')}</button></div>}
             </div>
           </>
         )}
+        {removing && <ProjectRemovalDialog name={removing.name} onClose={() => setRemoving(null)} onConfirm={async () => {
+          const saved=await setProjectRemoved(removing.id,true)
+          if(saved)setNotice('Project removed. You can restore it from Removed.')
+          return saved
+        }}/>}
         {rejecting && <AdminModal title={`${t('Reject application')}: ${rejecting.name}`} onClose={() => {setRejecting(null);setFeedback('')}}><form onSubmit={async e => {e.preventDefault();if(!await update(rejecting.id,'Rejected'))return;setRejecting(null);setFeedback('')}}><div className="modal-form-body"><label>{t('Rejection feedback')}<textarea required rows={5} value={feedback} onChange={e => setFeedback(e.target.value)} placeholder={t('Explain what needs to change')} /></label></div><div className="modal-form-actions"><button className="primary" disabled={!feedback.trim()}>{t('Confirm rejection')}</button><button type="button" className="secondary" onClick={() => {setRejecting(null);setFeedback('')}}>{t('Cancel')}</button></div></form></AdminModal>}
         {editing && (
           <AdminModal title={editing.name} onClose={() => setEditing(null)}>
