@@ -7,7 +7,7 @@ import { formatPhone, teamSummary } from './validation'
 export const demoOwnerId = 'demo-student'
 export const ownsStartup = (row: Submission, userId: string | null = null, liveMode = false) => liveMode ? Boolean(userId && row.ownerId === userId) : row.ownerId === demoOwnerId || (!row.ownerId && row.id.startsWith('student-'))
 
-export function ImageUpload({ label, value, onChange, square = false, target, disabledReason = '', pendingFile, onPrepared, onBusyChange }: { onBusyChange?: (busy: boolean) => void; pendingFile?: Blob; onPrepared?: (file: Blob | undefined) => void; target?: MediaTarget; disabledReason?: string; label: string; value?: string; onChange: (value: string) => void; square?: boolean }) {
+export function ImageUpload({ label, value, onChange, square = false, target, disabledReason = '', pendingFile, onPrepared, onBusyChange, outputType = 'image/webp' }: { outputType?: 'image/webp' | 'image/png'; onBusyChange?: (busy: boolean) => void; pendingFile?: Blob; onPrepared?: (file: Blob | undefined) => void; target?: MediaTarget; disabledReason?: string; label: string; value?: string; onChange: (value: string) => void; square?: boolean }) {
   const t = useT()
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -24,11 +24,11 @@ export function ImageUpload({ label, value, onChange, square = false, target, di
   prepared.current = onPrepared
   useEffect(() => () => { revision.current++ }, [])
   return <div className="image-upload">
-    <label><span>{t(label)}</span><input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy || (!target && !onPrepared) || Boolean(disabledReason)} onChange={async e => {
+    <label><span>{t(label)}</span><input type="file" accept="image/*" disabled={busy || (!target && !onPrepared) || Boolean(disabledReason)} onChange={async e => {
       const file = e.target.files?.[0]
       e.target.value = ''
       if (!file || (!target && !onPrepared) || disabledReason) return
-      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) { setError('Choose a PNG, JPG or WebP smaller than 5 MB.'); return }
+      if (file.size > 5 * 1024 * 1024) { setError('Choose an image smaller than 5 MB.'); return }
       const request = ++revision.current
       setBusy(true); onBusyChange?.(true); setError('')
       try {
@@ -39,13 +39,13 @@ export function ImageUpload({ label, value, onChange, square = false, target, di
         const context = canvas.getContext('2d')
         if (!context) throw new Error('Canvas unavailable')
         context.drawImage(bitmap, 0, 0, canvas.width, canvas.height); bitmap.close()
-        const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('Image conversion failed.')), 'image/webp', .85))
+        const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('Image conversion failed.')), outputType, .85))
         if (onPrepared) { if (request === revision.current) prepared.current?.(blob); return }
         const reference = await uploadImage(blob, target!)
         if (request === revision.current) change.current(reference)
       } catch (error) { if (request === revision.current) setError(error instanceof Error ? error.message : 'Image upload failed.') }
       finally { setBusy(false); onBusyChange?.(false) }
-    }} /><small>{t(disabledReason || (busy ? 'Loading image…' : 'PNG, JPG or WebP · up to 5 MB'))}</small></label>
+    }} /><small>{t(disabledReason || (busy ? 'Loading image…' : 'Image · up to 5 MB'))}</small></label>
     {(localPreview || value) && <div className={`image-upload-preview${square ? ' square' : ''}`}><StorageImage src={localPreview || value} alt={t(label)} /><button type="button" className="secondary" disabled={busy || Boolean(disabledReason)} onClick={() => { revision.current++; if (pendingFile && onPrepared) onPrepared(undefined); else onChange('') }}>{t('Remove image')}</button></div>}
     {error && <p className="form-error" role="alert">{t(error)}</p>}
   </div>

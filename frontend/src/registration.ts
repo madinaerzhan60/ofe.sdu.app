@@ -61,7 +61,7 @@ export function describeError(error: unknown): string {
   if (/event_team_members_event_id_email_key|duplicate key.*email|unique.*email/i.test(text)) return 'One of these people is already registered in another team.'
   if (/event_teams_event_id_captain_id_key|duplicate key/i.test(text)) return 'You have already registered a team for this event.'
   if (/sdu\.edu\.kz/i.test(text)) return 'Use a corporate @sdu.edu.kz email.'
-  if (/Cover upload failed|Choose a PNG/i.test(text)) return /Choose a PNG/i.test(text) ? 'Choose a PNG, JPG or WebP smaller than 5 MB.' : 'Cover upload failed. Please try again.'
+  if (/Cover upload failed|Choose an image/i.test(text)) return /Choose an image/i.test(text) ? 'Choose an image smaller than 5 MB.' : 'Cover upload failed. Please try again.'
   if (/presentation|mime|size|Payload too large/i.test(text)) return 'Upload a PDF or PPTX file up to 25 MB.'
   if (/JWT|not authenticated|permission|row-level security/i.test(text)) return 'Sign in with your SDU account and try again.'
   return 'Could not save the registration. Check your connection and try again.'

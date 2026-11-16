@@ -185,7 +185,7 @@ function Wizard({ event, captainEmail, team, onDone, onCancel, onStart }: { onSt
         <Field label="Stage" error={errors.stage}><select value={draft.stage} aria-invalid={Boolean(errors.stage)} onChange={e => update({ stage: e.target.value })}><option value="">{t('Select stage')}</option>{stages.map(value => <option key={value} value={value}>{t(value)}</option>)}</select></Field>
       </div>
       <Field label="Product description" help="The problem, your solution, who your users are and what you have already done." error={errors.description} counter={`${draft.description.length}/3000`}><textarea rows={8} maxLength={3000} value={draft.description} aria-invalid={Boolean(errors.description)} onChange={e => update({ description: e.target.value })} /></Field>
-      <ImageUpload label="Project cover (optional)" value={cover} pendingFile={coverFile} onPrepared={setCoverFile} onChange={setCover} onBusyChange={setImageBusy} disabledReason={busy ? 'Please wait…' : ''} />
+      <ImageUpload outputType="image/png" label="Project cover (optional)" value={cover} pendingFile={coverFile} onPrepared={setCoverFile} onChange={setCover} onBusyChange={setImageBusy} disabledReason={busy ? 'Please wait…' : ''} />
       <p className="field-note">{t('Optional. The photo appears after OFE confirmation. Without a photo, the project is shown with its name.')}</p>
       <Field label="Product link (optional)" error={errors.productUrl}><input type="url" inputMode="url" placeholder="https://" value={draft.productUrl ?? ''} aria-invalid={Boolean(errors.productUrl)} onChange={e => update({ productUrl: e.target.value })} /></Field>
     </section>}
