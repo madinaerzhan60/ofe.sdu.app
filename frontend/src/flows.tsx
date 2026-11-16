@@ -436,7 +436,7 @@ export function AdminModal({ title, onClose, children, eyebrow = "Project detail
 
 export function AdminDashboard({ go }: { go: Go }) {
   const t = useT()
-  const { submissions, setSubmissions, events, setEvents, liveMode, isAdmin, authLoading, setAccount } = useModel()
+  const { submissions, setSubmissions, events, setEvents, setProjectEvents, liveMode, isAdmin, authLoading, setAccount } = useModel()
   const [access, setAccess] = useState(false)
   const [section, setSection] = useState("Founders Cup")
   const [filter, setFilter] = useState("All")
@@ -562,9 +562,10 @@ export function AdminDashboard({ go }: { go: Go }) {
               onSubmit={async (e) => {
                 e.preventDefault()
                 const saved = await setSubmissions((rows) =>
-                  rows.map((r) => (r.id === editing.id ? editing : r)),
+                  rows.map((r) => (r.id === editing.id ? {...editing,eventIds:r.eventIds} : r)),
                 )
                 if(!saved)return
+                if(!await setProjectEvents(editing.id, editing.eventIds ?? []))return
                 setEditing(null);setNotice("Changes saved")
               }}
             >
@@ -595,6 +596,7 @@ export function AdminDashboard({ go }: { go: Go }) {
                 <h3>{t("Contacts for the OFE team")}</h3>
                 {editing.contact ? <p className="admin-contacts"><a href={`https://t.me/${editing.contact.telegram.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer">{editing.contact.telegram}</a> · <a href={`tel:${editing.contact.phone}`}>{formatPhone(editing.contact.phone)}</a></p> : <p className="field-help">{t('The author has not left contacts yet.')}</p>}
               </div>
+              <fieldset><legend>{t('Connected events')}</legend>{events.map(event => <label className="check" key={event.id}><input type="checkbox" checked={editing.eventIds?.includes(event.id) ?? false} onChange={e => setEditing({...editing,eventIds:e.target.checked ? [...(editing.eventIds ?? []),event.id] : (editing.eventIds ?? []).filter(id => id !== event.id)})}/><span>{t(event.title)} · {event.date}</span></label>)}</fieldset>
               <div className="admin-review-summary"><span className={`status ${editing.status.toLowerCase()}`}>{t(editing.status)}</span><p>{t('Review the project details before making a decision.')}</p></div>
               <ImageUpload label="Startup logo (optional)" value={editing.image} disabledReason="Only the project owner can upload its images." onChange={image => setEditing(d => d ? {...d,image} : d)} square />
               <ImageUpload label="Startup cover" value={editing.cover} disabledReason="Only the project owner can upload its images." onChange={cover => setEditing(d => d ? {...d,cover} : d)} />

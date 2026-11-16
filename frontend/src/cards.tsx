@@ -1,8 +1,11 @@
 import { StorageImage } from './storage'
 import { eventDate } from './event-date'
-import { useModel, useT, type NewsCategory, type NewsPost, type Submission } from './model'
+import { useModel, useT, type NewsCategory, type NewsPost } from './model'
+import { isPublic, type CatalogProject } from './catalog'
 import { Link } from './router'
 import { Icon, type IconName } from './ui'
+
+export { isPublic }
 
 export const categoryMeta: Record<NewsCategory, { label: string; icon: IconName }> = {
   business: { label: 'Business', icon: 'briefcase' },
@@ -37,10 +40,10 @@ export function NewsCard({ post, variant = 'default', index = 0 }: { post: NewsP
   </article>
 }
 
-export const isPublic = (row: Submission) => row.status === 'Approved' && row.publication && row.visible !== false
-
-export function ProjectCard({ project, index = 0 }: { project: Submission; index?: number }) {
+export function ProjectCard({ project, index = 0 }: { project: CatalogProject; index?: number }) {
   const t = useT()
+  const { events } = useModel()
+  const connected = events.filter(event => event.published && project.eventIds?.includes(event.id))
   return <article className="pcard reveal-up" style={{ '--i': index % 6 } as React.CSSProperties}>
     <Link to="profile" id={project.id} className="pcard-link">
       <span className={`pcard-cover pattern-${index % 4}`}>
@@ -53,6 +56,7 @@ export function ProjectCard({ project, index = 0 }: { project: Submission; index
           <strong>{project.name}</strong>
           <Icon name="arrowUpRight" size={18} className="pcard-arrow" />
         </span>
+        <span className="chip-row">{connected.map(event => <span key={event.id} className="chip">{t(event.title)}{event.date ? ` · ${event.date.slice(0,4)}` : ''}</span>)}</span>
         <span className="pcard-desc">{t(project.description)}</span>
         <span className="pcard-foot"><span className="stage-dot" data-stage={project.stage} />{t(project.stage || 'Idea')}</span>
       </span>

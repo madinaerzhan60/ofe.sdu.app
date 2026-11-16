@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react"
+import type { EventProject } from './catalog'
 export type Lang = "EN" | "RU" | "KK"
 export type Member = { email: string; role: string }
 export type ProjectContact = { telegram: string; phone: string }
@@ -13,6 +14,7 @@ export type Submission = {
   visible?: boolean
   year?: string
   eventYears?: string[]
+  eventIds?: string[]
   id: string
   name: string
   description: string
@@ -75,6 +77,8 @@ export const AppContext = createContext({
   selected: "SkillPath AI",
   select: (_name: string) => {},
   submissions: [] as Submission[],
+  eventProjects: [] as EventProject[],
+  setProjectEvents: async (_projectId: string, _eventIds: string[]): Promise<boolean> => true,
   setSubmissions: async (_update: (rows: Submission[]) => Submission[]): Promise<boolean> => true,
   events: [] as EventData[],
   setEvents: async (_update: (rows: EventData[]) => EventData[]): Promise<boolean> => true,

@@ -115,7 +115,7 @@ export default function App() {
   useEffect(() => { document.documentElement.lang = lang.toLowerCase() }, [lang])
 
   const t = (text: string) => lang === 'EN' ? text : (translations[text]?.[lang === 'RU' ? 0 : 1] ?? text)
-  const profileName = route.page === 'profile' ? submissions.find(row => row.id === route.id)?.name : route.page === 'news' ? news.find(post => post.id === route.id)?.title : undefined
+  const profileName = route.page === 'profile' ? [...submissions, ...platform.eventProjects].find(row => row.id === route.id)?.name : route.page === 'news' ? news.find(post => post.id === route.id)?.title : undefined
   useEffect(() => {
     const base = profileName ?? t(pageTitles[route.page])
     document.title = route.page === 'home' ? 'Office for Entrepreneurship · SDU University' : `${base} — OFE · SDU University`
@@ -130,6 +130,7 @@ export default function App() {
       workspaceTab, setWorkspaceTab, draft, setDraft, resubmitId, setResubmitId, registered, setRegistered,
       account, setAccount, lang, selected: selected.current, select: (id: string) => { selected.current = id },
       submissions, setSubmissions, events, setEvents, policy,
+      eventProjects: platform.eventProjects, setProjectEvents: platform.setProjectEvents,
       openPolicy: name => { setPolicy(name); setPolicyOpen(true) },
       news, setNews: platform.setNews, isMediaEditor, setDemoMedia,
     }}>

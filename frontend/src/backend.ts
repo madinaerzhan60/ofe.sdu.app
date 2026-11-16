@@ -2,6 +2,7 @@ import {correctEventDate} from './event-corrections'
 import { createClient } from '@supabase/supabase-js'
 import { useEffect, useRef, useState } from 'react'
 import type { EventData, Member, NewsPost, ProjectContact, Submission } from './model'
+import type { EventProject } from './catalog'
 
 const url = import.meta.env.VITE_SUPABASE_URL?.trim()
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
@@ -31,12 +32,15 @@ function clearAuthRedirectParams() {
 }
 export const backend = liveMode ? createClient(url!, key!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } }) : null
 
-type State = { submissions: Submission[]; events: EventData[]; news: NewsPost[]; userId: string | null; userEmail: string; isAdmin: boolean; isMediaEditor: boolean }
+const catalogListeners = new Set<() => void>()
+export const notifyCatalogChanged = () => catalogListeners.forEach(refresh => refresh())
+
+type State = { submissions: Submission[]; eventProjects: EventProject[]; events: EventData[]; news: NewsPost[]; userId: string | null; userEmail: string; isAdmin: boolean; isMediaEditor: boolean }
 type Kind = 'submissions' | 'events' | 'news'
 // Tables added by 20261113120000_media_news_members_contacts.sql. Until that migration
 // is applied, reads fall back to empty data instead of breaking the whole site.
 const missing = (error: {code?: string} | null) => Boolean(error && ['42P01', 'PGRST205', 'PGRST202', '42883'].includes(error.code ?? ''))
-const privateKeys = ['members', 'contact'] as const
+const privateKeys = ['members', 'contact', 'eventIds'] as const
 const publicData = (row: Submission) => { const copy: Record<string, unknown> = {...row}; for (const key of privateKeys) delete copy[key]; return copy }
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
 
@@ -60,7 +64,7 @@ export async function setMediaEditor(email: string, enabled: boolean) {
   if (result.error) throw new Error(/No confirmed account/.test(result.error.message) ? 'No confirmed account uses this email.' : /sdu\.edu\.kz/.test(result.error.message) ? 'Use an @sdu.edu.kz email.' : 'Could not update the media team.')
 }
 export function usePlatform(samples: Submission[], sampleEvents: EventData[], sampleNews: NewsPost[] = []) {
-  const [state, setState] = useState<State>({submissions: liveMode ? [] : samples, events: liveMode ? [] : sampleEvents, news: liveMode ? [] : sampleNews, userId:null, userEmail:'', isAdmin:false, isMediaEditor:false})
+  const [state, setState] = useState<State>({submissions: liveMode ? [] : samples, eventProjects: [], events: liveMode ? [] : sampleEvents, news: liveMode ? [] : sampleNews, userId:null, userEmail:'', isAdmin:false, isMediaEditor:false})
   const current = useRef(state)
   current.current = state
   const [authLoading, setLoading] = useState(liveMode)
@@ -82,11 +86,11 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
         const user = session.data.session?.user
         // Clear private records before changing account, even if the network fails.
         if (active && generation.current === request && current.current.userId !== (user?.id ?? null)) {
-          const cleared: State = {submissions:[], events:[], news:[], userId:user?.id ?? null, userEmail:user?.email ?? '', isAdmin:false, isMediaEditor:false}
+          const cleared: State = {submissions:[], eventProjects:[], events:[], news:[], userId:user?.id ?? null, userEmail:user?.email ?? '', isAdmin:false, isMediaEditor:false}
           current.current = cleared; setState(cleared)
         }
         const none = Promise.resolve({data:null,error:null})
-        const [projects, events, role, news, media, contacts, members] = await Promise.all([
+        const [projects, events, role, news, media, contacts, members, eventProducts, assignments] = await Promise.all([
           backend!.from('projects').select('id,owner_id,data'),
           backend!.from('events').select('id,data'),
           user ? backend!.rpc('is_admin') : Promise.resolve({data:false,error:null}),
@@ -94,8 +98,10 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
           user ? backend!.rpc('is_media_editor') : Promise.resolve({data:false,error:null}),
           user ? backend!.from('project_contacts').select('project_id,telegram,phone') : none,
           user ? backend!.from('project_members').select('project_id,email,role') : none,
+          backend!.rpc('list_confirmed_event_projects'),
+          backend!.from('project_events').select('project_id,event_id'),
         ])
-        if (projects.error || events.error || role.error) throw projects.error || events.error || role.error
+        if (projects.error || events.error || role.error || eventProducts.error || assignments.error) throw projects.error || events.error || role.error || eventProducts.error || assignments.error
         for (const optional of [news, media, contacts, members]) if (optional.error && !missing(optional.error)) throw optional.error
         if (!active || generation.current !== request) return
         const contactRows = (contacts.data ?? []) as {project_id:string; telegram:string; phone:string}[]
@@ -104,15 +110,18 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
           submissions:(projects.data ?? []).map(r => {
             const contact = contactRows.find(c => c.project_id === r.id)
             return {...r.data,id:r.id,ownerId:r.owner_id,
+              eventIds: (assignments.data ?? []).filter(a => a.project_id === r.id).map(a => a.event_id),
               contact: contact ? {telegram:contact.telegram, phone:contact.phone} : undefined,
               members: memberRows.filter(m => m.project_id === r.id).map(m => ({email:m.email, role:m.role}))}
           }),
+          eventProjects: (eventProducts.data ?? []).map((r: {id:string;event_id:string;data:Omit<EventProject,'id'|'source'|'eventIds'>}) => ({...r.data, id:r.id, source:'event', eventIds:[r.event_id]})),
           events:(events.data ?? []).map(r => correctEventDate({...r.data,id:r.id})),
           news:((news.data ?? []) as {id:string; data:NewsPost}[]).map(r => ({...r.data,id:r.id})).sort((a,b) => (b.date ?? '').localeCompare(a.date ?? '')),}
         current.current = next; setState(next); setError('')
       } catch { if (active && generation.current === request) setError('Could not load your data. Check your connection and try again.') }
       finally { if (active && generation.current === request) setLoading(false) }
     }
+    catalogListeners.add(refresh)
     void refresh()
     const { data } = backend.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setRecovery(true)
@@ -120,7 +129,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
       // Do not await Supabase queries inside its auth callback.
       setTimeout(() => { if(active) void refresh() }, 0)
     })
-    return () => {active=false; generation.current++; data.subscription.unsubscribe()}
+    return () => {catalogListeners.delete(refresh);active=false; generation.current++; data.subscription.unsubscribe()}
   }, [])
 
   async function syncPrivate(row: Submission, old: Submission | undefined) {
@@ -177,11 +186,25 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
         }
         const next = {...current.current,[kind]:rows}
         current.current=next; setState(next); setError(''); resolve(true)
+        if (backend && kind === 'events') notifyCatalogChanged()
       } catch { setError('Your changes were not saved. Check your connection and permissions, then try again.'); resolve(false) }
     })
     return result
   }
+  async function setProjectEvents(projectId: string, eventIds: string[]) {
+    const version = generation.current
+    try {
+      if (backend) {
+        const result = await backend.rpc('set_project_events', {target_project_id:projectId, event_ids:eventIds})
+        if (result.error) throw result.error
+      }
+      if (generation.current !== version) return false
+      const next = {...current.current, submissions:current.current.submissions.map(row => row.id === projectId ? {...row,eventIds} : row)}
+      current.current = next; setState(next); return true
+    } catch { setError('Could not save the project’s events. Please try again.'); return false }
+  }
   return {...state, liveMode, authLoading, recovery, finishRecovery:() => setRecovery(false), error:authError || error, clearError:() => {setAuthError('');setError('')},
+    setProjectEvents,
     setSubmissions:(update:(rows:Submission[])=>Submission[]) => change('submissions', update),
     setEvents:(update:(rows:EventData[])=>EventData[]) => change('events', update),
     setNews:(update:(rows:NewsPost[])=>NewsPost[]) => change('news', update),

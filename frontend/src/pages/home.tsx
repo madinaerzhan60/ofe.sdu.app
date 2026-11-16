@@ -1,6 +1,7 @@
+import { publicProjects } from '../catalog'
 import { useEffect, useState } from 'react'
 import { eventDate } from '../event-date'
-import { NewsCard, ProjectCard, isPublic } from '../cards'
+import { NewsCard, ProjectCard } from '../cards'
 import { useModel, useT } from '../model'
 import { Link, prefersReducedMotion } from '../router'
 import { CountUp, Icon, SectionHead, type IconName } from '../ui'
@@ -59,8 +60,8 @@ const steps = [
 
 export function Home() {
   const t = useT()
-  const { submissions, events, news, lang } = useModel()
-  const projects = submissions.filter(isPublic)
+  const { submissions, eventProjects, events, news, lang } = useModel()
+  const projects = publicProjects(submissions, eventProjects)
   const current = events.find(e => e.id === 'current' && e.published) ?? events.find(e => e.id !== 'archive' && e.published && e.date)
   const published = news.filter(post => post.published)
   const [lead, ...rest] = [...published].sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.date.localeCompare(a.date))

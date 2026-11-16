@@ -69,6 +69,7 @@ export function AdminRegistrations() {
           </div>
         </div>
         <label className="reg-note">{t('Message to the team (optional)')}<textarea rows={2} maxLength={1000} value={notes[team.id] ?? team.adminNote} onChange={e => setNotes({ ...notes, [team.id]: e.target.value })} /></label>
+        <p className="field-note">{t('Confirmed product information appears in the project catalog with this event’s tag. Contacts and presentations remain private.')}</p>
         <div className="reg-actions">
           {team.status !== 'confirmed' && <button type="button" className="btn btn-primary btn-sm" disabled={busy === team.id} onClick={() => act(team, () => setTeamStatus(team, 'confirmed', notes[team.id] ?? team.adminNote))}><Icon name="check" size={16} />{t('Confirm the team')}</button>}
           {team.status !== 'submitted' && <button type="button" className="btn btn-outline btn-sm" disabled={busy === team.id} onClick={() => act(team, () => setTeamStatus(team, 'submitted', notes[team.id] ?? team.adminNote))}>{t('Back to review')}</button>}

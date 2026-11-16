@@ -87,6 +87,49 @@ test('captains register teams by SDU email; teams stay private', async () => {
   } finally { await db.close() }
 })
 
+test('registrations accept valid product URLs and enforce URL boundaries', async () => {
+  const { db, as } = await setup()
+  try {
+    await as('captain')
+    const { rows: [created] } = await db.query(`
+      insert into public.event_teams (
+        event_id, team_name, product_name, tagline, description,
+        industry, stage, telegram, phone, consent, product_url
+      ) values (
+        'current', 'Campus Eats', 'Campus Eats', 'Food delivered across campus',
+        $1, 'FoodTech', 'MVP', '@campus_eats', '+77011234567', true, $2
+      ) returning id, product_url
+    `, ['A campus delivery service connecting students with nearby cafes.'.repeat(2), 'https://campus.example'])
+    assert.equal(created.product_url, 'https://campus.example')
+
+    for (const url of [
+      'https://abc',
+      `https://${'a'.repeat(500)}`,
+      `https://campus.example/${'a'.repeat(300)}`,
+      'https://campus.example/product?lang=kk&tab=team#about',
+      null,
+    ]) {
+      const result = await db.query('update public.event_teams set product_url=$1 where id=$2 returning product_url', [url, created.id])
+      assert.equal(result.rows[0].product_url, url)
+    }
+
+    for (const url of [
+      '',
+      'https://ab',
+      `https://${'a'.repeat(501)}`,
+      'http://campus.example',
+      'https://campus.example/white space',
+      'https://campus.example/<script>',
+      'https://campus.example/"quoted"',
+    ]) {
+      await assert.rejects(
+        db.query('update public.event_teams set product_url=$1 where id=$2', [url, created.id]),
+        /event_teams_product_url_check/,
+      )
+    }
+  } finally { await db.close() }
+})
+
 test('presentations are private files in the team folder', async () => {
   const { db, as, operation, asOwner } = await setup()
   try {
@@ -131,4 +174,67 @@ test('presentations are private files in the team folder', async () => {
     await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values ('event-presentations',$1)", [`current/${teamId}/1f1c2b8a-1d2e-4f5a-9b8c-7d6e5f4a3b2c.pdf`]))
     assert.equal((await db.query('select public.event_registration_open($1) as open', ['current'])).rows[0].open, false)
   } finally { await db.close() }
+})
+
+test('catalogue publishes confirmed products with exact event IDs, never private registration data', async () => {
+  const {db,as,login} = await setup()
+  try {
+    await as('captain')
+    const first = (await db.query(team())).rows[0].id
+    await as('other')
+    const pending = (await db.query(team())).rows[0].id
+    await as('admin')
+    await db.query("update public.event_teams set status='confirmed',admin_note='Private reviewer note' where id=$1",[first])
+    await login(null)
+    const rows = (await db.query('select * from public.list_confirmed_event_projects()')).rows
+    assert.equal(rows.length,1)
+    assert.equal(rows[0].id,`event-team-${first}`)
+    assert.equal(rows[0].event_id,'current')
+    assert.deepEqual(Object.keys(rows[0].data).sort(),['about','createdAt','description','industry','name','product','stage','team'])
+    assert.equal(rows[0].data.name,'Campus Eats')
+    await assert.rejects(db.query('select * from public.event_teams'))
+    await assert.rejects(db.query('select * from public.event_team_members'))
+
+    await as('admin')
+    // Same calendar year is not an event relationship.
+    await db.query("insert into public.events(id,data) values ('second',$1)", [{id:'second',title:'Second event',date:'2099-12-01',place:'SDU',published:true}])
+    await as('captain')
+    const second = (await db.query(team('second'))).rows[0].id
+    await as('admin')
+    await db.query("update public.event_teams set status='confirmed' where id=$1",[second])
+    await login(null)
+    assert.deepEqual((await db.query('select event_id from public.list_confirmed_event_projects() order by event_id')).rows,[{event_id:'current'},{event_id:'second'}])
+    await as('admin')
+    await db.query("update public.events set data=jsonb_set(data,'{published}','false') where id='second'")
+    await db.query("update public.event_teams set status='rejected' where id=$1",[pending])
+    await login(null)
+    assert.equal((await db.query('select * from public.list_confirmed_event_projects()')).rows.length,1)
+    // An edit resets confirmation and removes the public card immediately.
+    await as('captain')
+    await db.query("update public.event_teams set tagline='Updated product needs another review' where id=$1",[first])
+    await login(null)
+    assert.equal((await db.query('select * from public.list_confirmed_event_projects()')).rows.length,0)
+  } finally {await db.close()}
+})
+
+test('project event assignment is admin-only and rolls back invalid changes', async () => {
+  const {db,as,login} = await setup()
+  try {
+    await as('captain')
+    await db.query("insert into public.projects(id,owner_id,data) values ('assigned-project',$1,$2)", [people.captain[0], {
+      id:'assigned-project',ownerId:people.captain[0],name:'Project',description:'Description',industry:'EdTech',stage:'Idea',team:'Team',product:'',
+      status:'Pending',visible:false,publication:false,consentVersion:'2026-10-22',consentAt:new Date().toISOString(),feedback:''
+    }])
+    await login(null)
+    await assert.rejects(db.query("select public.set_project_events('assigned-project',array['current'])"), /permission/)
+    await as('captain')
+    await assert.rejects(db.query("select public.set_project_events('assigned-project',array['current'])"), /administrators/)
+    await as('admin')
+    await db.query("select public.set_project_events('assigned-project',array['current','current'])")
+    assert.deepEqual((await db.query("select event_id from public.project_events where project_id='assigned-project'")).rows,[{event_id:'current'}])
+    await assert.rejects(db.query("select public.set_project_events('assigned-project',array['missing-event'])"), /foreign key/)
+    assert.deepEqual((await db.query("select event_id from public.project_events where project_id='assigned-project'")).rows,[{event_id:'current'}])
+    await db.query("select public.set_project_events('assigned-project',array[]::text[])")
+    assert.equal((await db.query('select * from public.project_events')).rows.length,0)
+  } finally {await db.close()}
 })

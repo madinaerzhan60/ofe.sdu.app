@@ -133,7 +133,7 @@ test('existing SDU email signup, signin, reset and recovery handlers still work'
   assert.deepEqual(recovery.calls, ['recovered'])
 })
 
-function platform(url, session = null, testEnv = env) {
+function platform(url, session = null, testEnv = env, fixtures = {}) {
   const state = hooks(), window = browser(url)
   let onAuthChange, options, sessionUrl
   const client = {
@@ -141,7 +141,8 @@ function platform(url, session = null, testEnv = env) {
       onAuthChange = callback
       return {data:{subscription:{unsubscribe(){}}}}
     }},
-    from:() => ({select:async () => ({data:[],error:null})}),rpc:async () => ({data:false,error:null}),
+    from:table => ({select:async () => ({data:fixtures[table] ?? [],error:null})}),
+    rpc:async name => ({data:name === 'list_confirmed_event_projects' ? (fixtures.eventProducts ?? []) : false,error:null}),
   }
   const module = load(backendSource, {
     react:state.react,'./event-corrections':{correctEventDate:e => e},'@supabase/supabase-js':{createClient:(_url, _key, config) => {options = config; return client}},
@@ -330,4 +331,27 @@ test('server-side hook requires verified SDU Google identity for OAuth and refre
       await assert.rejects(invoke('oauth'), /permission denied/)
     }
   } finally {await db.close()}
+})
+
+
+test('platform loads event products separately and reads project associations by exact ID', async () => {
+  const view = platform(origin + '/projects',null,env,{
+    projects:[{id:'normal',owner_id:'owner',data:{name:'Normal',eventYears:['2026']}}],
+    project_events:[{project_id:'normal',event_id:'second-event'}],
+    eventProducts:[{id:'event-team-1',event_id:'current',data:{name:'Confirmed product',team:'Confirmed team'}}],
+  })
+  try {
+    await tick()
+    const state = view.render()
+    assert.equal(state.error,'')
+    assert.equal(state.submissions.length,1)
+    assert.deepEqual(Array.from(state.submissions[0].eventIds),['second-event'])
+    assert.equal(state.eventProjects.length,1)
+    assert.equal(state.eventProjects[0].source,'event')
+    assert.deepEqual(Array.from(state.eventProjects[0].eventIds),['current'])
+    assert.equal(state.eventProjects[0].publication,undefined)
+    view.module.notifyCatalogChanged()
+    await tick()
+    assert.equal(view.render().error,'')
+  } finally {view.close()}
 })
