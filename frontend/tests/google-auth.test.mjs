@@ -141,7 +141,7 @@ function platform(url, session = null, testEnv = env, fixtures = {}) {
       onAuthChange = callback
       return {data:{subscription:{unsubscribe(){}}}}
     }},
-    from:table => ({select:async () => ({data:fixtures[table] ?? [],error:null})}),
+    from:table => ({select:async () => {await fixtures.beforeSelect?.(table);return {data:fixtures[table] ?? [],error:null}}}),
     rpc:async name => ({data:name === 'list_confirmed_event_projects' ? (fixtures.eventProducts ?? []) : name === 'list_removed_workspace_projects' ? (fixtures.removals ?? []) : false,error:null}),
   }
   const module = load(backendSource, {
@@ -152,7 +152,7 @@ function platform(url, session = null, testEnv = env, fixtures = {}) {
   const cleanups = state.mount()
   return {render,window,options,module,
     get sessionUrl() {return sessionUrl},
-    emit(event, nextSession) {session = nextSession; onAuthChange(event)},
+    emit(event, nextSession) {session = nextSession; onAuthChange(event, nextSession)},
     close() {cleanups.forEach(cleanup => cleanup?.())},
   }
 }
@@ -177,6 +177,43 @@ test('OAuth cancellation and failure callbacks show safe persistent errors and c
       assert.equal(view.render().error, '')
     } finally {view.close()}
   }
+})
+
+test('returning from a mobile file picker refreshes the same identity without unmounting forms', async () => {
+  const session = {user:{id:'captain-id',email:'captain@sdu.edu.kz'}}
+  let release
+  let hold = false
+  const view = platform(origin + '/register',session,env,{
+    projects:[{id:'private-project',owner_id:session.user.id,data:{name:'Private draft'}}],
+    beforeSelect:table => table === 'projects' && hold ? new Promise(resolve => {release=resolve}) : undefined,
+  })
+  try {
+    await tick()
+    assert.equal(view.render().authLoading,false)
+    for (const event of ['SIGNED_IN','TOKEN_REFRESHED','USER_UPDATED']) {
+      hold=true
+      view.emit(event,session)
+      await tick()
+      assert.equal(view.render().authLoading,false,`${event} must not replace the active wizard with a skeleton`)
+      assert.equal(view.render().userId,session.user.id)
+      release();await tick()
+    }
+    // An actual account switch must clear the previous account's private data
+    // and block the old form while the new account's records are loading.
+    view.emit('SIGNED_IN',{user:{id:'other-captain',email:'other@sdu.edu.kz'}})
+    await tick()
+    assert.equal(view.render().authLoading,true)
+    assert.equal(view.render().submissions.length,0)
+    assert.equal(view.render().userId,'other-captain')
+    release();await tick()
+    view.emit('SIGNED_OUT',null)
+    await tick()
+    assert.equal(view.render().authLoading,true)
+    assert.equal(view.render().userId,null)
+    assert.equal(view.render().submissions.length,0)
+    release();await tick()
+    assert.equal(view.render().authLoading,false)
+  } finally {view.close()}
 })
 
 test('failed callbacks reach Supabase unchanged and discard attached credentials before a reload', async () => {

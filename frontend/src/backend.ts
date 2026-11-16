@@ -131,11 +131,15 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
     const refreshCatalog = () => { void refresh(true) }
     catalogListeners.add(refreshCatalog)
     void refresh()
-    const { data } = backend.auth.onAuthStateChange((event) => {
+    const { data } = backend.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') setRecovery(true)
       if (event === 'SIGNED_IN') setAuthError('')
+      // Returning from a phone's file picker can re-confirm the same session.
+      // Keep forms mounted during that refresh so their step, contacts and Files
+      // survive. A different account still uses the blocking loading state.
+      const sameIdentity = (session?.user.id ?? null) === current.current.userId
       // Do not await Supabase queries inside its auth callback.
-      setTimeout(() => { if(active) void refresh() }, 0)
+      setTimeout(() => { if(active) void refresh(sameIdentity) }, 0)
     })
     return () => {catalogListeners.delete(refreshCatalog);active=false; generation.current++; data.subscription.unsubscribe()}
   }, [])
