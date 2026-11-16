@@ -14,11 +14,11 @@
 | Исходный репозиторий команды | https://github.com/madinaerzhan60/ofe.sdu.app |
 | Превью (демо-режим) | https://ofe-sdu.vercel.app · регистрация: https://ofe-sdu.vercel.app/events/founders-cup/register |
 | Vercel | проект `ofe-sdu`, аккаунт `anuar-zxc` |
-| Supabase | проект `ofe-sdu`, ref `roglnggywelrpahbakxt`, URL `https://roglnggywelrpahbakxt.supabase.co` |
+| Supabase (основная база) | проект `ofe-sdu-app`, ref `tnbomcaxdsqtarsfjarh`, URL `https://tnbomcaxdsqtarsfjarh.supabase.co` |
 | Настройка аккаунтов и безопасности | [`frontend/ACCOUNT_SETUP.md`](frontend/ACCOUNT_SETUP.md), [`frontend/STORAGE_SETUP.md`](frontend/STORAGE_SETUP.md) |
 
 Чтобы продолжить, новому человеку нужен доступ к проекту Vercel `ofe-sdu`
-и к организации Supabase, где лежит `ofe-sdu`. Пароли и ключи в чат и в код не
+и к организации Supabase, где лежит `ofe-sdu-app`. Пароли и ключи в чат и в код не
 передавайте: только приглашения в команды.
 
 ## Что сделано
@@ -54,22 +54,22 @@
 
 ## Что осталось сделать (по порядку)
 
-### 1. Накатить миграции в Supabase `roglnggywelrpahbakxt`
-Уже применены: `20261022_accounts`, `20261023074400_event_registration_user_index`.
-Осталось применить по порядку файлы из `frontend/supabase/migrations/`:
+### 1. Миграции в Supabase `tnbomcaxdsqtarsfjarh` — готово
+Основная база — `tnbomcaxdsqtarsfjarh` (`ofe-sdu-app`). Все 10 миграций из
+`frontend/supabase/migrations/` уже применены 16 ноября 2026:
 
-1. `20261023071333_database_foundation.sql`
-2. `20261023115503_storage_security_hardening.sql`
-3. `20261023120625_storage_token_guards.sql`
-4. `20261023123211_storage_update_operation.sql`
-5. `20261031150000_sdu_auth_token_hook.sql`
-6. `20261104150000_correct_founders_cup_date.sql`
-7. `20261113120000_media_news_members_contacts.sql`
-8. `20261114120000_founders_cup_registration.sql`
+1. `20261022_accounts.sql`
+2. `20261023071333_database_foundation.sql`
+3. `20261023074400_event_registration_user_index.sql`
+4. `20261023115503_storage_security_hardening.sql`
+5. `20261023120625_storage_token_guards.sql`
+6. `20261023123211_storage_update_operation.sql`
+7. `20261031150000_sdu_auth_token_hook.sql`
+8. `20261104150000_correct_founders_cup_date.sql`
+9. `20261113120000_media_news_members_contacts.sql`
+10. `20261114120000_founders_cup_registration.sql`
 
-Например через SQL Editor или `supabase db push`. Supabase может попросить
-подтвердить потенциально разрушительные операции: база пустая, подтверждать можно.
-После этого запустите Advisors → Security и убедитесь, что предупреждений нет.
+Стоит ещё раз запустить Advisors → Security и убедиться, что предупреждений нет.
 
 ### 2. Заполнить мероприятия
 ```sql
@@ -83,8 +83,8 @@ on conflict (id) do nothing;
 `"registration": "closed"`, чтобы закрыть регистрацию досрочно.
 
 ### 3. Настроить Auth в Supabase
-- URL Configuration: Site URL `https://ofe-sdu.vercel.app`, в Redirect URLs точные
-  адреса сайта (и итоговый домен, если он будет другой).
+- URL Configuration: Site URL `https://ofesdu.app`, в Redirect URLs точные
+  адреса сайта (`https://ofesdu.app` и превью-домены Vercel, если нужны).
 - Providers → Email: Confirm email **вкл.**, минимальная длина пароля **10**.
   Anonymous sign-ins **выкл.**
 - Hooks: **Before User Created** → `public.sdu_before_user_created_hook`,
@@ -94,7 +94,7 @@ on conflict (id) do nothing;
 
 ### 4. Вход через Google
 1. Google Cloud Console → APIs & Services → Credentials → OAuth client ID (Web).
-   Authorized redirect URI: `https://roglnggywelrpahbakxt.supabase.co/auth/v1/callback`.
+   Authorized redirect URI: `https://tnbomcaxdsqtarsfjarh.supabase.co/auth/v1/callback`.
    Если приложение не опубликовано, его нужно опубликовать или добавить
    тестовых пользователей.
 2. Supabase → Authentication → Providers → Google: вставить Client ID и Secret.
@@ -102,7 +102,7 @@ on conflict (id) do nothing;
 
 ### 5. Подключить сайт к базе (Vercel)
 Settings → Environment Variables (Production), затем Redeploy:
-- `VITE_SUPABASE_URL=https://roglnggywelrpahbakxt.supabase.co`
+- `VITE_SUPABASE_URL=https://tnbomcaxdsqtarsfjarh.supabase.co`
 - `VITE_SUPABASE_PUBLISHABLE_KEY=` publishable (anon) ключ из Supabase → Connect.
   Только он: service_role или secret ключ сюда класть нельзя.
 - `VITE_SUPABASE_STORAGE_BUCKET=startup-media`
@@ -136,11 +136,8 @@ select id from auth.users where email = '250107056@sdu.edu.kz';
   `git push team main:redesign/office-for-entrepreneurship`, затем открыть PR в `main`
   репозитория команды и отревьюить. История общая, так что PR соберётся без конфликтов,
   если в `main` команды ничего не менялось после 8 ноября.
-- Нужно решить, на какой базе работает прод. Старый сайт команды
-  (`ofe-frontend-nine.vercel.app`) использует **другой** проект Supabase
-  (`tnbomcaxdsqtarsfjarh`), где новые миграции не применены. Либо перенести прод
-  на `roglnggywelrpahbakxt`, либо применить миграции 5–8 из шага 1 к старому проекту
-  (с согласия владельца, после проверки уже существующих данных).
+- Прод работает на базе команды `tnbomcaxdsqtarsfjarh` (`ofe-sdu-app`), миграции
+  применены, CSP в `frontend/vercel.json` указывает на этот проект.
 
 ## Известные ограничения и что стоит улучшить
 - Проверка, что файл действительно PDF/PPTX (по первым байтам), идёт в браузере.
