@@ -87,6 +87,49 @@ test('captains register teams by SDU email; teams stay private', async () => {
   } finally { await db.close() }
 })
 
+test('registrations accept valid product URLs and enforce URL boundaries', async () => {
+  const { db, as } = await setup()
+  try {
+    await as('captain')
+    const { rows: [created] } = await db.query(`
+      insert into public.event_teams (
+        event_id, team_name, product_name, tagline, description,
+        industry, stage, telegram, phone, consent, product_url
+      ) values (
+        'current', 'Campus Eats', 'Campus Eats', 'Food delivered across campus',
+        $1, 'FoodTech', 'MVP', '@campus_eats', '+77011234567', true, $2
+      ) returning id, product_url
+    `, ['A campus delivery service connecting students with nearby cafes.'.repeat(2), 'https://campus.example'])
+    assert.equal(created.product_url, 'https://campus.example')
+
+    for (const url of [
+      'https://abc',
+      `https://${'a'.repeat(500)}`,
+      `https://campus.example/${'a'.repeat(300)}`,
+      'https://campus.example/product?lang=kk&tab=team#about',
+      null,
+    ]) {
+      const result = await db.query('update public.event_teams set product_url=$1 where id=$2 returning product_url', [url, created.id])
+      assert.equal(result.rows[0].product_url, url)
+    }
+
+    for (const url of [
+      '',
+      'https://ab',
+      `https://${'a'.repeat(501)}`,
+      'http://campus.example',
+      'https://campus.example/white space',
+      'https://campus.example/<script>',
+      'https://campus.example/"quoted"',
+    ]) {
+      await assert.rejects(
+        db.query('update public.event_teams set product_url=$1 where id=$2', [url, created.id]),
+        /event_teams_product_url_check/,
+      )
+    }
+  } finally { await db.close() }
+})
+
 test('presentations are private files in the team folder', async () => {
   const { db, as, operation, asOwner } = await setup()
   try {
