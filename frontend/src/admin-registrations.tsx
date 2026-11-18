@@ -12,7 +12,7 @@ const labels: Record<TeamStatus, string> = { submitted: 'Under review', confirme
 export function AdminRegistrations() {
   const t = useT()
   const { events, userEmail } = useModel()
-  const event = events.find(e => e.id === 'current') ?? { id: 'current', title: 'SDU FOUNDERS CUP', date: '2026-11-21' }
+  const event = events.find(e => e.id === 'current') ?? { id: 'current', title: 'SDU FOUNDERS CUP', date: '2026-11-23' }
   const { teams, loading, error, reload } = useEventTeams(event.id, `admin:${userEmail}`, true)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<'all' | 'removed' | TeamStatus>('all')

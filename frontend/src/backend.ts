@@ -1,4 +1,3 @@
-import {correctEventDate} from './event-corrections'
 import { createClient } from '@supabase/supabase-js'
 import { useEffect, useRef, useState } from 'react'
 import type { EventData, Member, NewsPost, ProjectContact, Submission } from './model'
@@ -122,7 +121,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
               members: memberRows.filter(m => m.project_id === r.id).map(m => ({email:m.email, role:m.role}))}
           }),
           eventProjects: (eventProducts.data ?? []).map((r: {id:string;event_id:string;data:Omit<EventProject,'id'|'source'|'eventIds'>}) => ({...r.data, id:r.id, source:'event', eventIds:[r.event_id]})),
-          events:(events.data ?? []).map(r => correctEventDate({...r.data,id:r.id})),
+          events:(events.data ?? []).map(r => ({...r.data,id:r.id})),
           news:((news.data ?? []) as {id:string; data:NewsPost}[]).map(r => ({...r.data,id:r.id})).sort((a,b) => (b.date ?? '').localeCompare(a.date ?? '')),}
         current.current = next; setState(next); setError('')
       } catch { if (active && generation.current === request) setError('Could not load your data. Check your connection and try again.') }

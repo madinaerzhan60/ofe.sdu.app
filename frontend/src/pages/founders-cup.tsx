@@ -8,7 +8,7 @@ import { Link } from '../router'
 import { registrationDeadline, registrationIsOpen } from './register'
 import { Icon } from '../ui'
 
-export function Countdown({ date = "2026-11-21" }: { date?: string }) {
+export function Countdown({ date = "2026-11-23" }: { date?: string }) {
   const t = useT()
   const calculate = () => {
     const diff = Math.max(
@@ -47,7 +47,7 @@ export function FoundersCup() {
   const t = useT()
   const { events, lang, submissions, eventProjects } = useModel()
   const publishedEvent = events.find((e) => e.id === "current" && e.published) ?? events.find(e => e.id !== "archive" && e.published && e.date)
-  const current: EventData = publishedEvent ?? {id:'announced-founders-cup',title:'SDU FOUNDERS CUP',date:'2026-11-21',place:'Venue to be confirmed',published:false}
+  const current: EventData = publishedEvent ?? {id:'announced-founders-cup',title:'SDU FOUNDERS CUP',date:'2026-11-23',place:'Venue to be confirmed',published:false}
   const projects = forEvent(publicProjects(submissions, eventProjects), current.id)
   const past = events.find((e) => e.id === "archive" && e.published)
   const registrationUrl = externalUrl(current.registrationUrl || import.meta.env.VITE_EVENT_REGISTRATION_URL)

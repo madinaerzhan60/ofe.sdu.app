@@ -34,7 +34,7 @@ export const menu: MenuGroup[] = [
       { label: 'Hackathons', to: 'events', id: 'hackathons', icon: 'code', note: 'Build in a weekend' },
       { label: 'Championships', to: 'events', id: 'championships', icon: 'briefcase', note: 'Case and business competitions' },
       { label: 'Winners & champions', to: 'events', id: 'champions', icon: 'trophy', note: 'Students who won' },
-      { label: 'SDU Founders Cup', to: 'demo', icon: 'sparkle', note: '21 November · Demo Day' },
+      { label: 'SDU Founders Cup', to: 'demo', icon: 'sparkle', note: '23 November · Demo Day' },
       { label: 'Team registration', to: 'register', icon: 'flag', note: 'Register for Founders Cup' },
     ],
     feature: { image: '/demo-day/IMG_7414.webp', title: 'SDU Founders Cup', to: 'demo' },

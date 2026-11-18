@@ -235,7 +235,7 @@ Object.assign(translations, {
   'SDU Founders Cup': ['SDU Founders Cup', 'SDU Founders Cup'],
   'Register your team': ['Зарегистрировать команду', 'Команданы тіркеу'],
   'Register for Founders Cup': ['Регистрация на Founders Cup', 'Founders Cup-қа тіркелу'],
-  '21 November · Demo Day': ['21 ноября · Demo Day', '21 қараша · Demo Day'],
+  '23 November · Demo Day': ['23 ноября · Demo Day', '23 қараша · Demo Day'],
   'Founders Cup registration': ['Регистрация на Founders Cup', 'Founders Cup тіркеуі'],
   'About the event': ['О мероприятии', 'Іс-шара туралы'],
   'Registration is open until': ['Регистрация открыта до', 'Тіркеу ашық:'],
