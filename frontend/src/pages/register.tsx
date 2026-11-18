@@ -20,7 +20,7 @@ const ALMATY = 5 * 3600000
 export function useFoundersCup(): EventData {
   const { events } = useModel()
   return events.find(e => e.id === 'current' && e.published) ?? events.find(e => e.id !== 'archive' && e.published && e.date)
-    ?? { id: 'current', title: 'SDU FOUNDERS CUP', date: '2026-11-21', place: 'Venue to be confirmed', published: false }
+    ?? { id: 'current', title: 'SDU FOUNDERS CUP', date: '2026-11-23', place: 'Venue to be confirmed', published: false }
 }
 /** Deadline shown to people: the explicit one, or the start of the event day in Almaty. */
 export function registrationDeadline(event: EventData) {
