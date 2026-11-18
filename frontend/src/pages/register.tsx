@@ -173,7 +173,7 @@ function Wizard({ event, captainEmail, team, onDone, onCancel, onStart }: { onSt
         <Field label="Captain’s phone" error={errors.phone}><span className="input-with-icon"><Icon name="phone" size={18} /><input type="tel" inputMode="tel" autoComplete="tel" placeholder="+7 7__ ___ __ __" value={draft.phone} aria-invalid={Boolean(errors.phone)} onChange={e => update({ phone: e.target.value })} onBlur={() => isPhone(draft.phone) && setDraft(d => ({ ...d, phone: formatPhone(d.phone) }))} /></span></Field>
       </div>
       <MemberEmailsField members={draft.members} ownEmail={captainEmail} max={MAX_TEAM_SIZE - 1} onChange={members => update({ members })} />
-      <p className="field-note">{t('Up to 6 people including the captain. Each person can be in one team only.')}</p>
+      <p className="field-note">{t('Up to 6 people including the captain. You can captain one team and join one other team.')}</p>
     </section>}
 
     {step === 1 && <section className="wizard-panel" aria-labelledby={`${formId}-1`}>
@@ -226,7 +226,7 @@ function Wizard({ event, captainEmail, team, onDone, onCancel, onStart }: { onSt
 
 const statusMeta = { submitted: ['Under review', 'is-review'], confirmed: ['Confirmed', 'is-confirmed'], rejected: ['Not accepted', 'is-rejected'] } as const
 
-function TeamDashboard({ team, captain, open, event, onEdit }: { team: EventTeam; captain: boolean; open: boolean; event: EventData; onEdit: () => void }) {
+function TeamDashboard({ team, captain, open, event, onEdit }: { team: EventTeam; captain: boolean; open: boolean; event: EventData; onEdit?: () => void }) {
   const t = useT()
   const { lang } = useModel()
   const [busy, setBusy] = useState(false)
@@ -296,8 +296,9 @@ export function Register() {
   const [editing, setEditing] = useState(false)
   const [notice, setNotice] = useState('')
   useEffect(() => { let alive = true; void registrationOpen(event.id, registrationIsOpen(event)).then(value => { if (alive) setOpen(value) }); return () => { alive = false } }, [event])
-  const mine = teams.find(team => team.members.some(m => m.email === email))
-  const captain = Boolean(mine && mine.captainEmail === email)
+  const mine = teams.find(team => team.captainEmail === email)
+  const memberships = teams.filter(team => team.captainEmail !== email && team.members.some(member => member.email === email))
+  const hasRegistration = Boolean(mine || memberships.length)
   const deadline = formatDeadline(registrationDeadline(event), lang)
   return <main id="main" className="register-page">
     <PageHero eyebrow="SDU Founders Cup" crumbs={[{ label: 'Events', to: 'events' }, { label: 'SDU Founders Cup', to: 'demo' }, { label: 'Team registration' }]} image="/demo-day/IMG_7414.webp"
@@ -314,10 +315,17 @@ export function Register() {
         </div>
         : authLoading || (liveMode && loading && !teams.length) ? <div className="skeleton-card" aria-busy="true"><span /><span /><span /></div>
         : error ? <div className="empty-state"><h3>{t(error)}</h3><button type="button" className="btn btn-outline" onClick={() => void reload()}>{t('Try again')}</button></div>
-        : isAdmin && !mine ? <div className="empty-state"><Icon name="grid" size={32} /><h3>{t('Administrators manage registrations in the admin panel.')}</h3><Link to="admin" className="btn btn-primary">{t('Workspace management')}</Link></div>
-        : mine && !editing ? <TeamDashboard team={mine} captain={captain} open={open} event={event} onEdit={() => { setEditing(true); setNotice('') }} />
+        : isAdmin && !hasRegistration ? <div className="empty-state"><Icon name="grid" size={32} /><h3>{t('Administrators manage registrations in the admin panel.')}</h3><Link to="admin" className="btn btn-primary">{t('Workspace management')}</Link></div>
+        : hasRegistration && (!editing || !open) ? <>
+          {mine && <TeamDashboard key={mine.id} team={mine} captain open={open} event={event} onEdit={() => { setEditing(true); setNotice('') }} />}
+          {!mine && open && !isAdmin && <div className="side-card">
+            <button type="button" className="btn btn-accent" onClick={() => { setEditing(true); setNotice('') }}>{t('Register your own project')}<Icon name="arrow" size={18} /></button>
+          </div>}
+          {memberships.length > 0 && <h2>{t('Teams you joined')}</h2>}
+          {memberships.map(team => <TeamDashboard key={team.id} team={team} captain={false} open={open} event={event} />)}
+        </>
         : !open ? <div className="empty-state"><Icon name="calendar" size={32} /><h3>{t('Registration is closed.')}</h3><Link to="demo" className="btn btn-outline">{t('About the event')}</Link></div>
-        : <Wizard event={event} captainEmail={email} team={editing ? mine : undefined} onCancel={editing ? () => setEditing(false) : undefined} onStart={() => setEditing(true)} onDone={message => { setEditing(false); setNotice(message); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />}
+        : <Wizard key={`${event.id}:${email}`} event={event} captainEmail={email} team={editing ? mine : undefined} onCancel={editing ? () => setEditing(false) : undefined} onStart={() => setEditing(true)} onDone={message => { setEditing(false); setNotice(message); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />}
       </div>
       <aside className="register-aside">
         <div className="side-card">

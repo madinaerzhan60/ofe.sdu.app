@@ -59,7 +59,8 @@ export function describeError(error: unknown): string {
   const text = String((error as { message?: string })?.message ?? error ?? '')
   if (/Registration is closed/i.test(text)) return 'Registration is closed.'
   if (/at most 6/i.test(text)) return 'A team can have up to 6 people including the captain.'
-  if (/event_team_members_event_id_email_key|duplicate key.*email|unique.*email/i.test(text)) return 'One of these people is already registered in another team.'
+  if (/event_team_members_one_guest_per_event_idx|event_team_members_event_id_email_key/i.test(text)) return 'One of these people has already joined another team.'
+  if (/event_team_members_pkey/i.test(text)) return 'This person is already in the team.'
   if (/event_teams_event_id_captain_id_key|duplicate key/i.test(text)) return 'You have already registered a team for this event.'
   if (/sdu\.edu\.kz/i.test(text)) return 'Use a corporate @sdu.edu.kz email.'
   if (/Cover upload failed|Choose an image/i.test(text)) return /Choose an image/i.test(text) ? 'Choose an image smaller than 5 MB.' : 'Cover upload failed. Please try again.'

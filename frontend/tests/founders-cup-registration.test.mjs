@@ -68,8 +68,14 @@ test('captains register teams by SDU email; teams stay private', async () => {
     assert.equal((await db.query('select id from public.event_teams')).rows.length, 1)
     assert.equal((await db.query('select email from public.event_team_members')).rows.length, 6)
     assert.equal((await db.query("update public.event_teams set team_name='Hijacked' where id=$1 returning id", [teamId])).rows.length, 0)
-    // A member of one team cannot captain another team in the same event.
-    await assert.rejects(db.query(team()), /duplicate|unique/i)
+    // A designer on one team can register a separate solo project.
+    const soloId = (await db.query(team())).rows[0].id
+    assert.deepEqual(new Set((await db.query('select id from public.event_teams')).rows.map(row => row.id)), new Set([teamId, soloId]))
+    assert.deepEqual((await db.query('select email, is_captain from public.event_team_members where team_id=$1', [soloId])).rows, [
+      { email: people.member[1], is_captain: true },
+    ])
+    await assert.rejects(db.query(team()), /event_teams_event_id_captain_id_key/)
+    assert.equal((await db.query("update public.event_teams set team_name='My Solo Project' where id=$1 returning id", [soloId])).rows.length, 1)
 
     await as('stranger')
     assert.equal((await db.query('select id from public.event_teams')).rows.length, 0)
@@ -84,6 +90,15 @@ test('captains register teams by SDU email; teams stay private', async () => {
     assert.equal((await db.query("update public.event_teams set status='confirmed', admin_note='See you on stage' where id=$1 returning status", [teamId])).rows[0].status, 'confirmed')
     await as('captain')
     assert.equal((await db.query("update public.event_teams set tagline='Campus food delivered to classrooms' where id=$1 returning status", [teamId])).rows[0].status, 'submitted')
+
+    await as('other')
+    const otherTeamId = (await db.query(team())).rows[0].id
+    // A second joined team is still blocked, regardless of the role label.
+    await assert.rejects(db.query("insert into public.event_team_members(team_id,email,role) values ($1,$2,'Co-founder')", [otherTeamId, people.member[1]]), /event_team_members_one_guest_per_event_idx/)
+    // The reverse order also works: an existing captain can join a team.
+    await db.query("insert into public.event_team_members(team_id,email,role) values ($1,$2,'Co-founder')", [otherTeamId, people.captain[1]])
+    await as('captain')
+    assert.deepEqual(new Set((await db.query('select id from public.event_teams')).rows.map(row => row.id)), new Set([teamId, otherTeamId]))
   } finally { await db.close() }
 })
 
