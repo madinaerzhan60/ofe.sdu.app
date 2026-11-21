@@ -12,6 +12,7 @@ export type TeamMember = { email: string; role: string; isCaptain?: boolean }
 export type EventTeam = {
   id: string
   eventId: string
+  captainId?: string
   captainEmail: string
   teamName: string
   productName: string
@@ -39,13 +40,13 @@ export type EventTeam = {
 export type TeamInput = Pick<EventTeam, 'teamName' | 'productName' | 'tagline' | 'description' | 'industry' | 'stage' | 'productUrl' | 'telegram' | 'phone'> & { members: TeamMember[] }
 
 type Row = {
-  id: string; event_id: string; captain_email: string; team_name: string; product_name: string; tagline: string; description: string
+  id: string; event_id: string; captain_id: string; captain_email: string; team_name: string; product_name: string; tagline: string; description: string
   industry: string; stage: string; product_url: string | null; telegram: string; phone: string; presentation_path: string | null
   presentation_name: string | null; cover_path: string | null; status: TeamStatus; admin_note: string; created_at: string; updated_at: string
   event_team_members?: { email: string; role: string; is_captain: boolean }[]
 }
 const fromRow = (row: Row): EventTeam => ({
-  id: row.id, eventId: row.event_id, captainEmail: row.captain_email, teamName: row.team_name, productName: row.product_name,
+  id: row.id, eventId: row.event_id, captainId: row.captain_id, captainEmail: row.captain_email, teamName: row.team_name, productName: row.product_name,
   tagline: row.tagline, description: row.description, industry: row.industry, stage: row.stage, productUrl: row.product_url ?? undefined,
   telegram: row.telegram, phone: row.phone, coverPath: row.cover_path ?? undefined, presentationPath: row.presentation_path ?? undefined, presentationName: row.presentation_name ?? undefined,
   status: row.status, adminNote: row.admin_note, createdAt: row.created_at, updatedAt: row.updated_at,
@@ -97,7 +98,7 @@ const subscribe = (fn: () => void) => { listeners.add(fn); return () => listener
 async function fetchTeams(eventId: string) {
   if (!backend) return state.teams
   const [{data,error},removals,pdfs] = await Promise.all([backend.from('event_teams')
-    .select('id,event_id,captain_email,team_name,product_name,tagline,description,industry,stage,product_url,telegram,phone,presentation_path,presentation_name,cover_path,status,admin_note,created_at,updated_at,event_team_members(email,role,is_captain)')
+    .select('id,event_id,captain_id,captain_email,team_name,product_name,tagline,description,industry,stage,product_url,telegram,phone,presentation_path,presentation_name,cover_path,status,admin_note,created_at,updated_at,event_team_members(email,role,is_captain)')
     .eq('event_id', eventId).order('created_at', { ascending: true }), backend.rpc('list_removed_workspace_projects'),
     backend.rpc('list_workspace_team_pdfs', { target_event_id: eventId })])
   if (error || removals.error) throw error || removals.error

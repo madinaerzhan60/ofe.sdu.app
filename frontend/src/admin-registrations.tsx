@@ -1,7 +1,7 @@
 import {ProjectRemovalDialog} from './project-removal-dialog'
 import { StorageImage } from './storage'
 import { coverReference } from './event-cover-storage'
-import { useState, type ReactNode } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { useModel, useT, type Submission } from './model'
 import { AdminTeamPdfUpload } from './admin-presentation'
 import { AdminEntryRow } from './admin-entry-row'
@@ -21,9 +21,11 @@ const catalogFilters: Record<Filter, string> = {
 }
 const sources: Record<Source, string> = { event: 'Founders Cup entries', catalog: 'Catalog submissions' }
 
+export type RelatedRegistration = { hasPresentation: boolean; open: () => void }
+
 export function AdminRegistrations({ projects, renderProjectDetails, directory }: {
   projects: Submission[]
-  renderProjectDetails: (project: Submission) => ReactNode
+  renderProjectDetails: (project: Submission, registration?: RelatedRegistration) => ReactNode
   directory: boolean
 }) {
   const t = useT()
@@ -35,6 +37,8 @@ export function AdminRegistrations({ projects, renderProjectDetails, directory }
   const [source, setSource] = useState<Source>('event')
   const [removing,setRemoving] = useState<EventTeam|null>(null)
   const [open, setOpen] = useState<string | null>(null)
+  const [linkedTeam, setLinkedTeam] = useState<string | null>(null)
+  const focusRegistration = useCallback((button: HTMLButtonElement | null) => button?.focus(), [])
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState('')
   const [problem, setProblem] = useState('')
@@ -87,16 +91,31 @@ export function AdminRegistrations({ projects, renderProjectDetails, directory }
       if (entry.kind === 'catalog') {
         const { project } = entry
         const key = `project:${project.id}`
-        const sourceLabel = project.eventIds?.includes(event.id) ? 'Founders Cup' : 'Catalog submission'
+        const belongsToEvent = project.eventIds?.includes(event.id)
+        const sourceLabel = belongsToEvent ? 'Founders Cup' : 'Catalog submission'
         const subtitle = [t(sourceLabel), t(project.industry), t(project.stage)].filter(Boolean).join(' · ')
+        // The team name may differ from the submitted product name, and one student can enter multiple projects.
+        const registration = !directory && belongsToEvent && !project.removed && project.ownerId
+          ? teams.find(team => !team.removed && team.captainId === project.ownerId
+            && team.productName.trim().toLowerCase() === project.name.trim().toLowerCase())
+          : undefined
+        const related = registration && {
+          hasPresentation: Boolean(registration.presentationPath || registration.supplementalPdf),
+          open: () => {
+            setFilter('all')
+            setQuery('')
+            setLinkedTeam(registration.id)
+            setOpen(`team:${registration.id}`)
+          },
+        }
         return <AdminEntryRow
           key={key} title={project.name} subtitle={subtitle} image={project.image}
           status={project.removed ? 'Removed' : project.status}
           tone={project.removed ? 'removed' : entry.status === 'submitted' ? 'review' : entry.status}
-          hasPresentation={Boolean(project.presentationAvailable)}
+          hasPresentation={Boolean(project.presentationAvailable || related?.hasPresentation)}
           open={open === key} onToggle={() => setOpen(open === key ? null : key)}
         >
-          {open === key && renderProjectDetails(project)}
+          {open === key && renderProjectDetails(project, related)}
         </AdminEntryRow>
       }
 
@@ -112,7 +131,8 @@ export function AdminRegistrations({ projects, renderProjectDetails, directory }
         status={team.removed ? 'Removed' : labels[team.status]}
         tone={team.removed ? 'removed' : team.status === 'submitted' ? 'review' : team.status}
         hasPresentation={hasPresentation}
-        open={open === key} onToggle={() => setOpen(open === key ? null : key)}
+        open={open === key} buttonRef={open === key && linkedTeam === team.id ? focusRegistration : undefined}
+        onToggle={() => { setLinkedTeam(null); setOpen(open === key ? null : key) }}
       >
         <div className="reg-columns">
           <div>

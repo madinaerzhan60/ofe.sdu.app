@@ -15,7 +15,7 @@ import { formatPhone, teamSummary } from "./validation"
 import { listMediaEditors, setMediaEditor } from "./backend"
 import { categoryMeta } from "./cards"
 import { eventDate } from "./event-date"
-import { AdminRegistrations } from "./admin-registrations"
+import { AdminRegistrations, type RelatedRegistration } from "./admin-registrations"
 import { CatalogPresentation } from "./admin-presentation"
 export function PolicyPage({ go }: { go: Go }) {
   const { policy } = useModel()
@@ -455,9 +455,11 @@ export function AdminDashboard({ go }: { go: Go }) {
         </div>
       </main>
     )
-  const renderProjectDetails = (row: Submission) => {
+  const renderProjectDetails = (row: Submission, registration?: RelatedRegistration) => {
     const showDetails = () => { setEditing({...row}); setRejecting(null) }
     const isVisible = !row.removed && row.status === 'Approved' && row.publication && row.visible !== false
+    const about = row.about?.trim()
+    const product = row.product?.trim()
     const changeVisibility = async () => {
       const saved = await setSubmissions(rows => rows.map(project =>
         project.id === row.id ? {...project, visible: project.visible === false} : project,
@@ -474,17 +476,33 @@ export function AdminDashboard({ go }: { go: Go }) {
       <div className="reg-columns">
         <div>
           <h4>{t('Product')}</h4>
+          {row.cover && <div className="image-upload-preview"><StorageImage src={row.cover} alt="" /></div>}
           <div className="prose reg-description">
             {row.description.split('\n').filter(Boolean).map((line, i) => <p key={i}>{t(line)}</p>)}
           </div>
+          {about && about !== row.description.trim() && <>
+            <h4>{t('About the project')}</h4>
+            <div className="prose reg-description">
+              {about.split('\n').filter(Boolean).map((line, i) => <p key={i}>{line}</p>)}
+            </div>
+          </>}
+          {product && /^https?:\/\//i.test(product) && (
+            <a className="link-arrow" href={product} target="_blank" rel="noopener noreferrer nofollow">{t('Visit product')} ↗</a>
+          )}
           <p className="field-note">{t(isVisible ? 'Visible on the website' : 'Not shown on the website')}</p>
           {!row.publication && <p className="field-note">{t('Author has not allowed publication')}</p>}
         </div>
         <div>
+          <AdminProjectPeople project={row} heading="h4" />
           <h4>{t('Presentation')}</h4>
           <div className="reg-presentation-files">
-            {!row.presentationAvailable && <p className="field-note">{t('Not uploaded yet')}</p>}
-            <CatalogPresentation project={row} canUpload={liveMode} />
+            {registration?.hasPresentation ? (
+              <p className="field-note">{t('Presentation in the Founders Cup registration')}</p>
+            ) : !row.presentationAvailable && <p className="field-note">{t('Not uploaded yet')}</p>}
+            <CatalogPresentation project={row} canUpload={liveMode && !registration?.hasPresentation} />
+            {registration && <button type="button" className="btn btn-outline btn-sm" onClick={registration.open}>
+              {t('Open Founders Cup registration')}
+            </button>}
           </div>
         </div>
       </div>
@@ -582,11 +600,7 @@ export function AdminDashboard({ go }: { go: Go }) {
                 />
               </label>
               <div className="admin-private">
-                <h3>{t("Team members")}</h3>
-                <p>{editing.team}</p>
-                {editing.members?.length ? <ul className="member-list">{editing.members.map(m => <li key={m.email}><strong>{m.email}</strong><small>{t(m.role === 'Other' ? 'Other role' : m.role)}</small></li>)}</ul> : <p className="field-help">{t('No teammates added by email.')}</p>}
-                <h3>{t("Contacts for the OFE team")}</h3>
-                {editing.contact ? <p className="admin-contacts"><a href={`https://t.me/${editing.contact.telegram.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer">{editing.contact.telegram}</a> · <a href={`tel:${editing.contact.phone}`}>{formatPhone(editing.contact.phone)}</a></p> : <p className="field-help">{t('The author has not left contacts yet.')}</p>}
+                <AdminProjectPeople project={editing} heading="h3" />
               </div>
               <fieldset><legend>{t('Connected events')}</legend>{events.map(event => <label className="check" key={event.id}><input type="checkbox" checked={editing.eventIds?.includes(event.id) ?? false} onChange={e => setEditing({...editing,eventIds:e.target.checked ? [...(editing.eventIds ?? []),event.id] : (editing.eventIds ?? []).filter(id => id !== event.id)})}/><span>{t(event.title)} · {event.date}</span></label>)}</fieldset>
               <div className="admin-review-summary"><span className={`status ${editing.status.toLowerCase()}`}>{t(editing.status)}</span><p>{t('Review the project details before making a decision.')}</p></div>
@@ -613,6 +627,31 @@ export function AdminDashboard({ go }: { go: Go }) {
       </section>
     </main>
   )
+}
+
+function AdminProjectPeople({ project, heading: Heading }: { project: Submission; heading: 'h3' | 'h4' }) {
+  const t = useT()
+  const { telegram, phone } = project.contact ?? {}
+  return <>
+    <Heading>{t('Team members')}</Heading>
+    {project.team?.trim() && <p>{t(project.team)}</p>}
+    {project.members?.length ? (
+      <ul className="member-list">
+        {project.members.map(member => <li key={member.email}>
+          <strong>{member.email}</strong>
+          <small>{t(member.role === 'Other' ? 'Other role' : member.role)}</small>
+        </li>)}
+      </ul>
+    ) : <p className="field-help">{t('No teammates added by email.')}</p>}
+    <Heading>{t('Contacts for the OFE team')}</Heading>
+    {telegram || phone ? (
+      <p className="admin-contacts">
+        {telegram && <a href={`https://t.me/${telegram.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer">{telegram}</a>}
+        {telegram && phone && ' · '}
+        {phone && <a href={`tel:${phone}`}>{formatPhone(phone)}</a>}
+      </p>
+    ) : <p className="field-help">{t('The author has not left contacts yet.')}</p>}
+  </>
 }
 
 function AdminNews({ go }: { go: Go }) {
