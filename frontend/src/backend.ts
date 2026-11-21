@@ -39,7 +39,7 @@ type Kind = 'submissions' | 'events' | 'news'
 // Tables added by 20261113120000_media_news_members_contacts.sql. Until that migration
 // is applied, reads fall back to empty data instead of breaking the whole site.
 const missing = (error: {code?: string} | null) => Boolean(error && ['42P01', 'PGRST205', 'PGRST202', '42883'].includes(error.code ?? ''))
-const privateKeys = ['members', 'contact', 'eventIds', 'removed'] as const
+const privateKeys = ['members', 'contact', 'eventIds', 'removed', 'presentationAvailable'] as const
 const publicData = (row: Submission) => { const copy: Record<string, unknown> = {...row}; for (const key of privateKeys) delete copy[key]; return copy }
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
 
@@ -94,7 +94,7 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
           current.current = cleared; setState(cleared)
         }
         const none = Promise.resolve({data:null,error:null})
-        const [projects, events, role, news, media, contacts, members, eventProducts, assignments, removals] = await Promise.all([
+        const [projects, events, role, news, media, contacts, members, eventProducts, assignments, removals, presentations] = await Promise.all([
           backend!.from('projects').select('id,owner_id,data'),
           backend!.from('events').select('id,data'),
           user ? backend!.rpc('is_admin') : Promise.resolve({data:false,error:null}),
@@ -105,16 +105,19 @@ export function usePlatform(samples: Submission[], sampleEvents: EventData[], sa
           backend!.rpc('list_confirmed_event_projects'),
           backend!.from('project_events').select('project_id,event_id'),
           user ? backend!.rpc('list_removed_workspace_projects') : none,
+          user ? backend!.rpc('list_workspace_project_pdfs') : none,
         ])
         if (projects.error || events.error || role.error || eventProducts.error || assignments.error || removals.error) throw projects.error || events.error || role.error || eventProducts.error || assignments.error || removals.error
         for (const optional of [news, media, contacts, members]) if (optional.error && !missing(optional.error)) throw optional.error
         if (!active || generation.current !== request) return
         const contactRows = (contacts.data ?? []) as {project_id:string; telegram:string; phone:string}[]
         const memberRows = (members.data ?? []) as {project_id:string; email:string; role:string}[]
+        const projectPdfs = new Set((presentations.data ?? []).map((row: {project_id:string}) => row.project_id))
         const next: State = {userId:user?.id ?? null, userEmail:user?.email ?? '', isAdmin:role.data === true, isMediaEditor:media.data === true,
           submissions:(projects.data ?? []).map(r => {
             const contact = contactRows.find(c => c.project_id === r.id)
             return {...r.data,id:r.id,ownerId:r.owner_id,
+              presentationAvailable: presentations.error ? undefined : projectPdfs.has(r.id),
               removed: (removals.data ?? []).some((item: {kind:string;target_id:string}) => item.kind === 'project' && item.target_id === r.id),
               eventIds: (assignments.data ?? []).filter(a => a.project_id === r.id).map(a => a.event_id),
               contact: contact ? {telegram:contact.telegram, phone:contact.phone} : undefined,
