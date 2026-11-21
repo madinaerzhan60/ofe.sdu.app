@@ -4,6 +4,7 @@ import { coverReference } from './event-cover-storage'
 import { useState, type ReactNode } from 'react'
 import { useModel, useT, type Submission } from './model'
 import { AdminTeamPdfUpload } from './admin-presentation'
+import { AdminEntryRow } from './admin-entry-row'
 import { describeError, downloadPresentation, downloadTeamPdf, setTeamStatus, setTeamRemoved, teamsToCsv, useEventTeams, type EventTeam, type TeamStatus } from './registration'
 import { Icon } from './ui'
 import { formatPhone } from './validation'
@@ -20,9 +21,9 @@ const catalogFilters: Record<Filter, string> = {
 }
 const sources: Record<Source, string> = { event: 'Founders Cup entries', catalog: 'Catalog submissions' }
 
-export function AdminRegistrations({ projects, renderProject, directory }: {
+export function AdminRegistrations({ projects, renderProjectDetails, directory }: {
   projects: Submission[]
-  renderProject: (project: Submission) => ReactNode
+  renderProjectDetails: (project: Submission) => ReactNode
   directory: boolean
 }) {
   const t = useT()
@@ -83,20 +84,36 @@ export function AdminRegistrations({ projects, renderProject, directory }: {
     {showEventTeams && error && <p className="form-error" role="alert">{t(error)}</p>}
     {(!showEventTeams || !loading) && !visible.length && <div className="admin-empty"><h3>{t('No projects found')}</h3></div>}
     <ul className="reg-list">{visible.map(entry => {
-      if (entry.kind === 'catalog') return <li key={`project:${entry.project.id}`}>{renderProject(entry.project)}</li>
+      if (entry.kind === 'catalog') {
+        const { project } = entry
+        const key = `project:${project.id}`
+        const sourceLabel = project.eventIds?.includes(event.id) ? 'Founders Cup' : 'Catalog submission'
+        const subtitle = [t(sourceLabel), t(project.industry), t(project.stage)].filter(Boolean).join(' · ')
+        return <AdminEntryRow
+          key={key} title={project.name} subtitle={subtitle} image={project.image}
+          status={project.removed ? 'Removed' : project.status}
+          tone={project.removed ? 'removed' : entry.status === 'submitted' ? 'review' : entry.status}
+          hasPresentation={Boolean(project.presentationAvailable)}
+          open={open === key} onToggle={() => setOpen(open === key ? null : key)}
+        >
+          {open === key && renderProjectDetails(project)}
+        </AdminEntryRow>
+      }
+
       const { team } = entry
+      const key = `team:${team.id}`
       const hasPresentation = Boolean(team.presentationPath || team.supplementalPdf)
       const canSupplyPdf = !team.removed && !team.supplementalPdf
         && (!team.presentationPath || (team.presentationPath.endsWith('.pptx') && team.supplementalPdf === false))
-      return <li key={`team:${team.id}`} className={`reg-row${open === team.id ? ' is-open' : ''}`}>
-      <button type="button" className="reg-row-head" aria-expanded={open === team.id} onClick={() => setOpen(open === team.id ? null : team.id)}>
-        <span className="reg-logo">{team.teamName.slice(0, 2).toUpperCase()}</span>
-        <span className="reg-title"><strong>{team.teamName}</strong><small>{t('Founders Cup')} · {team.productName} · {team.members.length} {t('people')} · {team.captainEmail}</small></span>
-        <span className={`status-badge is-${team.status === 'submitted' ? 'review' : team.status}`}><span className="status-dot" />{t(team.removed ? 'Removed' : labels[team.status])}</span>
-        <span className={`reg-file${hasPresentation ? ' has-file' : ''}`} title={t(hasPresentation ? 'Presentation uploaded' : 'Not uploaded yet')}><Icon name={hasPresentation ? 'check' : 'image'} size={16} /></span>
-        <Icon name="chevron" size={18} className="reg-chevron" />
-      </button>
-      {open === team.id && <div className="reg-details">
+      const memberCount = `${team.members.length} ${t(team.members.length === 1 ? 'person' : 'people')}`
+      const subtitle = [t('Founders Cup'), team.productName, memberCount, team.captainEmail].join(' · ')
+      return <AdminEntryRow
+        key={key} title={team.teamName} subtitle={subtitle}
+        status={team.removed ? 'Removed' : labels[team.status]}
+        tone={team.removed ? 'removed' : team.status === 'submitted' ? 'review' : team.status}
+        hasPresentation={hasPresentation}
+        open={open === key} onToggle={() => setOpen(open === key ? null : key)}
+      >
         <div className="reg-columns">
           <div>
             <h4>{t('Product')}</h4>
@@ -129,8 +146,7 @@ export function AdminRegistrations({ projects, renderProject, directory }: {
           {team.status !== 'rejected' && <button type="button" className="btn btn-ghost btn-sm danger-text" disabled={busy === team.id} onClick={() => act(team, () => setTeamStatus(team, 'rejected', notes[team.id] ?? team.adminNote))}>{t('Decline')}</button>}</> }
         </div>
         <p className="field-note">{t('Registered')}: {team.createdAt.slice(0, 16).replace('T', ' ')} · {t('Updated')}: {team.updatedAt.slice(0, 16).replace('T', ' ')}</p>
-      </div>}
-    </li>
+      </AdminEntryRow>
     })}</ul>
     {removing && <ProjectRemovalDialog name={`${removing.productName} · ${removing.teamName}`} onClose={()=>setRemoving(null)} onConfirm={async()=>{await setTeamRemoved(removing,true);setOpen(null);return true}}/>}
   </div>

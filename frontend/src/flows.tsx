@@ -455,7 +455,7 @@ export function AdminDashboard({ go }: { go: Go }) {
         </div>
       </main>
     )
-  const renderProject = (row: Submission) => {
+  const renderProjectDetails = (row: Submission) => {
     const showDetails = () => { setEditing({...row}); setRejecting(null) }
     const isVisible = !row.removed && row.status === 'Approved' && row.publication && row.visible !== false
     const changeVisibility = async () => {
@@ -470,36 +470,39 @@ export function AdminDashboard({ go }: { go: Go }) {
         if (await setProjectRemoved(row.id, false)) setNotice('Project restored.')
       } finally { setRestoring('') }
     }
-    return <article className="admin-project">
-      <div className="admin-project-identity">
-        <span className="admin-project-logo">{row.image ? <StorageImage src={row.image} alt="" /> : row.name.slice(0, 2).toUpperCase()}</span>
+    return <>
+      <div className="reg-columns">
         <div>
-          <h3><button className="admin-project-title" onClick={showDetails}>{row.name}</button></h3>
-          <p>{t(row.description)}</p>
-          <div className="admin-project-tags"><span>{t('Catalog submission')}</span><span>{t(row.industry)}</span><span>{t(row.stage)}</span></div>
+          <h4>{t('Product')}</h4>
+          <div className="prose reg-description">
+            {row.description.split('\n').filter(Boolean).map((line, i) => <p key={i}>{t(line)}</p>)}
+          </div>
+          <p className="field-note">{t(isVisible ? 'Visible on the website' : 'Not shown on the website')}</p>
+          {!row.publication && <p className="field-note">{t('Author has not allowed publication')}</p>}
+        </div>
+        <div>
+          <h4>{t('Presentation')}</h4>
+          <div className="reg-presentation-files">
+            {!row.presentationAvailable && <p className="field-note">{t('Not uploaded yet')}</p>}
+            <CatalogPresentation project={row} canUpload={liveMode} />
+          </div>
         </div>
       </div>
-      <div className="admin-project-state">
-        <span className={`status ${row.status.toLowerCase()}`}>{t(row.removed ? 'Removed' : row.status)}</span>
-        <small>{t(isVisible ? 'Visible on the website' : 'Not shown on the website')}</small>
-        {!row.publication && <small className="consent-hint">{t('Author has not allowed publication')}</small>}
-      </div>
-      <CatalogPresentation project={row} canUpload={liveMode} />
-      <div className="actions">
-        {row.removed ? <button disabled={Boolean(restoring)} onClick={restore}>{t('Restore project')}</button> : <>
-          <button onClick={showDetails}>{t('View details')}</button>
+      <div className="reg-actions">
+        {row.removed ? <button type="button" className="btn btn-outline btn-sm" disabled={Boolean(restoring)} onClick={restore}>{t('Restore project')}</button> : <>
+          <button type="button" className="btn btn-outline btn-sm" onClick={showDetails}>{t('View details')}</button>
           {row.status === 'Pending' && <>
-            <button className="approve" onClick={() => update(row.id, 'Approved')}>{t('Approve')}</button>
-            <button className="reject" onClick={() => { setRejecting(row); setEditing(null); setFeedback('') }}>{t('Request changes')}</button>
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => update(row.id, 'Approved')}>{t('Approve')}</button>
+            <button type="button" className="btn btn-outline btn-sm" onClick={() => { setRejecting(row); setEditing(null); setFeedback('') }}>{t('Request changes')}</button>
           </>}
-          {row.status === 'Approved' && <button disabled={!row.publication} title={!row.publication ? t('Author has not allowed publication') : undefined} onClick={changeVisibility}>
+          {row.status === 'Approved' && <button type="button" className="btn btn-outline btn-sm" disabled={!row.publication} title={!row.publication ? t('Author has not allowed publication') : undefined} onClick={changeVisibility}>
             {t(row.visible === false ? 'Publish' : 'Unpublish')}
           </button>}
-          {row.status === 'Rejected' && <button onClick={() => update(row.id, 'Pending')}>{t('Return to review')}</button>}
-          {row.status !== 'Approved' && <button className="danger-text" onClick={() => { setRemoving(row); setEditing(null); setRejecting(null) }}>{t('Remove project')}</button>}
+          {row.status === 'Rejected' && <button type="button" className="btn btn-outline btn-sm" onClick={() => update(row.id, 'Pending')}>{t('Return to review')}</button>}
+          {row.status !== 'Approved' && <button type="button" className="btn btn-ghost btn-sm danger-text" onClick={() => { setRemoving(row); setEditing(null); setRejecting(null) }}>{t('Remove project')}</button>}
         </>}
       </div>
-    </article>
+    </>
   }
   return (
     <main className="admin-page">
@@ -525,7 +528,7 @@ export function AdminDashboard({ go }: { go: Go }) {
         <div className="admin-head"><div><p className="eyebrow">{t('A PLACE FOR NEW IDEAS')}</p><h1>{t(section)}</h1><p className="admin-description">{t(section === 'Startups' ? 'Keep project pages up to date and manage which ones visitors can see.' : section === 'Events' ? 'Bring people together. Add event details, a cover image and publish when ready.' : section === 'Founders Cup' ? 'Review team registrations and manage presentations for SDU Founders Cup.' : section === 'News' ? 'Moderate news from the media team: hide or remove posts that should not be on the website.' : section === 'Media team' ? 'Give media access to SDU accounts so they can publish news on the Events page.' : 'Keep the stories and materials from past events in one place.')}</p></div></div>
         {notice && <div className="admin-notice" role="status"><span>✓ {t(notice)}</span><button aria-label={t('Close')} onClick={() => setNotice('')}>×</button></div>}
         {section === "Founders Cup" || section === "Startups"
-          ? <AdminRegistrations key={section} projects={submissions} renderProject={renderProject} directory={section === "Startups"} />
+          ? <AdminRegistrations key={section} projects={submissions} renderProjectDetails={renderProjectDetails} directory={section === "Startups"} />
           : section === "News" ? <AdminNews go={go} /> : section === "Media team" ? <MediaTeam /> : section === "Events" || section === "Demo Day archive" ? (
           <div className="event-editors">
             {section === 'Demo Day archive' && !events.some(e => e.id === 'archive') && <button className="secondary" onClick={() => setEvents(rows => [...rows, {id:'archive',title:'Our first Demo Day',date:'',place:'SDU University',published:false,finalists:[]}])}>{t('Create archive')}</button>}
