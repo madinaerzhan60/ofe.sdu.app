@@ -13,12 +13,12 @@ const labels: Record<TeamStatus, string> = { submitted: 'Under review', confirme
 type Source = 'event' | 'catalog'
 type Filter = 'all' | 'removed' | TeamStatus
 const projectStatuses: Record<Submission['status'], TeamStatus> = { Pending: 'submitted', Approved: 'confirmed', Rejected: 'rejected' }
-const teamFilters: Record<Filter, string> = { all: 'All teams', ...labels, removed: 'Removed' }
+const teamFilters: Record<Filter, string> = { all: 'All entries', ...labels, confirmed: 'Confirmed or approved', removed: 'Removed' }
 const catalogFilters: Record<Filter, string> = {
   all: 'All submissions', submitted: 'Pending', confirmed: 'Approved',
   rejected: 'Rejected', removed: 'Removed',
 }
-const sources: Record<Source, string> = { event: 'Team registrations', catalog: 'Catalog submissions' }
+const sources: Record<Source, string> = { event: 'Founders Cup entries', catalog: 'Catalog submissions' }
 
 export function AdminRegistrations({ projects, renderProject, directory }: {
   projects: Submission[]
@@ -38,15 +38,17 @@ export function AdminRegistrations({ projects, renderProject, directory }: {
   const [busy, setBusy] = useState('')
   const [problem, setProblem] = useState('')
   const q = query.trim().toLowerCase()
-  const entries = (source === 'event'
-    ? teams.map(team => ({
+  const showEventTeams = directory || source === 'event'
+  const entries = [
+    ...(showEventTeams ? teams : []).map(team => ({
       kind: 'event' as const, team, status: team.status, removed: team.removed,
       searchText: [team.teamName, team.productName, team.captainEmail, team.telegram, ...team.members.map(member => member.email)].join(' '),
-    }))
-    : projects.map(project => ({
+    })),
+    ...projects.filter(project => directory || Boolean(project.eventIds?.includes(event.id)) === (source === 'event')).map(project => ({
       kind: 'catalog' as const, project, status: projectStatuses[project.status], removed: project.removed,
       searchText: [project.name, project.team, project.description, project.industry, t(project.industry), ...(project.members ?? []).map(member => member.email)].join(' '),
-    }))).filter(entry => !directory || (!entry.removed && entry.status === 'confirmed'))
+    })),
+  ].filter(entry => !directory || (!entry.removed && entry.status === 'confirmed'))
   const filterLabels = source === 'event' ? teamFilters : catalogFilters
   const matchesStatus = (entry: typeof entries[number], key: Filter) =>
     key === 'removed' ? Boolean(entry.removed) : !entry.removed && (key === 'all' || key === entry.status)
@@ -62,25 +64,24 @@ export function AdminRegistrations({ projects, renderProject, directory }: {
     document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000)
   }
   return <div className="admin-registrations">
-    <div className="table-toolbar reg-source-tabs" role="group" aria-label={t('Submission source')}>
+    {!directory && <div className="table-toolbar reg-source-tabs" role="group" aria-label={t('Submission source')}>
       <div>{(Object.keys(sources) as Source[]).map(key => <button
         key={key} type="button" className={source === key ? 'active' : ''} aria-pressed={source === key}
         onClick={() => { setSource(key); setFilter('all'); setQuery(''); setOpen(null); setProblem('') }}
       >{t(sources[key])}</button>)}</div>
-    </div>
+    </div>}
     {!directory && <div className="reg-stats">{(['all', 'submitted', 'confirmed', 'rejected', 'removed'] as const).map(key => <button key={key} type="button" className={`reg-stat${filter === key ? ' is-active' : ''}`} aria-pressed={filter === key} onClick={() => setFilter(key)}>
       <strong>{entries.filter(entry => matchesStatus(entry, key)).length}</strong><span>{t(filterLabels[key])}</span>
     </button>)}</div>}
     <div className="reg-toolbar">
       <label className="reg-search"><Icon name="search" size={18} /><span className="sr-only">{t('Search submissions')}</span><input placeholder={t('Search by team, product or email')} value={query} onChange={e => setQuery(e.target.value)} /></label>
-      {source === 'event' && <button type="button" className="btn btn-outline" onClick={() => void reload()}>{t('Refresh teams')}</button>}
-      {source === 'event' && <button type="button" className="btn btn-primary" disabled={!visibleTeams.length} onClick={exportCsv}><Icon name="download" size={16} />{t('Export teams CSV')}</button>}
+      {showEventTeams && <button type="button" className="btn btn-outline" onClick={() => void reload()}>{t('Refresh teams')}</button>}
+      {showEventTeams && <button type="button" className="btn btn-primary" disabled={!visibleTeams.length} onClick={exportCsv}><Icon name="download" size={16} />{t('Export teams CSV')}</button>}
     </div>
-    <div className="admin-list-heading"><h2>{t(directory ? 'Project directory' : 'Project applications')}</h2><span>{visible.length} {t('results')}</span></div>
+    <div className="admin-list-heading"><h2>{t(directory ? 'Project directory' : 'Project applications')}</h2><span>{showEventTeams && loading && !teams.length ? t('Please wait…') : `${visible.length} ${t('results')}`}</span></div>
     {problem && <p className="form-error" role="alert">{t(problem)}</p>}
-    {source === 'event' && error && <p className="form-error" role="alert">{t(error)}</p>}
-    {source === 'event' && loading && !entries.length && <p className="field-note">{t('Please wait…')}</p>}
-    {(source === 'catalog' || !loading) && !visible.length && <div className="admin-empty"><h3>{t('No projects found')}</h3></div>}
+    {showEventTeams && error && <p className="form-error" role="alert">{t(error)}</p>}
+    {(!showEventTeams || !loading) && !visible.length && <div className="admin-empty"><h3>{t('No projects found')}</h3></div>}
     <ul className="reg-list">{visible.map(entry => {
       if (entry.kind === 'catalog') return <li key={`project:${entry.project.id}`}>{renderProject(entry.project)}</li>
       const { team } = entry
