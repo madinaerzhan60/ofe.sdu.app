@@ -16,6 +16,7 @@ import { listMediaEditors, setMediaEditor } from "./backend"
 import { categoryMeta } from "./cards"
 import { eventDate } from "./event-date"
 import { AdminRegistrations } from "./admin-registrations"
+import { CatalogPresentation } from "./admin-presentation"
 export function PolicyPage({ go }: { go: Go }) {
   const { policy } = useModel()
   const t = useT()
@@ -244,6 +245,7 @@ export function Application({go}: {go:Go}) {
                       {t("Edit and resubmit")}
                     </button>
                   )}
+                <CatalogPresentation project={row} />
                 </article>
               ))}
             </section>
@@ -417,8 +419,6 @@ export function AdminDashboard({ go }: { go: Go }) {
   const { submissions, setSubmissions, events, setEvents, setProjectEvents, setProjectRemoved, liveMode, isAdmin, authLoading, setAccount } = useModel()
   const [access, setAccess] = useState(false)
   const [section, setSection] = useState("Founders Cup")
-  const [filter, setFilter] = useState("All")
-  const [search, setSearch] = useState("")
   const [editing, setEditing] = useState<Submission | null>(null)
   const [feedback, setFeedback] = useState("")
   const [removing,setRemoving] = useState<Submission|null>(null)
@@ -455,26 +455,66 @@ export function AdminDashboard({ go }: { go: Go }) {
         </div>
       </main>
     )
-  const visible = submissions.filter(
-    (r) =>
-      (filter === "Removed" ? r.removed : !r.removed && (section !== "Startups" || r.status === "Approved")) &&
-      (filter === "All" || filter === "Removed" || r.status === filter) &&
-      [r.name, r.description, r.industry, t(r.industry)].join(" ").toLowerCase().includes(search.trim().toLowerCase()),
-  )
+  const renderProject = (row: Submission) => {
+    const showDetails = () => { setEditing({...row}); setRejecting(null) }
+    const isVisible = !row.removed && row.status === 'Approved' && row.publication && row.visible !== false
+    const changeVisibility = async () => {
+      const saved = await setSubmissions(rows => rows.map(project =>
+        project.id === row.id ? {...project, visible: project.visible === false} : project,
+      ))
+      if (saved) setNotice(isVisible ? 'Project hidden from the website.' : 'Project published on the website.')
+    }
+    const restore = async () => {
+      setRestoring(row.id)
+      try {
+        if (await setProjectRemoved(row.id, false)) setNotice('Project restored.')
+      } finally { setRestoring('') }
+    }
+    return <article className="admin-project">
+      <div className="admin-project-identity">
+        <span className="admin-project-logo">{row.image ? <StorageImage src={row.image} alt="" /> : row.name.slice(0, 2).toUpperCase()}</span>
+        <div>
+          <h3><button className="admin-project-title" onClick={showDetails}>{row.name}</button></h3>
+          <p>{t(row.description)}</p>
+          <div className="admin-project-tags"><span>{t('Catalog submission')}</span><span>{t(row.industry)}</span><span>{t(row.stage)}</span></div>
+        </div>
+      </div>
+      <div className="admin-project-state">
+        <span className={`status ${row.status.toLowerCase()}`}>{t(row.removed ? 'Removed' : row.status)}</span>
+        <small>{t(isVisible ? 'Visible on the website' : 'Not shown on the website')}</small>
+        {!row.publication && <small className="consent-hint">{t('Author has not allowed publication')}</small>}
+      </div>
+      <CatalogPresentation project={row} canUpload={liveMode} />
+      <div className="actions">
+        {row.removed ? <button disabled={Boolean(restoring)} onClick={restore}>{t('Restore project')}</button> : <>
+          <button onClick={showDetails}>{t('View details')}</button>
+          {row.status === 'Pending' && <>
+            <button className="approve" onClick={() => update(row.id, 'Approved')}>{t('Approve')}</button>
+            <button className="reject" onClick={() => { setRejecting(row); setEditing(null); setFeedback('') }}>{t('Request changes')}</button>
+          </>}
+          {row.status === 'Approved' && <button disabled={!row.publication} title={!row.publication ? t('Author has not allowed publication') : undefined} onClick={changeVisibility}>
+            {t(row.visible === false ? 'Publish' : 'Unpublish')}
+          </button>}
+          {row.status === 'Rejected' && <button onClick={() => update(row.id, 'Pending')}>{t('Return to review')}</button>}
+          {row.status !== 'Approved' && <button className="danger-text" onClick={() => { setRemoving(row); setEditing(null); setRejecting(null) }}>{t('Remove project')}</button>}
+        </>}
+      </div>
+    </article>
+  }
   return (
     <main className="admin-page">
       <aside className="admin-side">
         <div className="admin-brand"><span>O</span><div><strong>OFE</strong><small>{t("Workspace management")}</small></div></div><p className="admin-nav-label">{t("WORKSPACE")}</p>
-        {["Founders Cup", "Submissions", "Startups", "News", "Media team"].map((x) => (
+        {["Founders Cup", "Startups", "News", "Media team"].map((x) => (
           <button
             className={section === x ? "active" : ""}
             key={x}
             onClick={() => {
               setSection(x)
-              setFilter("All"); setSearch(""); setEditing(null); setRejecting(null); setNotice("")
+              setEditing(null); setRejecting(null); setNotice("")
             }}
           >
-            <i className="admin-nav-icon" aria-hidden="true">{({Submissions: "▤", Startups: "◇", Events: "▦", "Demo Day archive": "◷", News: "✎", "Media team": "◎", "Founders Cup": "★"} as Record<string,string>)[x]}</i>{t(x)}{x === "Submissions" && <b className="admin-nav-count">{submissions.filter(r => r.status === "Pending").length}</b>}
+            <i className="admin-nav-icon" aria-hidden="true">{({Submissions: "▤", Startups: "◇", Events: "▦", "Demo Day archive": "◷", News: "✎", "Media team": "◎", "Founders Cup": "★"} as Record<string,string>)[x]}</i>{t(x)}
           </button>
         ))}
         <div className="admin-side-bottom"><p>{t(liveMode ? 'Changes are saved to the platform.' : 'Changes are saved for this preview session.')}</p><button onClick={() => go("home")}>↗ {t("Back to website")}</button></div>
@@ -482,9 +522,11 @@ export function AdminDashboard({ go }: { go: Go }) {
       </aside>
       <section className="admin-main">
         <div className="admin-breadcrumb">OFE <span>/</span> {t('Workspace management')}{!liveMode && <span className="admin-demo-badge">{t('Preview mode')}</span>}</div>
-        <div className="admin-head"><div><p className="eyebrow">{t('A PLACE FOR NEW IDEAS')}</p><h1>{t(section)}</h1><p className="admin-description">{t(section === 'Submissions' ? 'Review new projects, leave helpful feedback and decide what appears on the website.' : section === 'Startups' ? 'Keep project pages up to date and manage which ones visitors can see.' : section === 'Events' ? 'Bring people together. Add event details, a cover image and publish when ready.' : section === 'Founders Cup' ? 'Team registrations for SDU Founders Cup: review teams, download presentations and confirm participants.' : section === 'News' ? 'Moderate news from the media team: hide or remove posts that should not be on the website.' : section === 'Media team' ? 'Give media access to SDU accounts so they can publish news on the Events page.' : 'Keep the stories and materials from past events in one place.')}</p></div></div>
+        <div className="admin-head"><div><p className="eyebrow">{t('A PLACE FOR NEW IDEAS')}</p><h1>{t(section)}</h1><p className="admin-description">{t(section === 'Startups' ? 'Keep project pages up to date and manage which ones visitors can see.' : section === 'Events' ? 'Bring people together. Add event details, a cover image and publish when ready.' : section === 'Founders Cup' ? 'Review team registrations and manage presentations for SDU Founders Cup.' : section === 'News' ? 'Moderate news from the media team: hide or remove posts that should not be on the website.' : section === 'Media team' ? 'Give media access to SDU accounts so they can publish news on the Events page.' : 'Keep the stories and materials from past events in one place.')}</p></div></div>
         {notice && <div className="admin-notice" role="status"><span>✓ {t(notice)}</span><button aria-label={t('Close')} onClick={() => setNotice('')}>×</button></div>}
-        {section === "Founders Cup" ? <AdminRegistrations /> : section === "News" ? <AdminNews go={go} /> : section === "Media team" ? <MediaTeam /> : section === "Events" || section === "Demo Day archive" ? (
+        {section === "Founders Cup" || section === "Startups"
+          ? <AdminRegistrations key={section} projects={submissions} renderProject={renderProject} directory={section === "Startups"} />
+          : section === "News" ? <AdminNews go={go} /> : section === "Media team" ? <MediaTeam /> : section === "Events" || section === "Demo Day archive" ? (
           <div className="event-editors">
             {section === 'Demo Day archive' && !events.some(e => e.id === 'archive') && <button className="secondary" onClick={() => setEvents(rows => [...rows, {id:'archive',title:'Our first Demo Day',date:'',place:'SDU University',published:false,finalists:[]}])}>{t('Create archive')}</button>}
             {section === 'Events' && <button className="secondary" onClick={() => setEvents(rows => [...rows, {id: `event-${Date.now()}`, title: '', date: '', place: '', published: false}])}>{t('Add event')}</button>}
@@ -496,46 +538,7 @@ export function AdminDashboard({ go }: { go: Go }) {
                 <EventEditor key={event.id} event={event} />
               ))}
           </div>
-        ) : (
-          <>
-            <div className="admin-stats">
-              {['Pending','Approved','Rejected'].map((status, i) => <button key={status} className={`admin-stat ${filter === status ? 'selected' : ''}`} onClick={() => {setFilter(status);setSearch('');if(section === 'Startups' && status !== 'Approved')setSection('Submissions')}} aria-pressed={filter === status}>
-                <span className={`stat-dot stat-${status.toLowerCase()}`} /><span>{t(status)}</span><strong>{submissions.filter(r => !r.removed && r.status === status).length}</strong><small>{t(['Waiting for your review','Ready for the next step','Feedback for the author'][i])}</small>
-              </button>)}
-            </div>
-            <div className="admin-list-heading"><h2>{t(section === 'Startups' ? 'Project directory' : 'Project applications')}</h2><span>{visible.length} {t('results')}</span></div>
-            <div className="table-toolbar">
-              <div>
-                {(section === 'Startups' ? ['All', 'Approved', 'Removed'] : ['All', 'Pending', 'Approved', 'Rejected', 'Removed']).map((x) => (
-                  <button
-                    className={filter === x ? "active" : ""}
-                    key={x}
-                    onClick={() => setFilter(x)}
-                  >
-                    {t(x)}
-                  </button>
-                ))}
-              </div>
-              <input
-                aria-label={t("Search submissions")}
-                placeholder={t("Search submissions")}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="admin-project-list">
-              {visible.map(row => <article className="admin-project" key={row.id}>
-                <div className="admin-project-identity"><span className="admin-project-logo">{row.image ? <StorageImage src={row.image} alt="" /> : row.name.slice(0,2).toUpperCase()}</span><div><h3><button className="admin-project-title" onClick={() => {setEditing({...row});setRejecting(null)}}>{row.name}</button></h3><p>{t(row.description)}</p><div className="admin-project-tags"><span>{t(row.industry)}</span><span>{t(row.stage)}</span></div></div></div>
-                <div className="admin-project-state"><span className={`status ${row.status.toLowerCase()}`}>{t(row.status)}</span><small>{t(!row.removed && row.status === 'Approved' && row.publication && row.visible !== false ? 'Visible on the website' : 'Not shown on the website')}</small>{!row.publication && <small className="consent-hint">{t('Author has not allowed publication')}</small>}</div>
-                <div className="actions">{row.removed ? <button disabled={Boolean(restoring)} onClick={async () => {setRestoring(row.id);try {if(await setProjectRemoved(row.id,false))setNotice('Project restored.')}finally{setRestoring('')}}}>{t('Restore project')}</button> : <><button onClick={() => {setEditing({...row});setRejecting(null)}}>{t('View details')}</button>
-                  {row.status === 'Pending' ? <><button className="approve" onClick={() => update(row.id,'Approved')}>{t('Approve')}</button><button className="reject" onClick={() => {setRejecting(row);setEditing(null);setFeedback('')}}>{t('Request changes')}</button></> : row.status === 'Approved' ? <button disabled={!row.publication} title={!row.publication ? t('Author has not allowed publication') : undefined} onClick={async () => {if(!await setSubmissions(rows => rows.map(r => r.id === row.id ? {...r,visible:r.visible===false} : r)))return;setNotice(row.visible === false ? 'Project published on the website.' : 'Project hidden from the website.')}}>{t(row.visible === false ? 'Publish' : 'Unpublish')}</button> : <button onClick={() => update(row.id,'Pending')}>{t('Return to review')}</button>}
-                  <button className="danger-text" onClick={() => {setRemoving(row);setEditing(null);setRejecting(null)}}>{t('Remove project')}</button></>}
-                </div>
-              </article>)}
-              {!visible.length && <div className="admin-empty"><span aria-hidden="true">⌕</span><h3>{t('No projects found')}</h3><p>{t('Try a different name or clear the filters to see all projects.')}</p><button className="secondary" onClick={() => {setFilter('All');setSearch('')}}>{t('Clear filters')}</button></div>}
-            </div>
-          </>
-        )}
+        ) : null}
         {removing && <ProjectRemovalDialog name={removing.name} onClose={() => setRemoving(null)} onConfirm={async () => {
           const saved=await setProjectRemoved(removing.id,true)
           if(saved)setNotice('Project removed. You can restore it from Removed.')

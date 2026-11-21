@@ -16,6 +16,7 @@ export type Submission = {
   eventYears?: string[]
   eventIds?: string[]
   removed?: boolean
+  presentationAvailable?: boolean
   id: string
   name: string
   description: string

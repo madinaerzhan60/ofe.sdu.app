@@ -868,7 +868,7 @@ html[data-theme="dark"] .form-failure { background: #3a1513; color: #ffb4ab; }
 
 /* Admin: registrations */
 .admin-registrations { display: grid; gap: 16px; }
-.reg-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.reg-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .reg-stat { display: grid; gap: 4px; text-align: left; padding: 16px 18px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; transition: border-color .2s, transform .2s var(--ease); color: var(--ink); font-family: var(--font-sans); }
 .reg-stat strong { font-family: var(--font-display); font-size: 34px; font-weight: 500; line-height: 1; }
 .reg-stat span { color: var(--muted); font-size: 14px; }
@@ -975,3 +975,8 @@ html[data-theme="dark"] .field-error { color: #ffb4ab; }
 .app .admin-registrations .btn:disabled { opacity: .55; cursor: not-allowed; }
 .reg-download { max-width: 100%; }
 .reg-download span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.admin-project > .admin-pdf-upload,
+.admin-project > .catalog-presentation { grid-column: 1 / -1; }
+.reg-source-tabs { margin-bottom: 0; }
+.reg-presentation-files { display: grid; justify-items: start; gap: 8px; }

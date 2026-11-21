@@ -6,7 +6,7 @@ import { AuthPanel } from '../auth'
 import { eventDate } from '../event-date'
 import { AdminModal } from '../flows'
 import { useModel, useT, type EventData } from '../model'
-import { checkPresentation, createTeam, describeError, downloadPresentation, MAX_TEAM_SIZE, registrationOpen, removePresentation, saveTeamCover, updateTeam, uploadPresentation, useEventTeams, withdrawTeam, type EventTeam, type TeamInput } from '../registration'
+import { checkPresentation, createTeam, describeError, downloadPresentation, downloadTeamPdf, MAX_TEAM_SIZE, registrationOpen, removePresentation, saveTeamCover, updateTeam, uploadPresentation, useEventTeams, withdrawTeam, type EventTeam, type TeamInput } from '../registration'
 import { Link } from '../router'
 import { MemberEmailsField } from '../team-fields'
 import { Icon, PageHero } from '../ui'
@@ -251,7 +251,7 @@ function TeamDashboard({ team, captain, open, event, onEdit }: { team: EventTeam
         <h3>{t('Checklist')}</h3>
         <ul className="checklist">
           <li className="is-done"><Icon name="check" size={18} />{t('Team registered')}</li>
-          <li className={team.presentationPath ? 'is-done' : ''}><Icon name={team.presentationPath ? 'check' : 'image'} size={18} />{t(team.presentationPath ? 'Presentation uploaded' : 'Upload the presentation')}</li>
+          <li className={team.presentationPath ? 'is-done' : ''}><Icon name={team.presentationPath ? 'check' : 'image'} size={18} />{t(team.presentationPath || team.supplementalPdf ? 'Presentation uploaded' : 'Upload the presentation')}</li>
           <li className={team.status === 'confirmed' ? 'is-done' : ''}><Icon name={team.status === 'confirmed' ? 'check' : 'eye'} size={18} />{t(team.status === 'confirmed' ? 'Confirmed by OFE' : 'Waiting for OFE review')}</li>
         </ul>
         <p className="field-note">{t('Event date')}: {eventDate(event.date, lang).full}</p>
@@ -266,7 +266,8 @@ function TeamDashboard({ team, captain, open, event, onEdit }: { team: EventTeam
           <span className="file-icon"><Icon name="file" size={22} /></span>
           <span className="file-meta"><strong>{team.presentationName}</strong><small>{team.presentationPath.endsWith('.pptx') ? 'PPTX' : 'PDF'}</small></span>
           <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => run(() => downloadPresentation(team))}><Icon name="download" size={16} />{t('Download')}</button>
-        </div> : <p className="field-note">{t('Not uploaded yet')}</p>}
+        </div> : !team.supplementalPdf && <p className="field-note">{t('Not uploaded yet')}</p>}
+        {team.supplementalPdf && <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => run(() => downloadTeamPdf(team))}><Icon name="download" size={16} />{t('Download PDF')}</button>}
         {captain && open && <>
           <PresentationPicker compact={Boolean(team.presentationPath)} file={file} onFile={async picked => { setError(''); if (!picked) { setFile(undefined); return } try { await checkPresentation(picked); setFile(picked) } catch (problem) { setError(problem instanceof Error ? problem.message : '') } }} busy={busy} />
           {file && <button type="button" className="btn btn-accent" disabled={busy} onClick={() => run(async () => { await uploadPresentation(team, file); setFile(undefined) })}>{t(busy ? 'Uploading…' : 'Upload presentation')}</button>}

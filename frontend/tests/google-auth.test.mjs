@@ -142,7 +142,7 @@ function platform(url, session = null, testEnv = env, fixtures = {}) {
       return {data:{subscription:{unsubscribe(){}}}}
     }},
     from:table => ({select:async () => {await fixtures.beforeSelect?.(table);return {data:fixtures[table] ?? [],error:null}}}),
-    rpc:async name => ({data:name === 'list_confirmed_event_projects' ? (fixtures.eventProducts ?? []) : name === 'list_removed_workspace_projects' ? (fixtures.removals ?? []) : false,error:null}),
+    rpc:async name => ({data:name === 'list_confirmed_event_projects' ? (fixtures.eventProducts ?? []) : name === 'list_removed_workspace_projects' ? (fixtures.removals ?? []) : name === 'list_workspace_project_pdfs' ? (fixtures.presentations ?? []) : false,error:null}),
   }
   const module = load(backendSource, {
     react:state.react,'@supabase/supabase-js':{createClient:(_url, _key, config) => {options = config; return client}},

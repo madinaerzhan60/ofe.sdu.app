@@ -151,6 +151,10 @@ test('presentations are private files in the team folder', async () => {
     await as('captain')
     const teamId = (await db.query(team())).rows[0].id
     const file = `current/${teamId}/3f1c2b8a-1d2e-4f5a-9b8c-7d6e5f4a3b2c.pdf`
+    await as('other')
+    const withoutFile = (await db.query(team())).rows[0].id
+    const suppliedFile = `current/${withoutFile}/2f1c2b8a-1d2e-4f5a-9b8c-7d6e5f4a3b2c.pdf`
+    await as('captain')
     await operation('storage.object.upload')
     await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values ('event-presentations',$1)", [`current/${teamId}/deck.exe`]))
     await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values ('event-presentations',$1)", [`closed/${teamId}/3f1c2b8a-1d2e-4f5a-9b8c-7d6e5f4a3b2c.pdf`]))
@@ -188,6 +192,89 @@ test('presentations are private files in the team folder', async () => {
     await operation('storage.object.upload')
     await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values ('event-presentations',$1)", [`current/${teamId}/1f1c2b8a-1d2e-4f5a-9b8c-7d6e5f4a3b2c.pdf`]))
     assert.equal((await db.query('select public.event_registration_open($1) as open', ['current'])).rows[0].open, false)
+
+    // Supplying a missing PDF as admin works even after registration closes.
+    await as('admin')
+    await db.query("update public.event_teams set status='confirmed' where id=$1", [withoutFile])
+    await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values ('event-presentations',$1)", [suppliedFile.replace('.pdf', '.pptx')]))
+    await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values ('event-presentations',$1)", [suppliedFile.replace('current/', 'closed/')]))
+    await db.query("insert into storage.objects(bucket_id,name) values ('event-presentations',$1)", [suppliedFile])
+    const { rows: [attached] } = await db.query(
+      'update public.event_teams set presentation_path=$1, presentation_name=$2 where id=$3 and presentation_path is null returning status',
+      [suppliedFile, 'Organizer PDF.pdf', withoutFile],
+    )
+    assert.equal(attached.status, 'confirmed')
+    await assert.rejects(db.query("insert into storage.objects(bucket_id,name) values ('event-presentations',$1)", [suppliedFile.replace('2f1c', '3f1c')]))
+    await as('other')
+    await operation('storage.object.get_authenticated')
+    assert.equal((await db.query('select name from storage.objects where name=$1', [suppliedFile])).rows.length, 1)
+  } finally { await db.close() }
+})
+
+test('an organizer PDF leaves the original PPTX and confirmation intact', async () => {
+  const { db, as, operation } = await setup()
+  const add = path => db.query("insert into storage.objects(bucket_id,name) values ('event-presentations',$1)", [path])
+  const files = async () => (await db.query('select name from storage.objects')).rows.map(row => row.name)
+  try {
+    await as('captain')
+    const teamId = (await db.query(team())).rows[0].id
+    const pptx = `current/${teamId}/2f1c2b8a-1d2e-4f5a-9b8c-7d6e5f4a3b2c.pptx`
+    const pdf = `team-pdf/current/${teamId}/presentation.pdf`
+    await operation('storage.object.upload')
+    await add(pptx)
+    await db.query('update public.event_teams set presentation_path=$1, presentation_name=$2 where id=$3', [pptx, 'Original.pptx', teamId])
+    await assert.rejects(add(pdf), /policy/)
+    await as('admin')
+    await db.query("update public.event_teams set status='confirmed' where id=$1", [teamId])
+    await add(pdf)
+    await assert.rejects(add(pdf), /duplicate|unique/)
+    assert.deepEqual((await db.query('select status, presentation_path from public.event_teams where id=$1', [teamId])).rows, [
+      {status: 'confirmed', presentation_path: pptx},
+    ])
+    await as('captain')
+    await operation('storage.object.get_authenticated')
+    assert.deepEqual(new Set(await files()), new Set([pptx, pdf]))
+    assert.deepEqual((await db.query("select team_id from public.list_workspace_team_pdfs('current')")).rows, [{team_id: teamId}])
+    await as('stranger')
+    assert.deepEqual(await files(), [])
+    assert.deepEqual((await db.query("select team_id from public.list_workspace_team_pdfs('current')")).rows, [])
+  } finally { await db.close() }
+})
+
+test('catalog PDFs can be supplied once by an admin and are readable only by the owner or an admin', async () => {
+  const { db, as, login, operation } = await setup()
+  const projectId = 'project-with-deck'
+  const path = `catalog/${people.captain[0]}/${projectId}/presentation.pdf`
+  const add = name => db.query("insert into storage.objects(bucket_id,name) values ('event-presentations',$1)", [name])
+  const list = async () => (await db.query('select project_id from public.list_workspace_project_pdfs()')).rows.map(row => row.project_id)
+  try {
+    await as('captain')
+    await db.query('insert into public.projects(id,owner_id,data) values ($1,$2,$3)', [projectId, people.captain[0], {
+      id: projectId, ownerId: people.captain[0], name: 'Catalog project', description: 'A project with an organizer PDF',
+      team: 'Team', industry: 'EdTech', stage: 'Idea', product: '', status: 'Pending', visible: false,
+      publication: false, consentVersion: '2026-10-22', consentAt: new Date().toISOString(), feedback: '',
+    }])
+    await operation('storage.object.upload')
+    await assert.rejects(add(path))
+    await as('admin')
+    await assert.rejects(add(path.replace(people.captain[0], people.stranger[0])))
+    await add(path)
+    await assert.rejects(add(path), /duplicate|unique/)
+    assert.deepEqual(await list(), [projectId])
+    assert.equal((await db.query("select data->>'status' as status from public.projects where id=$1", [projectId])).rows[0].status, 'Pending')
+    await as('captain')
+    assert.deepEqual(await list(), [projectId])
+    await operation('storage.object.get_authenticated')
+    assert.equal((await db.query('select name from storage.objects where name=$1', [path])).rows.length, 1)
+    await operation('storage.object.get_signed')
+    assert.equal((await db.query('select name from storage.objects where name=$1', [path])).rows.length, 0)
+    await as('stranger')
+    await operation('storage.object.get_authenticated')
+    assert.deepEqual(await list(), [])
+    assert.equal((await db.query('select name from storage.objects where name=$1', [path])).rows.length, 0)
+    await login(null)
+    await assert.rejects(list(), /permission/)
+    assert.equal((await db.query('select name from storage.objects where name=$1', [path])).rows.length, 0)
   } finally { await db.close() }
 })
 
@@ -332,6 +419,8 @@ test('only administrators remove and restore ordinary projects; public data and 
     await assert.rejects(db.query("select public.set_workspace_project_removed($1,'project',true)",[projectId]),/administrators/)
     await assert.rejects(db.query('insert into private.removed_projects(project_id) values ($1)',[projectId]),/permission/)
     await as('admin')
+    await assert.rejects(db.query("select public.set_workspace_project_removed($1,'project',true)",[projectId]),/approved projects cannot be removed/i)
+    await db.query("update public.projects set data=data||'{\"status\":\"Pending\",\"visible\":false}' where id=$1",[projectId])
     await db.query("select public.set_workspace_project_removed($1,'project',true)",[projectId])
     await db.query("select public.set_workspace_project_removed($1,'project',true)",[projectId])
     assert.deepEqual((await db.query('select * from public.list_removed_workspace_projects()')).rows,[{kind:'project',target_id:projectId}])
@@ -347,6 +436,7 @@ test('only administrators remove and restore ordinary projects; public data and 
     await assert.rejects(db.query("select public.set_workspace_project_removed($1,'project',false)",[projectId]),/administrators/)
     await as('admin')
     await db.query("select public.set_workspace_project_removed($1,'project',false)",[projectId])
+    await db.query("update public.projects set data=data||'{\"status\":\"Approved\",\"visible\":true}' where id=$1",[projectId])
     await assert.rejects(db.query("select public.set_workspace_project_removed('missing','project',true)"),/not found/)
     await login(null)
     assert.equal((await db.query('select id from public.projects')).rows.length,1)
@@ -368,6 +458,9 @@ test('removed Founders Cup projects, member data, covers and presentations stay 
     await assert.rejects(db.query("select public.set_workspace_project_removed($1,'event-team',true)",[teamId]),/administrators/)
     await as('admin')
     await db.query("update public.event_teams set status='confirmed' where id=$1",[teamId])
+    await assert.rejects(db.query("select public.set_workspace_project_removed($1,'event-team',true)",[teamId]),/confirmed teams cannot be removed/i)
+    assert.deepEqual((await db.query("delete from public.event_teams where id=$1 returning id",[teamId])).rows,[])
+    await db.query("update public.event_teams set status='submitted' where id=$1",[teamId])
     await db.query("select public.set_workspace_project_removed($1,'event-team',true)",[teamId])
     assert.equal((await db.query('select * from public.list_removed_workspace_projects()')).rows[0].target_id,teamId)
     await login(null)
@@ -384,6 +477,7 @@ test('removed Founders Cup projects, member data, covers and presentations stay 
     await as('admin')
     assert.equal((await db.query("select name from storage.objects where bucket_id in ('event-covers','event-presentations')")).rows.length,2)
     await db.query("select public.set_workspace_project_removed($1,'event-team',false)",[teamId])
+    await db.query("update public.event_teams set status='confirmed' where id=$1",[teamId])
     await login(null)
     assert.equal((await db.query('select * from public.list_confirmed_event_projects()')).rows.length,1)
     assert.deepEqual((await db.query("select name from storage.objects where bucket_id='event-covers'")).rows,[{name:cover}])

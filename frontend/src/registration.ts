@@ -1,6 +1,7 @@
 import { eventCoverBucket, uploadEventCover } from './event-cover-storage'
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
 import { backend, liveMode, notifyCatalogChanged, setWorkspaceProjectRemoved } from './backend'
+import type { Submission } from './model'
 
 export const PRESENTATION_BUCKET = 'event-presentations'
 export const MAX_PRESENTATION_BYTES = 25 * 1024 * 1024
@@ -25,6 +26,7 @@ export type EventTeam = {
   coverPath?: string
   presentationPath?: string
   presentationName?: string
+  supplementalPdf?: boolean
   status: TeamStatus
   adminNote: string
   createdAt: string
@@ -32,6 +34,7 @@ export type EventTeam = {
   members: TeamMember[]
   /** Demo mode only: the uploaded file kept in memory. */
   demoFile?: File
+  demoPdf?: File
 }
 export type TeamInput = Pick<EventTeam, 'teamName' | 'productName' | 'tagline' | 'description' | 'industry' | 'stage' | 'productUrl' | 'telegram' | 'phone'> & { members: TeamMember[] }
 
@@ -93,11 +96,17 @@ const subscribe = (fn: () => void) => { listeners.add(fn); return () => listener
 
 async function fetchTeams(eventId: string) {
   if (!backend) return state.teams
-  const [{data,error},removals] = await Promise.all([backend.from('event_teams')
+  const [{data,error},removals,pdfs] = await Promise.all([backend.from('event_teams')
     .select('id,event_id,captain_email,team_name,product_name,tagline,description,industry,stage,product_url,telegram,phone,presentation_path,presentation_name,cover_path,status,admin_note,created_at,updated_at,event_team_members(email,role,is_captain)')
-    .eq('event_id', eventId).order('created_at', { ascending: true }), backend.rpc('list_removed_workspace_projects')])
+    .eq('event_id', eventId).order('created_at', { ascending: true }), backend.rpc('list_removed_workspace_projects'),
+    backend.rpc('list_workspace_team_pdfs', { target_event_id: eventId })])
   if (error || removals.error) throw error || removals.error
-  return (data as Row[]).map(row => ({...fromRow(row),removed:(removals.data ?? []).some((item: {kind:string;target_id:string}) => item.kind === 'event-team' && item.target_id === row.id)}))
+  const supplementalPdfs = new Set((pdfs.data ?? []).map((item: {team_id:string}) => item.team_id))
+  return (data as Row[]).map(row => ({
+    ...fromRow(row),
+    removed: (removals.data ?? []).some((item: {kind:string;target_id:string}) => item.kind === 'event-team' && item.target_id === row.id),
+    supplementalPdf: pdfs.error ? undefined : supplementalPdfs.has(row.id),
+  }))
 }
 
 export function useEventTeams(eventId: string, identity: string, includeRemoved = false) {
@@ -137,7 +146,7 @@ async function syncMembers(teamId: string, before: TeamMember[], after: TeamMemb
 export async function createTeam(eventId: string, captainEmail: string, input: TeamInput): Promise<EventTeam> {
   if (!backend) {
     const now = new Date().toISOString()
-    const team: EventTeam = { ...input, id: crypto.randomUUID(), eventId, captainEmail, status: 'submitted', adminNote: '', createdAt: now, updatedAt: now,
+    const team: EventTeam = { ...input, id: crypto.randomUUID(), eventId, captainEmail, status: 'submitted', adminNote: '', createdAt: now, updatedAt: now, supplementalPdf: false,
       members: [{ email: captainEmail, role: 'Captain', isCaptain: true }, ...input.members.filter(m => !m.isCaptain)] }
     emit({ teams: [...state.teams, team] })
     return team
@@ -185,8 +194,10 @@ export async function saveTeamCover(team: EventTeam, file?: Blob) {
   return teams.find(row => row.id === team.id)!
 }
 
-export async function uploadPresentation(team: EventTeam, file: File, onProgress?: (value: number) => void) {
+export async function uploadPresentation(team: EventTeam, file: File, onProgress?: (value: number) => void, onlyIfMissing = false) {
   const kind = await checkPresentation(file)
+  if (onlyIfMissing && kind !== 'pdf') throw new Error('Choose a PDF up to 25 MB.')
+  if (onlyIfMissing && team.presentationPath) throw new Error('This project already has a presentation.')
   const name = safeFileName(file.name)
   if (!backend) {
     onProgress?.(1)
@@ -198,8 +209,12 @@ export async function uploadPresentation(team: EventTeam, file: File, onProgress
   const upload = await backend.storage.from(PRESENTATION_BUCKET).upload(path, file, { contentType: contentType(kind), upsert: false, cacheControl: '0' })
   if (upload.error) throw upload.error
   onProgress?.(0.85)
-  const { error } = await backend.from('event_teams').update({ presentation_path: path, presentation_name: name }).eq('id', team.id)
-  if (error) { await backend.storage.from(PRESENTATION_BUCKET).remove([path]); throw error }
+  const update = backend.from('event_teams').update({ presentation_path: path, presentation_name: name }).eq('id', team.id)
+  const { data, error } = await (team.presentationPath ? update.eq('presentation_path', team.presentationPath) : update.is('presentation_path', null)).select('id').maybeSingle()
+  if (error || !data) {
+    await backend.storage.from(PRESENTATION_BUCKET).remove([path])
+    throw error ?? new Error('This project already has a presentation.')
+  }
   if (team.presentationPath) await backend.storage.from(PRESENTATION_BUCKET).remove([team.presentationPath])
   onProgress?.(1)
   notifyCatalogChanged()
@@ -224,14 +239,66 @@ export async function downloadPresentation(team: EventTeam) {
     blob = data
   }
   if (!blob) return
+  savePresentationFile(blob, team.presentationName || `${team.teamName}.${team.presentationPath?.endsWith('.pptx') ? 'pptx' : 'pdf'}`)
+}
+
+function savePresentationFile(blob: Blob, name: string) {
   // Always save as an attachment: the bytes are never rendered inside this origin.
   const url = URL.createObjectURL(new Blob([blob], { type: 'application/octet-stream' }))
   const link = document.createElement('a')
   link.href = url
-  link.download = team.presentationName || `${team.teamName}.${team.presentationPath?.endsWith('.pptx') ? 'pptx' : 'pdf'}`
+  link.download = name
   link.rel = 'noopener'
   document.body.append(link); link.click(); link.remove()
   setTimeout(() => URL.revokeObjectURL(url), 30000)
+}
+
+const catalogPdfPath = (project: Submission) => `catalog/${project.ownerId}/${project.id}/presentation.pdf`
+const supplementalPdfPath = (team: EventTeam) => `team-pdf/${team.eventId}/${team.id}/presentation.pdf`
+
+async function uploadPrivatePdf(path: string, file: File) {
+  if (await checkPresentation(file) !== 'pdf') throw new Error('Choose a PDF up to 25 MB.')
+  if (!backend) return
+  const { error } = await backend.storage.from(PRESENTATION_BUCKET).upload(path, file, {
+    contentType: 'application/pdf', upsert: false, cacheControl: '0',
+  })
+  if (error) throw error
+}
+
+async function downloadPrivatePdf(path: string, name: string) {
+  if (!backend) return
+  const { data, error } = await backend.storage.from(PRESENTATION_BUCKET).download(path)
+  if (error) throw error
+  savePresentationFile(data, `${safeFileName(name)}.pdf`)
+}
+
+export async function uploadCatalogPdf(project: Submission, file: File) {
+  if (!backend || !project.ownerId) throw new Error('Could not upload the PDF. Please try again.')
+  await uploadPrivatePdf(catalogPdfPath(project), file)
+  notifyCatalogChanged()
+}
+
+export async function downloadCatalogPdf(project: Submission) {
+  if (project.ownerId) await downloadPrivatePdf(catalogPdfPath(project), project.name)
+}
+
+export async function uploadTeamPdf(team: EventTeam, file: File) {
+  if (team.supplementalPdf || team.presentationPath?.endsWith('.pdf')) throw new Error('This project already has a PDF.')
+  if (!team.presentationPath) return uploadPresentation(team, file, undefined, true)
+  await uploadPrivatePdf(supplementalPdfPath(team), file)
+  if (backend) {
+    emit({ teams: await fetchTeams(team.eventId) })
+  } else {
+    emit({ teams: state.teams.map(row => row.id === team.id ? {...row, supplementalPdf: true, demoPdf: file} : row) })
+  }
+}
+
+export async function downloadTeamPdf(team: EventTeam) {
+  if (team.demoPdf) {
+    savePresentationFile(team.demoPdf, safeFileName(team.demoPdf.name))
+  } else {
+    await downloadPrivatePdf(supplementalPdfPath(team), team.productName)
+  }
 }
 
 export async function withdrawTeam(team: EventTeam) {
@@ -260,7 +327,7 @@ export function teamsToCsv(teams: EventTeam[]) {
   }
   const header = ['Team', 'Product', 'Tagline', 'Industry', 'Stage', 'Captain', 'Telegram', 'Phone', 'Members', 'Presentation', 'Status', 'Registered']
   const rows = teams.map(team => [team.teamName, team.productName, team.tagline, team.industry, team.stage, team.captainEmail, team.telegram, team.phone,
-    team.members.filter(m => !m.isCaptain).map(m => `${m.email} (${m.role})`).join('; '), team.presentationPath ? 'yes' : 'no', team.status, team.createdAt.slice(0, 16).replace('T', ' ')])
+    team.members.filter(m => !m.isCaptain).map(m => `${m.email} (${m.role})`).join('; '), team.presentationPath || team.supplementalPdf ? 'yes' : 'no', team.status, team.createdAt.slice(0, 16).replace('T', ' ')])
   return '﻿' + [header, ...rows].map(row => row.map(value => cell(String(value))).join(',')).join('\r\n')
 }
 
